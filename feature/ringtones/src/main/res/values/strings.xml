@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ringtone_title_alarm">Alarm sound</string>
+    <string name="ringtone_title_default">Default sound</string>
+    <string name="ringtone_done">Done</string>
+    <string name="ringtone_silent">Silent</string>
+    <string name="ringtone_random">Shuffle my sounds</string>
+    <string name="ringtone_section_bundled">Included</string>
+    <string name="ringtone_section_device">On this device</string>
+    <string name="ringtone_section_mine">My sounds</string>
+    <string name="ringtone_import">Import from device</string>
+    <string name="ringtone_record">Record voice memo</string>
+    <string name="ringtone_record_stop">Stop recording</string>
+    <string name="ringtone_delete">Delete</string>
+    <string name="ringtone_preview">Play</string>
+    <string name="ringtone_set_default">Set as default</string>
+    <string name="ringtone_msg_imported">Sound imported</string>
+    <string name="ringtone_msg_too_large">That file is too large</string>
+    <string name="ringtone_msg_too_long">That audio is too long</string>
+    <string name="ringtone_msg_undecodable">That file could not be decoded</string>
+    <string name="ringtone_msg_import_failed">Import failed</string>
+    <string name="ringtone_msg_recorded">Recording saved</string>
+    <string name="ringtone_msg_recording_too_short">Recording too short</string>
+    <string name="ringtone_msg_recording_failed">Recording failed</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alarme_app_name">Alarme</string>
+    <string name="alarme_notif_channel_status">Alarm status</string>
+    <string name="alarme_notif_ring_title">Alarm</string>
+    <string name="alarme_wuc_notif_title">You aren\'t still in bed, right?</string>
+    <string name="alarme_wuc_notif_body">Tap here and complete the Wake Up Check or your alarm will start ringing again.</string>
+    <string name="alarme_wuc_edit_blocked">An alarm can\'t be edited during the Wake Up Check</string>
+    <string name="alarme_notif_channel_next">Next alarm</string>
+    <string name="alarme_notif_snoozed_title">Snoozed</string>
+    <string name="alarme_notif_snoozed_until">Snoozed until %1$s</string>
+    <string name="alarme_notif_reminder_title">%1$s alarm is coming up</string>
+    <string name="alarme_notif_reminder_body">%1$s — skip it?</string>
+    <string name="alarme_notif_reminder_skip">Skip alarm</string>
+    <string name="alarme_admin_explanation">While this is on, Alarme cannot be uninstalled — not even mid-alarm. Turn it off in Alarme settings to uninstall.</string>
+    <string name="alarme_accessibility_description">Lets Alarme pull the ring screen back to the front when you try to turn the phone off or leave the alarm. Alarme only checks which app is in front; it never reads screen content.</string>
+</resources>

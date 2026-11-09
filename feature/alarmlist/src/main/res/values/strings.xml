@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alarmlist_title">Alarms</string>
+    <string name="alarmlist_next_alarm">Next alarm: %1$s</string>
+    <string name="alarmlist_no_alarms">No alarms yet</string>
+    <string name="alarmlist_all_off">No enabled alarms</string>
+    <string name="alarmlist_empty_hint">Create a quick alarm to get started.</string>
+    <string name="alarmlist_quick_badge">Quick alarm</string>
+    <string name="alarmlist_skipped_badge">(Will be skipped)</string>
+    <string name="alarmlist_skip_once">Skip once</string>
+    <string name="alarmlist_undo_skip">Undo skip</string>
+    <string name="alarmlist_delete">Delete</string>
+    <string name="alarmlist_quick_1h">+1 h</string>
+    <string name="alarmlist_quick_2h">+2 h</string>
+    <string name="alarmlist_quick_8h">+8 h</string>
+    <string name="alarmlist_daily">Daily</string>
+    <string name="alarmlist_once">Once</string>
+    <string name="alarmlist_skip_disabled">You can only skip enabled alarms</string>
+    <string name="alarmlist_skip_not_repeating">You can only skip repeated alarms</string>
+    <string name="alarmlist_quick_not_editable">Quick alarms can\'t be edited</string>
+    <string name="alarmlist_not_armed">Saved, but the alarm cannot ring: allow alarms and reminders in Settings</string>
+    <string name="alarmlist_sound">Sound</string>
+    <string name="alarmlist_settings">Settings</string>
+    <string name="alarmlist_new_alarm">New alarm</string>
+    <string name="alarmlist_default_sound">Default sound</string>
+</resources>

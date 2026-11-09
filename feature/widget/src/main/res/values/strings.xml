@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">Next alarm</string>
+    <string name="widget_no_alarm">No alarm set</string>
+    <string name="widget_no_alarm_hint">Tap to add one</string>
+    <string name="widget_description">Shows the next alarm and how long until it rings.</string>
+</resources>

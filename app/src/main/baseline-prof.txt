@@ -1,0 +1,27 @@
+# Baseline profile (startup + ring path), applied at install time by ProfileInstaller and used
+# by R8 to lay out the startup dex. Class-level rules: ART compiles every method of the class.
+Ldev/tomng/alarme/AlarmeApplication;
+Ldev/tomng/alarme/MainActivity;
+Ldev/tomng/alarme/feature/alarmlist/AlarmListScreenKt;
+Ldev/tomng/alarme/feature/alarmlist/AlarmListViewModel;
+Ldev/tomng/alarme/core/designsystem/AlarmeThemeKt;
+Ldev/tomng/alarme/core/data/AlarmeDatabase;
+Ldev/tomng/alarme/core/data/repository/AlarmRepository;
+Ldev/tomng/alarme/core/alarmengine/receiver/AlarmRingReceiver;
+Ldev/tomng/alarme/core/alarmengine/receiver/AlarmWarmupReceiver;
+Ldev/tomng/alarme/core/alarmengine/receiver/AlarmPrepareReceiver;
+Ldev/tomng/alarme/core/alarmengine/service/AlarmService;
+Ldev/tomng/alarme/core/alarmengine/ring/RingDeliveryHandler;
+Ldev/tomng/alarme/core/alarmengine/ring/RingEffectExecutor;
+Ldev/tomng/alarme/core/alarmengine/ring/RingtoneResolver;
+Ldev/tomng/alarme/core/alarmengine/scheduling/AlarmSchedulerImpl;
+Ldev/tomng/alarme/core/alarmengine/statemachine/RingSessionStore;
+Ldev/tomng/alarme/core/alarmengine/statemachine/RingStateMachine;
+Ldev/tomng/alarme/core/alarmengine/statemachine/RingingReducers;
+Ldev/tomng/alarme/core/alarmengine/statemachine/MissionChainReducer;
+Ldev/tomng/alarme/core/audio/player/AlarmPlayer;
+Ldev/tomng/alarme/core/audio/host/RingAudioHost;
+Ldev/tomng/alarme/feature/ring/RingActivity;
+Ldev/tomng/alarme/feature/ring/ui/RingScreenKt;
+Ldev/tomng/alarme/feature/widget/AlarmWidget;
+Ldev/tomng/alarme/feature/widget/AlarmWidgetReceiver;

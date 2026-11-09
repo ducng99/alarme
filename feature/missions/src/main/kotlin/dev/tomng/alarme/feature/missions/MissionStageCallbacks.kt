@@ -1,0 +1,14 @@
+package dev.tomng.alarme.feature.missions
+
+/** The events a mission screen reports up to the ring session. */
+interface MissionStageCallbacks {
+
+    /** The mission finished — advance the chain or dismiss. */
+    fun onComplete()
+
+    /** User activity (a keystroke, frames being analysed): restart the countdown. */
+    fun onTimerReset()
+
+    /** A match is being confirmed: pause the countdown. */
+    fun onTimerStop()
+}

@@ -1,0 +1,185 @@
+package dev.tomng.alarme.feature.settings
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import com.google.common.truth.Truth.assertThat
+import dev.tomng.alarme.feature.settings.diagnostics.DiagnosticLabel
+import dev.tomng.alarme.feature.settings.diagnostics.DiagnosticLine
+import dev.tomng.alarme.feature.settings.optimize.OemGuide
+import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
+import dev.tomng.alarme.feature.settings.permissions.PermissionItem
+import dev.tomng.alarme.feature.settings.permissions.PermissionRow
+import dev.tomng.alarme.feature.settings.reliability.ReliabilityState
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+class SettingsScreenTest {
+
+    @get:Rule val compose = createComposeRule()
+
+    private val permissions =
+        PermissionCenterState(
+            rows =
+                PermissionItem.entries.map {
+                    PermissionRow(it, granted = it == PermissionItem.NOTIFICATIONS)
+                },
+            missingCount = PermissionItem.entries.size - 1,
+            allGranted = false,
+        )
+
+    @Test
+    fun `permission rows show their grant state`() {
+        compose.setContent { SettingsScreen(permissions, ReliabilityState(), SettingsCallbacks()) }
+
+        compose.onNodeWithTag("permission_NOTIFICATIONS").assertIsDisplayed()
+        compose.onNodeWithText("Granted").assertIsDisplayed()
+        compose.onAllNodesWithText("Not granted").onFirst().assertIsDisplayed()
+    }
+
+    @Test
+    fun `tapping a permission row asks for its settings screen`() {
+        var opened: PermissionItem? = null
+        compose.setContent {
+            SettingsScreen(
+                permissions,
+                ReliabilityState(),
+                SettingsCallbacks(onOpenPermission = { opened = it }),
+            )
+        }
+
+        compose.onNodeWithTag("permission_EXACT_ALARM").performClick()
+
+        assertThat(opened).isEqualTo(PermissionItem.EXACT_ALARM)
+    }
+
+    @Test
+    fun `the power-off toggle reports its new value`() {
+        var toggled: Boolean? = null
+        compose.setContent {
+            SettingsScreen(
+                permissions,
+                ReliabilityState(preventPowerOff = false),
+                SettingsCallbacks(onTogglePreventPowerOff = { toggled = it }),
+            )
+        }
+
+        compose
+            .onNodeWithTag("settings_screen")
+            .performScrollToNode(hasTestTag("toggle_prevent_power_off"))
+        compose.onNodeWithTag("toggle_prevent_power_off").performClick()
+
+        assertThat(toggled).isTrue()
+    }
+
+    @Test
+    fun `an unarmed power-off toggle explains what is missing`() {
+        compose.setContent {
+            SettingsScreen(
+                permissions,
+                ReliabilityState(preventPowerOff = true, preventPowerOffArmed = false),
+                SettingsCallbacks(),
+            )
+        }
+
+        compose
+            .onNodeWithTag("settings_screen")
+            .performScrollToNode(hasTestTag("toggle_prevent_power_off"))
+        compose
+            .onNodeWithText("Needs accessibility and display-over-apps access")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `the block count is shown once something was blocked`() {
+        compose.setContent {
+            SettingsScreen(permissions, ReliabilityState(blockedCount = 3), SettingsCallbacks())
+        }
+
+        compose
+            .onNodeWithTag("settings_screen")
+            .performScrollToNode(hasTestTag("toggle_prevent_power_off"))
+        compose.onNodeWithText("Blocked 3 times").assertIsDisplayed()
+    }
+
+    @Test
+    fun `diagnostics and optimize links open their screens`() {
+        var diagnostics = false
+        var optimize = false
+        compose.setContent {
+            SettingsScreen(
+                permissions,
+                ReliabilityState(),
+                SettingsCallbacks(
+                    onOpenDiagnostics = { diagnostics = true },
+                    onOpenOptimize = { optimize = true },
+                ),
+            )
+        }
+
+        compose.onNodeWithTag("settings_screen").performScrollToNode(hasTestTag("open_diagnostics"))
+        compose.onNodeWithTag("open_diagnostics").performClick()
+        compose.onNodeWithTag("settings_screen").performScrollToNode(hasTestTag("open_optimize"))
+        compose.onNodeWithTag("open_optimize").performClick()
+
+        assertThat(diagnostics).isTrue()
+        assertThat(optimize).isTrue()
+    }
+
+    @Test
+    fun `diagnostics lines show values and verdicts`() {
+        compose.setContent {
+            DiagnosticsScreen(
+                lines =
+                    listOf(
+                        DiagnosticLine(DiagnosticLabel.BATTERY, "80%", healthy = true),
+                        DiagnosticLine(DiagnosticLabel.STANDBY_BUCKET, "40", healthy = false),
+                    ),
+                onBack = {},
+            )
+        }
+
+        compose.onNodeWithText("80%").assertIsDisplayed()
+        compose.onNodeWithText("Check").assertIsDisplayed()
+        compose.onNodeWithText("App standby bucket").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the optimize screen offers battery dnd and autostart`() {
+        var battery = false
+        var dnd = false
+        var autostart = false
+        compose.setContent {
+            OptimizeScreen(
+                guide = OemGuide.XIAOMI,
+                batteryUnrestricted = true,
+                dndGranted = false,
+                onOpenBattery = { battery = true },
+                onOpenDnd = { dnd = true },
+                onOpenAutostart = { autostart = true },
+                onBack = {},
+            )
+        }
+
+        compose.onNodeWithTag("optimize_battery").performClick()
+        compose.onNodeWithTag("optimize_dnd").performClick()
+        compose.onNodeWithTag("optimize_autostart").performClick()
+
+        assertThat(battery).isTrue()
+        assertThat(dnd).isTrue()
+        assertThat(autostart).isTrue()
+        compose.onNodeWithText("Allowed").assertIsDisplayed()
+        compose.onNodeWithText("Not allowed").assertIsDisplayed()
+    }
+}

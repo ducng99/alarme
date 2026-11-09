@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_title">Backup &amp; restore</string>
+    <string name="backup_back">Done</string>
+    <string name="backup_explainer">Save your alarms and your own sounds to a single file, or restore them from one.</string>
+    <string name="backup_export">Export to file</string>
+    <string name="backup_import">Restore from file</string>
+    <string name="backup_working">Working…</string>
+    <string name="backup_exported">Exported %1$d alarms and %2$d sounds.</string>
+    <string name="backup_imported">Restored %1$d alarms and %2$d sounds.</string>
+    <string name="backup_import_warning">Restoring replaces the current alarm list.</string>
+    <string name="backup_error_not_archive">That file is not an Alarme backup.</string>
+    <string name="backup_error_missing_data">The backup is missing its alarm data.</string>
+    <string name="backup_error_invalid">The backup contains invalid alarm data.</string>
+    <string name="backup_error_newer">This backup was made by a newer version of Alarme.</string>
+    <string name="backup_error_too_many">The backup contains too many alarms.</string>
+    <string name="backup_error_too_large">The backup is too large to restore.</string>
+    <string name="backup_error_missing_audio">The backup is missing a sound file.</string>
+    <string name="backup_error_cannot_open">Could not open the file.</string>
+    <string name="backup_error_cannot_write">Could not restore a sound file.</string>
+</resources>

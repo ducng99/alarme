@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!--
+        The launcher icon is an adaptive icon, which AAPT2 only accepts from API 26 on: the -v26
+        qualifier has to stay even though minSdk already rules the older path out.
+    -->
+    <issue id="ObsoleteSdkInt">
+        <ignore regexp="mipmap-anydpi-v26" />
+    </issue>
+</lint>

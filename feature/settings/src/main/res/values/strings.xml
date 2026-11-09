@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+
+    <string name="settings_permissions_title">Permissions</string>
+    <string name="settings_permissions_all_granted">All permissions granted</string>
+    <string name="settings_permissions_missing">%1$d missing</string>
+    <string name="settings_permission_granted">Granted</string>
+    <string name="settings_permission_missing">Not granted</string>
+    <string name="settings_permission_open">Open</string>
+
+    <string name="settings_permission_notifications">Notifications</string>
+    <string name="settings_permission_notifications_body">The alarm notification keeps the ring alive in the background.</string>
+    <string name="settings_permission_exact_alarm">Exact alarms</string>
+    <string name="settings_permission_exact_alarm_body">Without this the alarm can ring minutes late.</string>
+    <string name="settings_permission_full_screen_intent">Full-screen alarms</string>
+    <string name="settings_permission_full_screen_intent_body">Lets the ring screen open over the lock screen.</string>
+    <string name="settings_permission_overlay">Display over other apps</string>
+    <string name="settings_permission_overlay_body">Needed to bring the ring screen to the front and to block the power menu.</string>
+    <string name="settings_permission_dnd">Do Not Disturb access</string>
+    <string name="settings_permission_dnd_body">Lets the alarm sound even when Do Not Disturb is on.</string>
+    <string name="settings_permission_battery">Battery optimization</string>
+    <string name="settings_permission_battery_body">Unrestricted battery use keeps alarms from being delayed.</string>
+    <string name="settings_permission_camera">Camera</string>
+    <string name="settings_permission_camera_body">Used by photo, barcode and image missions.</string>
+    <string name="settings_permission_microphone">Microphone</string>
+    <string name="settings_permission_microphone_body">Used by the voice mission and the voice memo recorder.</string>
+
+    <string name="settings_reliability_title">Cheat prevention</string>
+    <string name="settings_prevent_power_off">Prevent phone turn-off</string>
+    <string name="settings_prevent_power_off_body">Pulls the alarm back when you try to power off or leave the ring screen.</string>
+    <string name="settings_prevent_power_off_armed">Active</string>
+    <string name="settings_prevent_power_off_needs">Needs accessibility and display-over-apps access</string>
+    <string name="settings_prevent_power_off_blocked">Blocked %1$d times</string>
+    <string name="settings_prevent_uninstall">Prevent app uninstall</string>
+    <string name="settings_prevent_uninstall_body">While on, Alarme cannot be uninstalled. Turn it off here to uninstall.</string>
+
+    <string name="settings_diagnostics_title">Diagnostics</string>
+    <string name="settings_diagnostics_body">Check what could delay your alarms on this device.</string>
+    <string name="settings_optimize_title">Keep alarms on time</string>
+    <string name="settings_optimize_body">Battery, Do Not Disturb and vendor autostart settings.</string>
+    <string name="settings_backup_title">Backup &amp; restore</string>
+    <string name="settings_backup_body">Export your alarms and sounds to a file, or restore them.</string>
+
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_ok">OK</string>
+    <string name="diagnostics_attention">Check</string>
+    <string name="diagnostics_label_battery">Battery level</string>
+    <string name="diagnostics_label_charging">Charging</string>
+    <string name="diagnostics_label_power_save">Power saving</string>
+    <string name="diagnostics_label_device_idle">Device idle</string>
+    <string name="diagnostics_label_standby_bucket">App standby bucket</string>
+    <string name="diagnostics_label_background_restricted">Background restricted</string>
+    <string name="diagnostics_label_battery_optimization">Battery optimization</string>
+    <string name="diagnostics_label_exact_alarm">Exact alarms</string>
+    <string name="diagnostics_label_overlay">Display over apps</string>
+    <string name="diagnostics_label_memory">Memory</string>
+    <string name="diagnostics_label_storage">Free storage</string>
+
+    <string name="optimize_title">Keep alarms on time</string>
+    <string name="optimize_battery">Battery optimization</string>
+    <string name="optimize_battery_body">Allow Alarme to run without battery restrictions.</string>
+    <string name="optimize_dnd">Do Not Disturb access</string>
+    <string name="optimize_dnd_body">Allow alarms to sound through Do Not Disturb.</string>
+    <string name="optimize_autostart">Autostart</string>
+    <string name="optimize_autostart_body">Allow Alarme to start itself after a reboot on this device.</string>
+    <string name="optimize_open">Open settings</string>
+    <string name="optimize_granted">Allowed</string>
+    <string name="optimize_missing">Not allowed</string>
+    <string name="optimize_generic_body">Your device has no vendor autostart screen; check the app details page instead.</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ring_dismiss">Dismiss</string>
+    <string name="ring_snooze">Snooze</string>
+    <string name="ring_prepare_title">Get ready</string>
+    <string name="ring_prepare_start">Start</string>
+    <string name="ring_mission_done">Done</string>
+    <string name="ring_mission_add_time">+10 seconds</string>
+    <string name="ring_emergency_title">Last chance</string>
+    <string name="ring_emergency_done">I\'m done</string>
+    <string name="ring_snoozed_until">Snoozed until %1$s</string>
+
+    <string name="ring_wuc_title">Wake Up Check</string>
+    <string name="ring_wuc_hint">Confirm you\'re awake, or your alarm will ring again.</string>
+    <string name="ring_wuc_confirm">Yes, I\'m up!</string>
+
+    <string name="mission_label_math">Math problem</string>
+    <string name="mission_label_memory">Memory game</string>
+    <string name="mission_label_shake">Shake it</string>
+    <string name="mission_label_step">Walk</string>
+    <string name="mission_label_squat">Squat</string>
+    <string name="mission_label_typing">Type the text</string>
+    <string name="mission_label_barcode">Scan the barcode</string>
+    <string name="mission_label_photo">Take a photo</string>
+    <string name="mission_label_image">Match the object</string>
+    <string name="mission_label_wordbeat">Say the words</string>
+</resources>

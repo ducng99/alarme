@@ -1,0 +1,41 @@
+# Alarme detekt config — defaults with pragmatic thresholds for a large
+# multi-module Compose app. Formatting itself is enforced by ktfmt.
+build:
+  maxIssues: 0
+
+complexity:
+  LongMethod:
+    threshold: 120
+  LongParameterList:
+    active: false          # Compose @Composable signatures & DI constructors
+  TooManyFunctions:
+    thresholdInFiles: 20
+    thresholdInClasses: 15
+    thresholdInInterfaces: 15
+  LargeClass:
+    threshold: 400
+  CyclomaticComplexMethod:
+    threshold: 20
+
+style:
+  MagicNumber:
+    active: false          # alarm timing constants are table-driven elsewhere
+  MaxLineLength:
+    maxLineLength: 120
+    excludePackageStatements: true
+    excludeImportStatements: true
+    excludeCommentStatements: true
+  ReturnCount:
+    active: false
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false          # alarm reliability code intentionally catches broadly + logs
+  SwallowedException:
+    active: false

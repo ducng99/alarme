@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="editor_title_new">New alarm</string>
+    <string name="editor_title_edit">Edit alarm</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_delete">Delete</string>
+    <string name="editor_back">Back</string>
+    <string name="editor_ok">OK</string>
+    <string name="editor_cancel">Cancel</string>
+    <string name="editor_decrease">Decrease</string>
+    <string name="editor_increase">Increase</string>
+    <string name="editor_time_hint">Tap to change the time</string>
+    <string name="editor_name">Label</string>
+    <string name="editor_repeat">Repeat</string>
+    <string name="editor_every_day">Every day</string>
+    <string name="editor_once">Once</string>
+    <string name="editor_sound">Sound</string>
+    <string name="editor_sound_default">Default sound</string>
+    <string name="editor_vibrate">Vibrate</string>
+    <string name="editor_volume">Volume %1$d%%</string>
+    <string name="editor_crescendo">Start quiet, get louder</string>
+    <string name="editor_crescendo_seconds">Ramp up over (seconds)</string>
+    <string name="editor_backup_sound">Backup sound</string>
+    <string name="editor_backup_sound_body">Play a second sound if the first one fails.</string>
+    <string name="editor_time_announcement">Announce the time</string>
+    <string name="editor_snooze">Snooze</string>
+    <string name="editor_snooze_minutes">Snooze length (minutes)</string>
+    <string name="editor_snooze_limit">Snooze limit</string>
+    <string name="editor_wake_up_check">Wake-up check</string>
+    <string name="editor_wake_up_check_body">Ring again after you dismiss, to make sure you are up.</string>
+    <string name="editor_wake_up_check_minutes">Check after (minutes)</string>
+    <string name="editor_memo">Memo</string>
+    <string name="editor_memo_hint">Shown while the alarm rings</string>
+    <string name="editor_tts">Read the memo aloud</string>
+    <string name="editor_enabled">Alarm on</string>
+    <string name="editor_missions">Missions (%1$d/%2$d)</string>
+    <string name="editor_add_mission">Add mission</string>
+    <string name="editor_mission_slot">%1$d. %2$s</string>
+    <string name="editor_mission_incomplete">Needs setup</string>
+    <string name="editor_mission_remove">Remove</string>
+    <string name="editor_error_too_many_missions">An alarm can have at most 5 missions.</string>
+    <string name="editor_error_incomplete_mission">Finish setting up your missions before saving.</string>
+
+    <string name="mission_math">Math</string>
+    <string name="mission_memory">Memory</string>
+    <string name="mission_shake">Shake</string>
+    <string name="mission_step">Steps</string>
+    <string name="mission_squat">Squats</string>
+    <string name="mission_typing">Typing</string>
+    <string name="mission_barcode">Barcode</string>
+    <string name="mission_photo">Photo</string>
+    <string name="mission_image_recognition">Find an object</string>
+    <string name="mission_word_beat">Read aloud</string>
+
+    <string name="summary_rounds_level">%1$d rounds · level %2$d</string>
+    <string name="summary_count">%1$d times</string>
+    <string name="summary_sentences">%1$d sentences</string>
+    <string name="summary_barcode">Barcode set</string>
+    <string name="summary_photo">Photo set</string>
+    <string name="summary_objects">%1$d objects</string>
+    <string name="summary_word_beat">%1$s · %2$d rounds</string>
+
+    <string name="config_rounds">Rounds</string>
+    <string name="config_difficulty">Difficulty</string>
+    <string name="config_count">Count</string>
+    <string name="config_time_limit">Time limit (seconds, 0 = none)</string>
+    <string name="config_language">Language</string>
+    <string name="config_volume">Volume</string>
+    <string name="config_objects">Objects to find</string>
+    <string name="config_barcode">Barcode value</string>
+    <string name="config_barcode_hint">Type the number under the barcode</string>
+    <string name="config_photo">Photo path</string>
+    <string name="config_sentences">Sentences</string>
+    <string name="config_custom_sentences">Your sentences (one per line)</string>
+
+    <string name="sentence_short">Short</string>
+    <string name="sentence_motivational">Motivational</string>
+    <string name="sentence_affirmation">Affirmation</string>
+    <string name="sentence_love">Love</string>
+    <string name="sentence_study">Study</string>
+    <string name="sentence_difficult">Difficult</string>
+    <string name="sentence_custom">Custom</string>
+
+    <string name="volume_low">Low</string>
+    <string name="volume_medium">Medium</string>
+    <string name="volume_high">High</string>
+
+    <string name="language_english">English</string>
+    <string name="language_korean">Korean</string>
+    <string name="language_japanese">Japanese</string>
+    <string name="editor_not_armed">Saved, but the alarm cannot ring: allow alarms and reminders in Settings</string>
+</resources>
