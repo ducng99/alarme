@@ -11,7 +11,7 @@ See `.pi/plans/alarme-android-app.md` (repo root) for the full build plan, and
 ## Requirements
 
 - JDK 17
-- Android SDK: platform 37, build-tools 36.0.0 (`sdkmanager`), `ANDROID_HOME` set
+- Android SDK: platform 37, build-tools 36.0.0 (`android sdk install platforms/android-37.0 build-tools/36.0.0`), `ANDROID_HOME` set
 - For instrumented tests: an emulator (see plan §2) or a device
 
 ## Build & test
