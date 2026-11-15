@@ -25,7 +25,7 @@ import org.robolectric.annotation.Config
 
 /** The list's rendering: cards, badges, the next-alarm header, and the quick creator. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class AlarmListScreenTest {
 
     @get:Rule val compose = createComposeRule()
@@ -134,7 +134,7 @@ class AlarmListScreenTest {
 
         compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
         compose.onNodeWithTag("alarmlist:skipped:7", useUnmergedTree = true).assertIsDisplayed()
-        compose.onNodeWithText("(Will be skipped)", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Will be skipped", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("alarmlist:menu:7").performClick()
         compose.onNodeWithText("Undo skip").performClick()
 

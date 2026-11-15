@@ -1,24 +1,24 @@
 package dev.tomng.alarme.feature.settings
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.BatterySaver
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Mic
@@ -27,25 +27,29 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.PriorityHigh
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.component.AlarmeScaffold
+import dev.tomng.alarme.core.designsystem.component.AlarmeSwitch
 import dev.tomng.alarme.core.designsystem.component.GroupCard
 import dev.tomng.alarme.core.designsystem.component.GroupDivider
 import dev.tomng.alarme.core.designsystem.component.LeadingIcon
-import dev.tomng.alarme.core.designsystem.component.ScreenHeader
+import dev.tomng.alarme.core.designsystem.component.MedallionShape
 import dev.tomng.alarme.core.designsystem.component.SectionLabel
 import dev.tomng.alarme.core.designsystem.component.SettingRow
+import dev.tomng.alarme.core.designsystem.component.ShapeMedallion
+import dev.tomng.alarme.core.designsystem.component.rememberListPadding
 import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.permissions.PermissionRow
@@ -58,31 +62,18 @@ fun SettingsScreen(
     callbacks: SettingsCallbacks,
     modifier: Modifier = Modifier,
 ) {
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+    AlarmeScaffold(
+        title = stringResource(R.string.settings_title),
+        modifier = modifier,
+        onBack = callbacks.onBack,
+        backContentDescription = stringResource(R.string.settings_back),
+        backTag = "settings_done",
+    ) { innerPadding ->
         LazyColumn(
-            modifier =
-                Modifier.fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .testTag("settings_screen"),
-            contentPadding = PaddingValues(bottom = 32.dp),
+            modifier = Modifier.fillMaxSize().testTag("settings_screen"),
+            contentPadding = rememberListPadding(innerPadding, horizontal = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            item {
-                ScreenHeader(
-                    title = stringResource(R.string.settings_title),
-                    navigation = {
-                        IconButton(
-                            onClick = callbacks.onBack,
-                            modifier = Modifier.testTag("settings_done"),
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.settings_back),
-                            )
-                        }
-                    },
-                )
-            }
             item { PermissionBanner(permissions) }
             item { SectionLabel(stringResource(R.string.settings_permissions_title)) }
             item {
@@ -153,23 +144,38 @@ fun SettingsScreen(
 @Composable
 private fun PermissionBanner(permissions: PermissionCenterState) {
     val granted = permissions.allGranted
-    Surface(
-        modifier =
-            Modifier.fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .testTag("permissions_banner"),
-        shape = MaterialTheme.shapes.extraLarge,
-        color =
+    val container by
+        animateColorAsState(
             if (granted) MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.primaryContainer,
+            else MaterialTheme.colorScheme.tertiaryContainer,
+            label = "banner",
+        )
+    val onContainer =
+        if (granted) MaterialTheme.colorScheme.onSecondaryContainer
+        else MaterialTheme.colorScheme.onTertiaryContainer
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("permissions_banner"),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = container,
+        contentColor = onContainer,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LeadingIcon(
-                icon = if (granted) Icons.Outlined.Notifications else Icons.Outlined.Alarm,
-            )
+            ShapeMedallion(
+                shape = if (granted) MedallionShape.Cookie else MedallionShape.SoftBurst,
+                size = 48.dp,
+                color = onContainer,
+            ) {
+                Icon(
+                    imageVector =
+                        if (granted) Icons.Outlined.Check else Icons.Outlined.PriorityHigh,
+                    contentDescription = null,
+                    tint = container,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
             Column(modifier = Modifier.padding(start = 14.dp).weight(1f)) {
                 Text(
                     text =
@@ -182,13 +188,12 @@ private fun PermissionBanner(permissions: PermissionCenterState) {
                             )
                         },
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 if (!granted) {
                     Text(
                         text = stringResource(R.string.settings_permissions_body),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                        color = onContainer.copy(alpha = 0.8f),
                     )
                 }
             }
@@ -232,7 +237,7 @@ private fun ToggleRow(
         leading = leading,
         onClick = { onCheckedChange(!checked) },
         trailing = {
-            Switch(
+            AlarmeSwitch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 modifier = Modifier.testTag(tag),
@@ -244,7 +249,7 @@ private fun ToggleRow(
 @Composable
 private fun StatePill(text: String, positive: Boolean) {
     Surface(
-        shape = MaterialTheme.shapes.small,
+        shape = CircleShape,
         color =
             if (positive) MaterialTheme.colorScheme.secondaryContainer
             else MaterialTheme.colorScheme.errorContainer,
@@ -252,11 +257,18 @@ private fun StatePill(text: String, positive: Boolean) {
             if (positive) MaterialTheme.colorScheme.onSecondaryContainer
             else MaterialTheme.colorScheme.onErrorContainer,
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        )
+        Row(
+            modifier = Modifier.padding(start = 8.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = if (positive) Icons.Outlined.Check else Icons.Outlined.Close,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+            )
+            Text(text = text, style = MaterialTheme.typography.labelMedium)
+        }
     }
 }
 

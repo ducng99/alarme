@@ -1,26 +1,23 @@
 package dev.tomng.alarme.feature.backup
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,16 +27,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.component.AlarmeScaffold
 import dev.tomng.alarme.core.designsystem.component.GroupCard
 import dev.tomng.alarme.core.designsystem.component.GroupDivider
 import dev.tomng.alarme.core.designsystem.component.LeadingIcon
-import dev.tomng.alarme.core.designsystem.component.ScreenHeader
 import dev.tomng.alarme.core.designsystem.component.SettingRow
 
 /**
  * Backup & restore. Both actions go through the system file picker (the caller owns the SAF
  * launchers), so this screen only renders state and reports outcomes.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BackupScreen(
     state: BackupUiState,
@@ -49,25 +47,20 @@ fun BackupScreen(
     modifier: Modifier = Modifier,
 ) {
     val working = state == BackupUiState.Working
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+    AlarmeScaffold(
+        title = stringResource(R.string.backup_title),
+        modifier = modifier,
+        onBack = onBack,
+        backContentDescription = stringResource(R.string.backup_back),
+        backTag = "backup_done",
+    ) { innerPadding ->
         Column(
             modifier =
                 Modifier.fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .verticalScroll(rememberScrollState())
+                    .padding(innerPadding)
                     .testTag("backup_screen"),
         ) {
-            ScreenHeader(
-                title = stringResource(R.string.backup_title),
-                navigation = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("backup_done")) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.backup_back),
-                        )
-                    }
-                },
-            )
             Text(
                 text = stringResource(R.string.backup_explainer),
                 style = MaterialTheme.typography.bodyMedium,
@@ -95,16 +88,13 @@ fun BackupScreen(
                     )
                 }
             }
-            if (working) {
+            AnimatedVisibility(visible = working) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.padding(start = 24.dp, top = 20.dp),
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp).testTag("backup_progress"),
-                        strokeWidth = 2.dp,
-                    )
+                    LoadingIndicator(modifier = Modifier.size(40.dp).testTag("backup_progress"))
                     Text(
                         text = stringResource(R.string.backup_working),
                         style = MaterialTheme.typography.bodyMedium,

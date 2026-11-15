@@ -131,7 +131,7 @@ private class FakeSpeech(available: Boolean = true) : SpeechSource {
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class SensorMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()
@@ -206,7 +206,7 @@ class SensorMissionScreenTest {
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class CameraMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()
@@ -292,7 +292,7 @@ class CameraMissionScreenTest {
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class WordBeatMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()

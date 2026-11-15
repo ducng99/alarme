@@ -1,5 +1,7 @@
 package dev.tomng.alarme.feature.missions.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -11,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +23,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -31,12 +37,14 @@ import dev.tomng.alarme.feature.missions.engine.MemoryMissionEngine
 import kotlin.time.Duration.Companion.milliseconds
 
 private val MEMORIZE_MILLIS = 1_500.milliseconds
+private const val TILE_REST_SCALE = 0.94f
 private val ROUND_CLEAR_MILLIS = 900.milliseconds
 
 /**
  * The colour-tile game. The grid flashes the correct tiles (memorize), hides them, then the player
  * reproduces the set; wrong taps latch as visible mistakes.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MemoryMissionScreen(
     mission: Mission.Memory,
@@ -44,6 +52,7 @@ fun MemoryMissionScreen(
     engine: MemoryMissionEngine = remember { MemoryMissionEngine() },
 ) {
     var state by remember { mutableStateOf(engine.start(mission)) }
+    val haptics = LocalHapticFeedback.current
 
     // The memorize flash, then a beat of nothing, then play.
     LaunchedEffect(state.round) {
@@ -99,24 +108,45 @@ fun MemoryMissionScreen(
                 val tile = state.board.tiles[index]
                 val flashCorrect =
                     state.phase == MemoryMissionEngine.Phase.MEMORIZING && tile.isCorrect
-                val color =
-                    when {
-                        flashCorrect -> MaterialTheme.colorScheme.primary
-                        tile.state == MemoryMissionEngine.TileState.CORRECT ->
-                            MaterialTheme.colorScheme.primary
+                val revealed = flashCorrect || tile.state == MemoryMissionEngine.TileState.CORRECT
+                val color by
+                    animateColorAsState(
+                        targetValue =
+                            when {
+                                revealed -> MaterialTheme.colorScheme.primary
+                                tile.state == MemoryMissionEngine.TileState.WRONG ->
+                                    MaterialTheme.colorScheme.error
 
-                        tile.state == MemoryMissionEngine.TileState.WRONG ->
-                            MaterialTheme.colorScheme.error
-
-                        else -> MaterialTheme.colorScheme.surfaceContainerHighest
-                    }
+                                else -> MaterialTheme.colorScheme.surfaceContainerHighest
+                            },
+                        label = "memoryTileColor",
+                    )
+                val scale by
+                    animateFloatAsState(
+                        if (revealed) 1f else TILE_REST_SCALE,
+                        label = "memoryTileScale",
+                    )
                 Button(
-                    onClick = { state = engine.tap(state, index) },
+                    onClick = {
+                        val next = engine.tap(state, index)
+                        val haptic =
+                            when {
+                                next.board.remaining < state.board.remaining ->
+                                    HapticFeedbackType.Confirm
+
+                                next.board.tiles[index].state ==
+                                    MemoryMissionEngine.TileState.WRONG -> HapticFeedbackType.Reject
+
+                                else -> null
+                            }
+                        haptic?.let(haptics::performHapticFeedback)
+                        state = next
+                    },
                     enabled = state.phase == MemoryMissionEngine.Phase.PLAYING,
-                    shape = MaterialTheme.shapes.medium,
+                    shapes = ButtonDefaults.shapes(),
                     colors = ButtonDefaults.buttonColors(containerColor = color),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.aspectRatio(1f).testTag("mission:memory:tile"),
+                    modifier = Modifier.aspectRatio(1f).scale(scale).testTag("mission:memory:tile"),
                 ) {}
             }
         }

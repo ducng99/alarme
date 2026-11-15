@@ -20,7 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +58,7 @@ fun WordBeatMissionScreen(
     var round by rememberSaveable { mutableIntStateOf(0) }
     var feedback by remember { mutableStateOf<SpeechEvent>(SpeechEvent.Idle) }
 
+    val haptics = LocalHapticFeedback.current
     val locale = mission.language.sttLocale
     val available = remember(source) { source.isLanguageAvailable(locale) }
 
@@ -68,7 +71,11 @@ fun WordBeatMissionScreen(
         if (current is SpeechEvent.Unavailable) return@LaunchedEffect
         if (current is SpeechEvent.Recognized) {
             val target = rounds.getOrNull(round) ?: return@LaunchedEffect
-            if (WordBeatMatcher.passes(target, current.text, mission.language.tokenMode)) {
+            val passes = WordBeatMatcher.passes(target, current.text, mission.language.tokenMode)
+            haptics.performHapticFeedback(
+                if (passes) HapticFeedbackType.Confirm else HapticFeedbackType.Reject,
+            )
+            if (passes) {
                 if (round + 1 >= rounds.size) {
                     callbacks.onComplete()
                 } else {

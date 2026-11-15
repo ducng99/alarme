@@ -210,6 +210,46 @@ class AlarmEditorViewModelTest {
     }
 
     @Test
+    fun `a freshly loaded draft has no changes until a field is edited`() = runTest {
+        repository.alarms[4] = alarm(id = 4, name = "Work")
+        val vm = viewModel()
+        vm.load(4)
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.hasChanges).isFalse()
+
+        vm.setName("Gym")
+
+        assertThat(vm.state.value.hasChanges).isTrue()
+
+        vm.setName("Work")
+
+        assertThat(vm.state.value.hasChanges).isFalse()
+    }
+
+    @Test
+    fun `the preview rolls a time that already passed today over to tomorrow`() = runTest {
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+
+        vm.setTime(5, 0)
+
+        assertThat(vm.state.value.nextRing).isEqualTo(Instant.parse("2026-05-06T05:00:00Z"))
+    }
+
+    @Test
+    fun `a disabled draft has no ring preview`() = runTest {
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+
+        vm.setEnabled(false)
+
+        assertThat(vm.state.value.nextRing).isNull()
+    }
+
+    @Test
     fun `saving a new alarm inserts it and re-arms`() = runTest {
         val vm = viewModel()
         vm.load(Alarm.NEW_ID)

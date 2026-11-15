@@ -1,14 +1,25 @@
 package dev.tomng.alarme.feature.editor
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -33,7 +44,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -47,11 +57,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.component.AlarmeSwitch
 import dev.tomng.alarme.core.designsystem.component.GroupCard
 import dev.tomng.alarme.core.designsystem.component.GroupDivider
 import dev.tomng.alarme.core.designsystem.component.LeadingIcon
@@ -92,17 +106,12 @@ internal fun DetailsGroup(
             modifier = Modifier.testTag("editor_sound"),
         )
         GroupDivider()
-        SettingRow(
+        ToggleRow(
             title = stringResource(R.string.editor_vibrate),
-            leading = { LeadingIcon(Icons.Outlined.Vibration) },
-            onClick = { callbacks.onVibrate(!draft.vibrate) },
-            trailing = {
-                Switch(
-                    checked = draft.vibrate,
-                    onCheckedChange = callbacks.onVibrate,
-                    modifier = Modifier.testTag("editor_vibrate"),
-                )
-            },
+            checked = draft.vibrate,
+            tag = "editor_vibrate",
+            icon = Icons.Outlined.Vibration,
+            onCheckedChange = callbacks.onVibrate,
         )
     }
 }
@@ -120,7 +129,7 @@ internal fun SoundGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
             icon = Icons.Outlined.TrendingUp,
             onCheckedChange = callbacks.onCrescendo,
         )
-        if (draft.crescendoEnabled) {
+        AnimatedVisibility(visible = draft.crescendoEnabled) {
             StepperRow(
                 label = stringResource(R.string.editor_crescendo_seconds),
                 value = draft.crescendoSeconds,
@@ -162,25 +171,27 @@ internal fun SnoozeGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
             icon = Icons.Outlined.Snooze,
             onCheckedChange = callbacks.onSnoozeEnabled,
         )
-        if (draft.snoozeEnabled) {
-            StepperRow(
-                label = stringResource(R.string.editor_snooze_minutes),
-                value = draft.snoozeMinutes,
-                tag = "editor_snooze_minutes",
-                onChange = callbacks.onSnoozeMinutes,
-                step = 1,
-                min = AlarmEditorViewModel.MIN_SNOOZE,
-                max = AlarmEditorViewModel.MAX_SNOOZE,
-            )
-            StepperRow(
-                label = stringResource(R.string.editor_snooze_limit),
-                value = draft.snoozeLimit,
-                tag = "editor_snooze_limit",
-                onChange = callbacks.onSnoozeLimit,
-                step = 1,
-                min = 0,
-                max = AlarmEditorViewModel.MAX_SNOOZE_LIMIT,
-            )
+        AnimatedVisibility(visible = draft.snoozeEnabled) {
+            Column {
+                StepperRow(
+                    label = stringResource(R.string.editor_snooze_minutes),
+                    value = draft.snoozeMinutes,
+                    tag = "editor_snooze_minutes",
+                    onChange = callbacks.onSnoozeMinutes,
+                    step = 1,
+                    min = AlarmEditorViewModel.MIN_SNOOZE,
+                    max = AlarmEditorViewModel.MAX_SNOOZE,
+                )
+                StepperRow(
+                    label = stringResource(R.string.editor_snooze_limit),
+                    value = draft.snoozeLimit,
+                    tag = "editor_snooze_limit",
+                    onChange = callbacks.onSnoozeLimit,
+                    step = 1,
+                    min = 0,
+                    max = AlarmEditorViewModel.MAX_SNOOZE_LIMIT,
+                )
+            }
         }
     }
 }
@@ -198,7 +209,7 @@ internal fun WakeUpCheckSection(draft: AlarmDraft, callbacks: AlarmEditorCallbac
                 callbacks.onWakeUpCheckMinutes(if (enabled) DEFAULT_WAKE_UP_CHECK else 0)
             },
         )
-        if (draft.wakeUpCheckMinutes > 0) {
+        AnimatedVisibility(visible = draft.wakeUpCheckMinutes > 0) {
             StepperRow(
                 label = stringResource(R.string.editor_wake_up_check_minutes),
                 value = draft.wakeUpCheckMinutes,
@@ -245,7 +256,7 @@ internal fun MissionGroup(
                 text = stringResource(R.string.editor_missions_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
             )
         }
         draft.missions.forEachIndexed { index, mission ->
@@ -270,12 +281,12 @@ private fun LabelField(
     leading: (@Composable () -> Unit)? = null,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 18.dp, end = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         leading?.let {
             it()
-            androidx.compose.foundation.layout.Spacer(Modifier.size(12.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.size(4.dp))
         }
         TextField(
             value = value,
@@ -302,8 +313,11 @@ private fun LabelField(
 @Composable
 private fun EmojiRow(selected: String, onSelect: (String) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 22.dp, end = 18.dp, bottom = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         EMOJIS.forEach { emoji ->
             Surface(
@@ -314,7 +328,7 @@ private fun EmojiRow(selected: String, onSelect: (String) -> Unit) {
             ) {
                 Box(
                     modifier =
-                        Modifier.size(34.dp)
+                        Modifier.size(40.dp)
                             .clip(CircleShape)
                             .clickable { onSelect(emoji) }
                             .testTag("editor_emoji:$emoji"),
@@ -329,20 +343,19 @@ private fun EmojiRow(selected: String, onSelect: (String) -> Unit) {
 
 @Composable
 private fun VolumeRow(value: Float, onValueChange: (Float) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 6.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             LeadingIcon(Icons.Outlined.VolumeUp)
             Text(
                 text = stringResource(R.string.editor_volume, (value * 100).roundToInt()),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 12.dp),
+                modifier = Modifier.padding(start = 16.dp),
             )
         }
         Slider(
             value = value,
             onValueChange = onValueChange,
-            modifier =
-                Modifier.padding(start = 12.dp, end = 12.dp, top = 2.dp).testTag("editor_volume"),
+            modifier = Modifier.padding(start = 56.dp, top = 4.dp).testTag("editor_volume"),
         )
     }
 }
@@ -389,17 +402,19 @@ private fun AddMissionRow(enabled: Boolean, onAdd: (MissionType) -> Unit) {
             enabled = enabled,
             modifier = Modifier.testTag("editor_add_mission"),
         )
-        if (expanded) {
-            MissionType.entries.forEach { type ->
-                SettingRow(
-                    title = missionTypeLabel(type),
-                    leading = { LeadingIcon(missionIcon(type)) },
-                    onClick = {
-                        onAdd(type)
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag("editor_mission_type:${type.name}"),
-                )
+        AnimatedVisibility(visible = expanded) {
+            Column {
+                MissionType.entries.forEach { type ->
+                    SettingRow(
+                        title = missionTypeLabel(type),
+                        leading = { LeadingIcon(missionIcon(type)) },
+                        onClick = {
+                            onAdd(type)
+                            expanded = false
+                        },
+                        modifier = Modifier.testTag("editor_mission_type:${type.name}"),
+                    )
+                }
             }
         }
     }
@@ -414,16 +429,24 @@ internal fun ToggleRow(
     body: String? = null,
     icon: ImageVector? = null,
 ) {
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clickable { onCheckedChange(!checked) }
-                .padding(horizontal = 18.dp, vertical = 10.dp),
+                .toggleable(value = checked, role = Role.Switch) { value ->
+                    haptics.performHapticFeedback(
+                        if (value) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff,
+                    )
+                    onCheckedChange(value)
+                }
+                .testTag(tag)
+                .heightIn(min = 64.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
             LeadingIcon(icon)
-            androidx.compose.foundation.layout.Spacer(Modifier.size(12.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.size(16.dp))
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge)
@@ -435,10 +458,10 @@ internal fun ToggleRow(
                 )
             }
         }
-        Switch(
+        AlarmeSwitch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.testTag(tag),
+            onCheckedChange = null,
+            modifier = Modifier.padding(start = 12.dp),
         )
     }
 }
@@ -457,7 +480,7 @@ internal fun StepperRow(
     val increaseLabel = stringResource(R.string.editor_increase)
     Row(
         modifier =
-            Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 2.dp, bottom = 2.dp),
+            Modifier.fillMaxWidth().padding(start = 72.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -469,37 +492,41 @@ internal fun StepperRow(
         FilledTonalIconButton(
             onClick = { onChange((value - step).coerceAtLeast(min)) },
             enabled = value > min,
-            colors =
-                IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
+            shapes = IconButtonDefaults.shapes(),
             modifier =
-                Modifier.size(32.dp).testTag("$tag:minus").semantics {
+                Modifier.size(40.dp).testTag("$tag:minus").semantics {
                     contentDescription = decreaseLabel
                 },
         ) {
-            Icon(Icons.Outlined.Remove, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(Icons.Outlined.Remove, contentDescription = null, modifier = Modifier.size(20.dp))
         }
-        Text(
-            text = value.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            modifier =
-                Modifier.testTag("$tag:value").padding(horizontal = 4.dp).widthIn(min = 32.dp),
-        )
+        AnimatedContent(
+            targetState = value,
+            transitionSpec = {
+                val up = targetState > initialState
+                (slideInVertically { if (up) it else -it } + fadeIn()) togetherWith
+                    (slideOutVertically { if (up) -it else it } + fadeOut())
+            },
+            label = "stepper",
+        ) { shown ->
+            Text(
+                text = shown.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier =
+                    Modifier.testTag("$tag:value").padding(horizontal = 4.dp).widthIn(min = 40.dp),
+            )
+        }
         FilledTonalIconButton(
             onClick = { onChange((value + step).coerceAtMost(max)) },
             enabled = value < max,
-            colors =
-                IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
+            shapes = IconButtonDefaults.shapes(),
             modifier =
-                Modifier.size(32.dp).testTag("$tag:plus").semantics {
+                Modifier.size(40.dp).testTag("$tag:plus").semantics {
                     contentDescription = increaseLabel
                 },
         ) {
-            Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(20.dp))
         }
     }
 }

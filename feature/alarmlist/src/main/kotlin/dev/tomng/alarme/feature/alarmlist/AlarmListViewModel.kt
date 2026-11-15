@@ -29,6 +29,7 @@ enum class AlarmListMessage {
     SkipNotRepeating,
     QuickNotEditable,
     NotArmed,
+    Deleted,
 }
 
 /**
@@ -96,10 +97,25 @@ constructor(
         }
     }
 
+    private var lastDeleted: Alarm? = null
+
     fun delete(alarm: Alarm) {
         viewModelScope.launch {
+            val full = alarmRepository.getAlarm(alarm.id) ?: alarm
             alarmRepository.deleteAlarm(alarm.id)
+            lastDeleted = full
+            _message.value = AlarmListMessage.Deleted
             rearm(RescheduleReason.DELETE_ALARM)
+        }
+    }
+
+    /** Restores the alarm removed by the last [delete], while its undo is still on screen. */
+    fun undoDelete() {
+        val alarm = lastDeleted ?: return
+        lastDeleted = null
+        viewModelScope.launch {
+            alarmRepository.upsertAlarm(alarm.copy(updatedAt = clock.now()))
+            rearm(RescheduleReason.ADD_ALARM)
         }
     }
 
@@ -137,6 +153,7 @@ constructor(
     }
 
     fun consumeMessage() {
+        if (_message.value == AlarmListMessage.Deleted) lastDeleted = null
         _message.value = null
     }
 }

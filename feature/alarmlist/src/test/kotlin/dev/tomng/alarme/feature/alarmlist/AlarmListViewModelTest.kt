@@ -126,6 +126,39 @@ class AlarmListViewModelTest {
     }
 
     @Test
+    fun `deleting an alarm offers an undo`() = runTest {
+        repo.alarms.value = listOf(alarm())
+
+        viewModel.delete(alarm())
+
+        assertThat(viewModel.message.value).isEqualTo(AlarmListMessage.Deleted)
+    }
+
+    @Test
+    fun `undoing a delete restores the alarm and rearms`() = runTest {
+        repo.alarms.value = listOf(alarm())
+        viewModel.delete(alarm())
+
+        viewModel.undoDelete()
+
+        assertThat(repo.alarms.value.single().name).isEqualTo("work")
+        assertThat(scheduler.reasons)
+            .containsExactly(RescheduleReason.DELETE_ALARM, RescheduleReason.ADD_ALARM)
+            .inOrder()
+    }
+
+    @Test
+    fun `undo does nothing once the deleted alarm has been forgotten`() = runTest {
+        repo.alarms.value = listOf(alarm())
+        viewModel.delete(alarm())
+        viewModel.consumeMessage()
+
+        viewModel.undoDelete()
+
+        assertThat(repo.alarms.value).isEmpty()
+    }
+
+    @Test
     fun `a quick alarm is created one-shot at the requested offset`() = runTest {
         viewModel.createQuick(hours = 8)
 

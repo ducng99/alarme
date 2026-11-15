@@ -7,22 +7,28 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,6 +45,7 @@ import dev.tomng.alarme.feature.missions.engine.MathMissionEngine
  * keypad-style numeric field. Wrong answers cost nothing but time - the timer keeps running.
  */
 @Composable
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun MathMissionScreen(
     mission: Mission.Math,
     callbacks: MissionStageCallbacks,
@@ -48,9 +55,15 @@ fun MathMissionScreen(
     var question by remember { mutableStateOf(engine.nextQuestion(mission.difficulty)) }
     var input by rememberSaveable { mutableStateOf("") }
     var wrong by rememberSaveable { mutableStateOf(false) }
+    var attempts by rememberSaveable { mutableIntStateOf(0) }
+    val haptics = LocalHapticFeedback.current
 
     val answer: (Long?) -> Unit = { value ->
         wrong = value == null || !engine.check(question, value)
+        attempts++
+        haptics.performHapticFeedback(
+            if (wrong) HapticFeedbackType.Reject else HapticFeedbackType.Confirm,
+        )
         if (!wrong) {
             if (round + 1 >= mission.rounds) {
                 callbacks.onComplete()
@@ -77,7 +90,9 @@ fun MathMissionScreen(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            GroupCard {
+            GroupCard(
+                modifier = Modifier.offset(x = rememberShakeOffset(attempts.takeIf { wrong } ?: 0)),
+            ) {
                 Box(
                     modifier =
                         Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
@@ -86,6 +101,9 @@ fun MathMissionScreen(
                     Text(
                         text = question.text,
                         style = MaterialTheme.typography.displayMedium,
+                        color =
+                            if (wrong) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.testTag("mission:math:question"),
                     )
@@ -101,7 +119,7 @@ fun MathMissionScreen(
                     options.forEach { option ->
                         FilledTonalButton(
                             onClick = { answer(option) },
-                            shape = MaterialTheme.shapes.large,
+                            shapes = ButtonDefaults.shapes(),
                             modifier =
                                 Modifier.fillMaxWidth()
                                     .heightIn(min = 56.dp)

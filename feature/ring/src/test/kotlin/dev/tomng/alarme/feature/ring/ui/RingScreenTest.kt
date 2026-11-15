@@ -25,7 +25,7 @@ import org.robolectric.annotation.Config
 
 /** One screen state per stage of the ringing session, plus which inputs are live in each. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class RingScreenTest {
 
     @get:Rule val compose = createComposeRule()

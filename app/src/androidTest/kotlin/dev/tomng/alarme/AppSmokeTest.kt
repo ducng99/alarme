@@ -41,6 +41,28 @@ class AppSmokeTest {
     }
 
     @Test
+    fun systemBackLeavesSettingsForTheList() {
+        compose.onNodeWithTag("alarmlist:settings").performClick()
+        compose.onNodeWithTag("settings_screen").assertIsDisplayed()
+
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("alarmlist:new").assertIsDisplayed()
+    }
+
+    @Test
+    fun systemBackLeavesTheEditorForTheList() {
+        compose.onNodeWithTag("alarmlist:new").performClick()
+        compose.onNodeWithTag("editor_screen").assertIsDisplayed()
+
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("alarmlist:new").assertIsDisplayed()
+    }
+
+    @Test
     fun theEditorSavesAndReturnsToTheList() {
         compose.onNodeWithTag("alarmlist:new").performClick()
         compose.onNodeWithTag("editor_save").performClick()

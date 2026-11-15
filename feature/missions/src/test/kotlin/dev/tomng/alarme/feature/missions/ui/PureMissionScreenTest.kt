@@ -40,7 +40,7 @@ private class RecordingCallbacks : MissionStageCallbacks {
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class MathMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()
@@ -105,7 +105,7 @@ class MathMissionScreenTest {
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class MemoryMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()
@@ -153,7 +153,7 @@ class MemoryMissionScreenTest {
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class TypingMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()

@@ -1,9 +1,13 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package dev.tomng.alarme.feature.ring.ui
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,17 +18,21 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.AlarmOff
 import androidx.compose.material.icons.outlined.AlarmOn
 import androidx.compose.material.icons.outlined.Snooze
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,13 +56,15 @@ import dev.tomng.alarme.core.alarmengine.statemachine.RingStage
 import dev.tomng.alarme.core.alarmengine.statemachine.RingState
 import dev.tomng.alarme.core.alarmengine.statemachine.RingStateMachine
 import dev.tomng.alarme.core.designsystem.component.ClockTime
+import dev.tomng.alarme.core.designsystem.component.MedallionShape
+import dev.tomng.alarme.core.designsystem.component.ShapeMedallion
+import dev.tomng.alarme.core.designsystem.component.clockText
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.MissionStageHost
 import dev.tomng.alarme.feature.ring.R
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.time.Duration
 import kotlinx.coroutines.delay
@@ -127,25 +137,16 @@ private fun LoudAlarmContent(state: RingState.Ringing, callbacks: RingScreenCall
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.weight(1f))
-        Box(modifier = Modifier.size(132.dp), contentAlignment = Alignment.Center) {
-            Box(
-                modifier =
-                    Modifier.size(132.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                            CircleShape,
-                        ),
-            )
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-            ) {
-                Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
-                    Text(text = state.alarm.emoji, fontSize = 44.sp)
-                }
-            }
+        ShapeMedallion(
+            shape = MedallionShape.SoftBurst,
+            size = 152.dp,
+            color = MaterialTheme.colorScheme.primary,
+            rotating = true,
+            pulsing = true,
+        ) {
+            Text(text = state.alarm.emoji, fontSize = 56.sp)
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(24.dp))
         ClockTime(
             hour = state.alarm.hour,
             minute = state.alarm.minute,
@@ -184,27 +185,35 @@ private fun LoudAlarmContent(state: RingState.Ringing, callbacks: RingScreenCall
             if (snoozeOffered(state)) {
                 FilledTonalButton(
                     onClick = callbacks::onSnooze,
-                    modifier = Modifier.weight(1f).heightIn(min = 64.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(1f).height(RING_BUTTON_HEIGHT),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                 ) {
-                    Icon(Icons.Outlined.Snooze, contentDescription = null)
+                    Icon(
+                        Icons.Outlined.Snooze,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                    )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.ring_snooze),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
                     )
                 }
             }
             Button(
                 onClick = callbacks::onDismiss,
-                modifier = Modifier.weight(1f).heightIn(min = 64.dp).testTag("ring:dismiss"),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
+                shapes = ButtonDefaults.shapes(),
+                modifier = Modifier.weight(1f).height(RING_BUTTON_HEIGHT).testTag("ring:dismiss"),
+                contentPadding = PaddingValues(horizontal = 16.dp),
             ) {
-                Icon(Icons.Filled.Check, contentDescription = null)
+                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.ring_dismiss),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
                 )
             }
         }
@@ -248,12 +257,28 @@ private fun MissionStageContent(
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            val remaining = stage.timer?.remaining
-            if (remaining != null) {
+            val timer = stage.timer
+            val remaining = timer?.remaining
+            if (timer != null && remaining != null) {
+                val fraction =
+                    if (timer.total.isPositive())
+                        (remaining / timer.total).toFloat().coerceIn(0f, 1f)
+                    else 0f
+                val animated by animateFloatAsState(fraction, label = "missionTimer")
+                LinearWavyProgressIndicator(
+                    progress = { animated },
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.statusBars)
+                            .padding(start = 24.dp, end = 24.dp, top = 12.dp),
+                    color =
+                        if (fraction < LOW_TIME) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary,
+                )
                 Row(
                     modifier =
                         Modifier.fillMaxWidth()
-                            .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 4.dp),
+                            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Surface(
@@ -270,7 +295,8 @@ private fun MissionStageContent(
                     Spacer(Modifier.weight(1f))
                     FilledTonalButton(
                         onClick = callbacks::onAddMissionTime,
-                        modifier = Modifier.heightIn(min = 44.dp),
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.ring_mission_add_time),
@@ -344,11 +370,19 @@ private fun WakeUpCheckContent(
         onAction = callbacks::onWakeUpCheckComplete,
         actionTag = "ring:wake_up_check_confirm",
     ) {
-        Text(
-            text = countdownText(remaining),
-            style = MaterialTheme.typography.displayLarge,
-            modifier = Modifier.padding(vertical = 8.dp),
-        )
+        val fraction =
+            (remaining / RingStateMachine.WAKE_UP_CHECK_WINDOW).toFloat().coerceIn(0f, 1f)
+        val animated by animateFloatAsState(fraction, label = "wakeUpCheck")
+        Box(
+            modifier = Modifier.padding(top = 24.dp).size(184.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularWavyProgressIndicator(
+                progress = { animated },
+                modifier = Modifier.fillMaxSize(),
+            )
+            Text(text = countdownText(remaining), style = MaterialTheme.typography.displayMedium)
+        }
     }
 }
 
@@ -374,7 +408,11 @@ private fun StageCover(
     ) {
         StageMedallion(icon)
         Spacer(Modifier.height(20.dp))
-        Text(text = title, style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+        )
         if (supporting != null) {
             Text(
                 text = supporting,
@@ -387,10 +425,11 @@ private fun StageCover(
         middle()
         Button(
             onClick = onAction,
+            shapes = ButtonDefaults.shapes(),
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(top = 32.dp)
-                    .heightIn(min = 56.dp)
+                    .padding(top = 40.dp)
+                    .height(ButtonDefaults.MediumContainerHeight)
                     .then(if (actionTag != null) Modifier.testTag(actionTag) else Modifier),
         ) {
             Text(text = actionLabel, style = MaterialTheme.typography.titleMedium)
@@ -400,25 +439,18 @@ private fun StageCover(
 
 @Composable
 private fun StageMedallion(icon: ImageVector) {
-    Box(modifier = Modifier.size(132.dp), contentAlignment = Alignment.Center) {
-        Box(
-            modifier =
-                Modifier.size(132.dp)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), CircleShape),
+    ShapeMedallion(
+        shape = MedallionShape.Cookie,
+        size = 132.dp,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        rotating = true,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(52.dp),
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
         )
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-        ) {
-            Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(44.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
     }
 }
 
@@ -445,13 +477,14 @@ private fun missionLabel(mission: Mission): String =
         is Mission.WordBeat -> stringResource(R.string.mission_label_wordbeat)
     }
 
-private val clockFormat: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+private fun clockText(instant: kotlin.time.Instant): String {
+    val time = Instant.ofEpochMilli(instant.toEpochMilliseconds()).atZone(ZoneId.systemDefault())
+    return clockText(time.hour, time.minute)
+}
 
-private fun clockText(instant: kotlin.time.Instant): String =
-    clockFormat.format(
-        Instant.ofEpochMilli(instant.toEpochMilliseconds()).atZone(ZoneId.systemDefault()),
-    )
+private const val LOW_TIME = 0.25f
+
+private val RING_BUTTON_HEIGHT = 96.dp
 
 internal fun countdownText(remaining: Duration): String {
     val totalSeconds = remaining.inWholeSeconds

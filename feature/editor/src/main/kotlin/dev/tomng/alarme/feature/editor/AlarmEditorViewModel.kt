@@ -11,7 +11,9 @@ import dev.tomng.alarme.core.data.repository.RingtoneRepository
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.MissionType
+import dev.tomng.alarme.core.model.scheduling.NextOccurrenceCalculator
 import javax.inject.Inject
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +34,14 @@ data class AlarmEditorUiState(
     val finished: EditorOutcome? = null,
     /** The save went through but the platform refused to arm the alarm. */
     val notArmed: Boolean = false,
-)
+    /** The draft as loaded; edits are compared against it to warn before discarding. */
+    val original: AlarmDraft = draft,
+    /** When the draft would next ring if saved now, or null when it would not ring. */
+    val nextRing: Instant? = null,
+) {
+    val hasChanges: Boolean
+        get() = draft != original
+}
 
 /** Terminal events the host reacts to (navigate back, show a message). */
 enum class EditorOutcome {
@@ -73,10 +82,13 @@ constructor(
         loaded = true
         viewModelScope.launch {
             val existing = if (alarmId == Alarm.NEW_ID) null else repository.getAlarm(alarmId)
+            val draft = existing?.let(AlarmDraft::fromAlarm) ?: AlarmDraft()
             _state.update {
                 it.copy(
-                    draft = existing?.let(AlarmDraft::fromAlarm) ?: AlarmDraft(),
+                    draft = draft,
+                    original = draft,
                     loading = false,
+                    nextRing = nextRingOf(draft),
                 )
             }
         }
@@ -197,8 +209,18 @@ constructor(
     }
 
     private fun edit(transform: (AlarmDraft) -> AlarmDraft) {
-        _state.update { it.copy(draft = transform(it.draft), errors = emptyList()) }
+        _state.update {
+            val draft = transform(it.draft)
+            it.copy(draft = draft, errors = emptyList(), nextRing = nextRingOf(draft))
+        }
     }
+
+    private fun nextRingOf(draft: AlarmDraft): Instant? =
+        NextOccurrenceCalculator.nextOccurrence(
+            draft.toAlarm(clock.now()).copy(isSkipped = false),
+            clock.now(),
+            clock.zone(),
+        )
 
     companion object {
         const val MIN_SNOOZE = 1

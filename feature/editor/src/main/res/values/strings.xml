@@ -96,4 +96,10 @@
     <string name="language_korean">Korean</string>
     <string name="language_japanese">Japanese</string>
     <string name="editor_not_armed">Saved, but the alarm cannot ring: allow alarms and reminders in Settings</string>
+    <string name="editor_rings_in">Rings %1$s</string>
+    <string name="editor_rings_off">Alarm is off</string>
+    <string name="editor_discard_title">Discard changes?</string>
+    <string name="editor_discard_body">Your edits to this alarm will be lost.</string>
+    <string name="editor_discard">Discard</string>
+    <string name="editor_keep_editing">Keep editing</string>
 </resources>

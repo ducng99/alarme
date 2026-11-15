@@ -16,7 +16,6 @@
     <string name="ringtone_delete">Delete</string>
     <string name="ringtone_preview">Play</string>
     <string name="ringtone_set_default">Set as default</string>
-    <string name="ringtone_kind_sound">Sound</string>
     <string name="ringtone_kind_recording">Recording</string>
     <string name="ringtone_msg_imported">Sound imported</string>
     <string name="ringtone_msg_too_large">That file is too large</string>

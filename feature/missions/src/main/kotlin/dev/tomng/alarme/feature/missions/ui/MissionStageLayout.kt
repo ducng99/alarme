@@ -1,5 +1,14 @@
 package dev.tomng.alarme.feature.missions.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,25 +18,31 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.tomng.alarme.core.designsystem.component.GroupCard
-import dev.tomng.alarme.core.designsystem.component.LeadingIcon
+import dev.tomng.alarme.core.designsystem.component.MedallionShape
+import dev.tomng.alarme.core.designsystem.component.ShapeMedallion
 
 /** The shared chrome for a mission stage: a themed full-screen surface with a tonal header. */
 @Composable
@@ -66,11 +81,18 @@ internal fun MissionHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        LeadingIcon(
-            icon = icon,
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
+        ShapeMedallion(
+            shape = MedallionShape.Cookie,
+            size = 48.dp,
+            color = MaterialTheme.colorScheme.primaryContainer,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(12.dp),
+            )
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.headlineSmall)
             if (subtitle != null) {
@@ -85,6 +107,7 @@ internal fun MissionHeader(
 }
 
 /** The one full-width action a mission offers at the bottom of the screen. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun MissionPrimaryButton(
     text: String,
@@ -95,8 +118,8 @@ internal fun MissionPrimaryButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        shape = MaterialTheme.shapes.large,
-        modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
+        shapes = ButtonDefaults.shapes(),
+        modifier = modifier.fillMaxWidth().height(64.dp),
     ) {
         Text(text = text, style = MaterialTheme.typography.titleMedium)
     }
@@ -125,21 +148,30 @@ internal fun MissionProgressCard(
     progressTag: String,
     modifier: Modifier = Modifier,
 ) {
+    val animated by animateFloatAsState(progress.coerceIn(0f, 1f), label = "missionProgress")
     GroupCard(modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = valueText,
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag(valueTag),
-            )
-            LinearProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth().height(10.dp).testTag(progressTag),
-                strokeCap = StrokeCap.Round,
+            AnimatedContent(
+                targetState = valueText,
+                transitionSpec = {
+                    (slideInVertically { height -> height } + fadeIn()) togetherWith
+                        (slideOutVertically { height -> -height } + fadeOut())
+                },
+                label = "missionProgressValue",
+            ) { text ->
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.displayMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag(valueTag),
+                )
+            }
+            LinearWavyProgressIndicator(
+                progress = { animated },
+                modifier = Modifier.fillMaxWidth().testTag(progressTag),
             )
             Text(
                 text = caption,
@@ -149,6 +181,34 @@ internal fun MissionProgressCard(
         }
     }
 }
+
+/**
+ * A short horizontal shake, replayed whenever [trigger] changes. Missions with a typed answer use
+ * it to make a wrong attempt visible without a new string or a blocking dialog.
+ */
+@Composable
+internal fun rememberShakeOffset(trigger: Int, amplitude: Dp = 10.dp): Dp {
+    val offset = remember { Animatable(0f) }
+    LaunchedEffect(trigger) {
+        if (trigger == 0) return@LaunchedEffect
+        offset.snapTo(0f)
+        offset.animateTo(
+            targetValue = 0f,
+            animationSpec =
+                keyframes {
+                    durationMillis = SHAKE_MILLIS
+                    amplitude.value at 0
+                    -amplitude.value at SHAKE_MILLIS / 4
+                    amplitude.value at SHAKE_MILLIS / 2
+                    -amplitude.value at SHAKE_MILLIS * 3 / 4
+                    0f at SHAKE_MILLIS
+                },
+        )
+    }
+    return offset.value.dp
+}
+
+private const val SHAKE_MILLIS = 360
 
 /**
  * The camera missions keep the preview full-bleed: a scrim dims the top and bottom edges, and the

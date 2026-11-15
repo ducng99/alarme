@@ -20,7 +20,6 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import dev.tomng.alarme.core.designsystem.theme.AlarmeTheme
-import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.feature.alarmlist.AlarmListScreen
 import dev.tomng.alarme.feature.alarmlist.AlarmListViewModel
 import dev.tomng.alarme.feature.backup.BackupScreen
@@ -40,30 +39,6 @@ import dev.tomng.alarme.feature.settings.permissions.PermissionCenterViewModel
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.reliability.ReliabilityViewModel
 import javax.inject.Inject
-
-/** Which sound the picker is editing. */
-private sealed interface PickerTarget {
-    data class ForAlarm(val alarm: Alarm) : PickerTarget
-
-    data object Default : PickerTarget
-}
-
-/** The app's top-level destinations; the ring screen is a separate activity. */
-private sealed interface Screen {
-    data object List : Screen
-
-    data class Picker(val target: PickerTarget) : Screen
-
-    data object Settings : Screen
-
-    data object Diagnostics : Screen
-
-    data object Optimize : Screen
-
-    data object Backup : Screen
-
-    data class Editor(val alarmId: Long) : Screen
-}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -89,71 +64,78 @@ private fun AlarmeApp(
     var screen by remember { mutableStateOf<Screen>(Screen.List) }
 
     AlarmeTheme {
-        when (val current = screen) {
-            Screen.List ->
-                AlarmListScreen(
-                    modifier = modifier,
-                    viewModel = listViewModel,
-                    onPickSound = { screen = Screen.Picker(PickerTarget.ForAlarm(it)) },
-                    onPickDefault = { screen = Screen.Picker(PickerTarget.Default) },
-                    onOpenSettings = { screen = Screen.Settings },
-                    onOpenEditor = { alarmId -> screen = Screen.Editor(alarmId) },
-                )
+        ScreenHost(
+            screen = screen,
+            parent = parentScreen(screen),
+            onBack = { screen = it },
+        ) { current ->
+            when (current) {
+                Screen.List ->
+                    AlarmListScreen(
+                        modifier = modifier,
+                        viewModel = listViewModel,
+                        onPickSound = { screen = Screen.Picker(PickerTarget.ForAlarm(it)) },
+                        onPickDefault = { screen = Screen.Picker(PickerTarget.Default) },
+                        onOpenSettings = { screen = Screen.Settings },
+                        onOpenEditor = { alarmId -> screen = Screen.Editor(alarmId) },
+                    )
 
-            is Screen.Picker ->
-                when (val target = current.target) {
-                    is PickerTarget.ForAlarm ->
-                        RingtonePickerScreen(
-                            mode = PickerMode.Alarm,
-                            selectedUri = target.alarm.ringtoneUri,
-                            onPersist = { uri, _ ->
-                                listViewModel.setRingtone(target.alarm, uri)
-                                screen = Screen.List
-                            },
-                            onDone = { screen = Screen.List },
-                            modifier = modifier,
-                        )
+                is Screen.Picker ->
+                    when (val target = current.target) {
+                        is PickerTarget.ForAlarm ->
+                            RingtonePickerScreen(
+                                mode = PickerMode.Alarm,
+                                selectedUri = target.alarm.ringtoneUri,
+                                onPersist = { uri, _ ->
+                                    listViewModel.setRingtone(target.alarm, uri)
+                                    screen = Screen.List
+                                },
+                                onDone = { screen = Screen.List },
+                                modifier = modifier,
+                            )
 
-                    PickerTarget.Default ->
-                        RingtonePickerScreen(
-                            mode = PickerMode.Default,
-                            selectedUri = null,
-                            onPersist = { _, _ -> },
-                            onDone = { screen = Screen.List },
-                            modifier = modifier,
-                        )
-                }
+                        PickerTarget.Default ->
+                            RingtonePickerScreen(
+                                mode = PickerMode.Default,
+                                selectedUri = null,
+                                onPersist = { _, _ -> },
+                                onDone = { screen = Screen.List },
+                                modifier = modifier,
+                            )
+                    }
 
-            Screen.Settings ->
-                SettingsRoute(
-                    permissionIntents = permissionIntents,
-                    onOpenDiagnostics = { screen = Screen.Diagnostics },
-                    onOpenOptimize = { screen = Screen.Optimize },
-                    onOpenBackup = { screen = Screen.Backup },
-                    onPickDefaultSound = { screen = Screen.Picker(PickerTarget.Default) },
-                    onBack = { screen = Screen.List },
-                    modifier = modifier,
-                )
+                Screen.Settings ->
+                    SettingsRoute(
+                        permissionIntents = permissionIntents,
+                        onOpenDiagnostics = { screen = Screen.Diagnostics },
+                        onOpenOptimize = { screen = Screen.Optimize },
+                        onOpenBackup = { screen = Screen.Backup },
+                        onPickDefaultSound = { screen = Screen.Picker(PickerTarget.Default) },
+                        onBack = { screen = Screen.List },
+                        modifier = modifier,
+                    )
 
-            Screen.Diagnostics ->
-                DiagnosticsRoute(onBack = { screen = Screen.Settings }, modifier = modifier)
+                Screen.Diagnostics ->
+                    DiagnosticsRoute(onBack = { screen = Screen.Settings }, modifier = modifier)
 
-            Screen.Optimize ->
-                OptimizeRoute(
-                    permissionIntents = permissionIntents,
-                    autostartIntents = autostartIntents,
-                    onBack = { screen = Screen.Settings },
-                    modifier = modifier,
-                )
+                Screen.Optimize ->
+                    OptimizeRoute(
+                        permissionIntents = permissionIntents,
+                        autostartIntents = autostartIntents,
+                        onBack = { screen = Screen.Settings },
+                        modifier = modifier,
+                    )
 
-            Screen.Backup -> BackupRoute(onBack = { screen = Screen.Settings }, modifier = modifier)
+                Screen.Backup ->
+                    BackupRoute(onBack = { screen = Screen.Settings }, modifier = modifier)
 
-            is Screen.Editor ->
-                AlarmEditorRoute(
-                    alarmId = current.alarmId,
-                    onDone = { screen = Screen.List },
-                    modifier = modifier,
-                )
+                is Screen.Editor ->
+                    AlarmEditorRoute(
+                        alarmId = current.alarmId,
+                        onDone = { screen = Screen.List },
+                        modifier = modifier,
+                    )
+            }
         }
     }
 }
