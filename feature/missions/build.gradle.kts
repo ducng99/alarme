@@ -25,6 +25,7 @@ dependencies {
     api(project(":core:model"))
     implementation(project(":core:sensors"))
     implementation(project(":core:common"))
+    implementation(project(":core:designsystem"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

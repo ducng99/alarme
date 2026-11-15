@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.component.GroupCard
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.R
@@ -63,44 +65,59 @@ fun TypingMissionScreen(
 
     val answer = { if (roundComplete) advance() }
 
-    Column(
-        modifier = Modifier.padding(16.dp).testTag("mission:typing"),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    MissionStageScaffold(
+        title = stringResource(R.string.mission_typing_title),
+        icon = Icons.Outlined.Keyboard,
+        testTag = "mission:typing",
     ) {
-        Text(
-            text = stringResource(R.string.mission_typing_prompt),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text =
-                buildAnnotatedString {
-                    pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                    append(progress.matchedPrefix)
-                    pop()
-                    append(progress.remaining)
+        Column(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            verticalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(R.string.mission_typing_round, index + 1, rounds.size),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.mission_typing_prompt),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            GroupCard {
+                Text(
+                    text =
+                        buildAnnotatedString {
+                            pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
+                            append(progress.matchedPrefix)
+                            pop()
+                            append(progress.remaining)
+                        },
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp),
+                )
+            }
+            OutlinedTextField(
+                value = input,
+                onValueChange = { value ->
+                    input = value
+                    callbacks.onTimerReset()
                 },
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.testTag("mission:typing:target"),
-        )
-        OutlinedTextField(
-            value = input,
-            onValueChange = { value ->
-                input = value
-                // Each keystroke is user activity: restart the countdown.
-                callbacks.onTimerReset()
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { answer() }),
-            modifier = Modifier.fillMaxWidth().testTag("mission:typing:input"),
-        )
-        Button(
+                placeholder = { Text(stringResource(R.string.mission_typing_hint)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { answer() }),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth().testTag("mission:typing:input"),
+            )
+        }
+        MissionPrimaryButton(
+            text = stringResource(R.string.mission_typing_submit),
             onClick = answer,
             enabled = roundComplete,
             modifier = Modifier.testTag("mission:typing:submit"),
-        ) {
-            Text(stringResource(R.string.mission_typing_submit))
-        }
+        )
     }
 }
 

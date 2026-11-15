@@ -1,28 +1,51 @@
 package dev.tomng.alarme.feature.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.BatterySaver
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.DoNotDisturbOn
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.OpenInFull
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import dev.tomng.alarme.feature.settings.diagnostics.DiagnosticLabel
-import dev.tomng.alarme.feature.settings.diagnostics.DiagnosticLine
-import dev.tomng.alarme.feature.settings.optimize.OemGuide
+import dev.tomng.alarme.core.designsystem.component.GroupCard
+import dev.tomng.alarme.core.designsystem.component.GroupDivider
+import dev.tomng.alarme.core.designsystem.component.LeadingIcon
+import dev.tomng.alarme.core.designsystem.component.ScreenHeader
+import dev.tomng.alarme.core.designsystem.component.SectionLabel
+import dev.tomng.alarme.core.designsystem.component.SettingRow
 import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.permissions.PermissionRow
@@ -35,349 +58,228 @@ fun SettingsScreen(
     callbacks: SettingsCallbacks,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(modifier = modifier.fillMaxSize().testTag("settings_screen")) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f),
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        LazyColumn(
+            modifier =
+                Modifier.fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .testTag("settings_screen"),
+            contentPadding = PaddingValues(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            item {
+                ScreenHeader(
+                    title = stringResource(R.string.settings_title),
+                    navigation = {
+                        IconButton(
+                            onClick = callbacks.onBack,
+                            modifier = Modifier.testTag("settings_done"),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.settings_back),
+                            )
+                        }
+                    },
                 )
-                TextButton(
-                    onClick = callbacks.onBack,
-                    modifier = Modifier.testTag("settings_done"),
-                ) {
-                    Text(stringResource(R.string.settings_back))
+            }
+            item { PermissionBanner(permissions) }
+            item { SectionLabel(stringResource(R.string.settings_permissions_title)) }
+            item {
+                GroupCard {
+                    permissions.rows.forEachIndexed { index, row ->
+                        if (index > 0) GroupDivider()
+                        PermissionRowItem(
+                            row = row,
+                            onOpen = { callbacks.onOpenPermission(row.item) },
+                        )
+                    }
                 }
             }
-        }
-
-        item { SectionHeader(stringResource(R.string.settings_permissions_title)) }
-        item {
-            Text(
-                text =
-                    if (permissions.allGranted) {
-                        stringResource(R.string.settings_permissions_all_granted)
-                    } else {
-                        stringResource(
-                            R.string.settings_permissions_missing,
-                            permissions.missingCount,
-                        )
-                    },
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-        }
-        items(permissions.rows, key = { it.item.name }) { row ->
-            PermissionRowItem(row = row, onOpen = { callbacks.onOpenPermission(row.item) })
-        }
-
-        item { SectionHeader(stringResource(R.string.settings_reliability_title)) }
-        item {
-            ToggleRow(
-                title = stringResource(R.string.settings_prevent_power_off),
-                body =
-                    if (reliability.preventPowerOff && !reliability.preventPowerOffArmed) {
-                        stringResource(R.string.settings_prevent_power_off_needs)
-                    } else {
-                        stringResource(R.string.settings_prevent_power_off_body)
-                    },
-                checked = reliability.preventPowerOff,
-                tag = "toggle_prevent_power_off",
-                onCheckedChange = callbacks.onTogglePreventPowerOff,
-            )
-        }
-        if (reliability.blockedCount > 0) {
+            item { SectionLabel(stringResource(R.string.settings_sound_title)) }
             item {
-                Text(
-                    text =
-                        stringResource(
-                            R.string.settings_prevent_power_off_blocked,
-                            reliability.blockedCount,
-                        ),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                )
+                GroupCard {
+                    SettingRow(
+                        title = stringResource(R.string.settings_default_sound_title),
+                        supporting = stringResource(R.string.settings_default_sound_body),
+                        leading = { LeadingIcon(Icons.Outlined.MusicNote) },
+                        trailing = { Chevron() },
+                        onClick = callbacks.onOpenDefaultSound,
+                        modifier = Modifier.testTag("settings_default_sound"),
+                    )
+                }
             }
-        }
-        item {
-            ToggleRow(
-                title = stringResource(R.string.settings_prevent_uninstall),
-                body = stringResource(R.string.settings_prevent_uninstall_body),
-                checked = reliability.preventUninstall,
-                tag = "toggle_prevent_uninstall",
-                onCheckedChange = callbacks.onTogglePreventUninstall,
-            )
-        }
-
-        item { SectionHeader(stringResource(R.string.settings_diagnostics_title)) }
-        item {
-            LinkRow(
-                title = stringResource(R.string.settings_diagnostics_title),
-                body = stringResource(R.string.settings_diagnostics_body),
-                tag = "open_diagnostics",
-                onClick = callbacks.onOpenDiagnostics,
-            )
-        }
-        item {
-            LinkRow(
-                title = stringResource(R.string.settings_optimize_title),
-                body = stringResource(R.string.settings_optimize_body),
-                tag = "open_optimize",
-                onClick = callbacks.onOpenOptimize,
-            )
-        }
-
-        item { SectionHeader(stringResource(R.string.settings_backup_title)) }
-        item {
-            LinkRow(
-                title = stringResource(R.string.settings_backup_title),
-                body = stringResource(R.string.settings_backup_body),
-                tag = "open_backup",
-                onClick = callbacks.onOpenBackup,
-            )
+            item { SectionLabel(stringResource(R.string.settings_reliability_title)) }
+            item { ReliabilityGroup(reliability, callbacks) }
+            item { SectionLabel(stringResource(R.string.settings_troubleshooting_title)) }
+            item {
+                GroupCard {
+                    SettingRow(
+                        title = stringResource(R.string.settings_diagnostics_title),
+                        supporting = stringResource(R.string.settings_diagnostics_body),
+                        leading = { LeadingIcon(Icons.Outlined.BugReport) },
+                        trailing = { Chevron() },
+                        onClick = callbacks.onOpenDiagnostics,
+                        modifier = Modifier.testTag("open_diagnostics"),
+                    )
+                    GroupDivider()
+                    SettingRow(
+                        title = stringResource(R.string.settings_optimize_title),
+                        supporting = stringResource(R.string.settings_optimize_body),
+                        leading = { LeadingIcon(Icons.Outlined.BatterySaver) },
+                        trailing = { Chevron() },
+                        onClick = callbacks.onOpenOptimize,
+                        modifier = Modifier.testTag("open_optimize"),
+                    )
+                }
+            }
+            item { SectionLabel(stringResource(R.string.settings_backup_title)) }
+            item {
+                GroupCard {
+                    SettingRow(
+                        title = stringResource(R.string.settings_backup_row),
+                        supporting = stringResource(R.string.settings_backup_body),
+                        leading = { LeadingIcon(Icons.Outlined.Archive) },
+                        trailing = { Chevron() },
+                        onClick = callbacks.onOpenBackup,
+                        modifier = Modifier.testTag("open_backup"),
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun SectionHeader(text: String) {
-    Column(modifier = Modifier.fillMaxWidth().padding(top = 20.dp)) {
-        HorizontalDivider()
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-        )
+private fun PermissionBanner(permissions: PermissionCenterState) {
+    val granted = permissions.allGranted
+    Surface(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .testTag("permissions_banner"),
+        shape = MaterialTheme.shapes.extraLarge,
+        color =
+            if (granted) MaterialTheme.colorScheme.secondaryContainer
+            else MaterialTheme.colorScheme.primaryContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            LeadingIcon(
+                icon = if (granted) Icons.Outlined.Notifications else Icons.Outlined.Alarm,
+            )
+            Column(modifier = Modifier.padding(start = 14.dp).weight(1f)) {
+                Text(
+                    text =
+                        if (granted) {
+                            stringResource(R.string.settings_permissions_all_granted)
+                        } else {
+                            stringResource(
+                                R.string.settings_permissions_missing,
+                                permissions.missingCount,
+                            )
+                        },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                if (!granted) {
+                    Text(
+                        text = stringResource(R.string.settings_permissions_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun PermissionRowItem(row: PermissionRow, onOpen: () -> Unit) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onOpen)
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-                .testTag("permission_${row.item.name}"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(row.item.titleRes()),
-                style = MaterialTheme.typography.bodyLarge,
+    SettingRow(
+        title = stringResource(row.item.titleRes()),
+        supporting = stringResource(row.item.bodyRes()),
+        leading = { LeadingIcon(row.item.icon()) },
+        onClick = onOpen,
+        trailing = {
+            StatePill(
+                text =
+                    stringResource(
+                        if (row.granted) R.string.settings_permission_granted
+                        else R.string.settings_permission_missing,
+                    ),
+                positive = row.granted,
             )
-            Text(
-                text = stringResource(row.item.bodyRes()),
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-        Text(
-            text =
-                stringResource(
-                    if (row.granted) R.string.settings_permission_granted
-                    else R.string.settings_permission_missing,
-                ),
-            style = MaterialTheme.typography.labelMedium,
-            color =
-                if (row.granted) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error,
-        )
-    }
+        },
+        modifier = Modifier.testTag("permission_${row.item.name}"),
+    )
 }
 
 @Composable
 private fun ToggleRow(
     title: String,
-    body: String,
+    supporting: String,
+    leading: @Composable () -> Unit,
     checked: Boolean,
     tag: String,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    SettingRow(
+        title = title,
+        supporting = supporting,
+        leading = leading,
+        onClick = { onCheckedChange(!checked) },
+        trailing = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                modifier = Modifier.testTag(tag),
+            )
+        },
+    )
+}
+
+@Composable
+private fun StatePill(text: String, positive: Boolean) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color =
+            if (positive) MaterialTheme.colorScheme.secondaryContainer
+            else MaterialTheme.colorScheme.errorContainer,
+        contentColor =
+            if (positive) MaterialTheme.colorScheme.onSecondaryContainer
+            else MaterialTheme.colorScheme.onErrorContainer,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = body, style = MaterialTheme.typography.bodySmall)
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.testTag(tag),
-        )
-    }
-}
-
-@Composable
-private fun LinkRow(title: String, body: String, tag: String, onClick: () -> Unit) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-                .testTag(tag),
-    ) {
-        Text(text = title, style = MaterialTheme.typography.bodyLarge)
-        Text(text = body, style = MaterialTheme.typography.bodySmall)
-    }
-}
-
-@Composable
-fun DiagnosticsScreen(
-    lines: List<DiagnosticLine>,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(modifier = modifier.fillMaxSize().testTag("diagnostics_screen")) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.diagnostics_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = onBack, modifier = Modifier.testTag("diagnostics_done")) {
-                    Text(stringResource(R.string.settings_back))
-                }
-            }
-        }
-        items(lines, key = { it.label.name }) { line ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(line.label.labelRes()),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(text = line.value, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text =
-                        stringResource(
-                            if (line.healthy) R.string.diagnostics_ok
-                            else R.string.diagnostics_attention,
-                        ),
-                    style = MaterialTheme.typography.labelMedium,
-                    color =
-                        if (line.healthy) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = 12.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun OptimizeScreen(
-    guide: OemGuide,
-    batteryUnrestricted: Boolean,
-    dndGranted: Boolean,
-    onOpenBattery: () -> Unit,
-    onOpenDnd: () -> Unit,
-    onOpenAutostart: () -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(modifier = modifier.fillMaxSize().testTag("optimize_screen")) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.optimize_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = onBack, modifier = Modifier.testTag("optimize_done")) {
-                    Text(stringResource(R.string.settings_back))
-                }
-            }
-        }
-        item {
-            OptimizeRow(
-                title = stringResource(R.string.optimize_battery),
-                body = stringResource(R.string.optimize_battery_body),
-                granted = batteryUnrestricted,
-                tag = "optimize_battery",
-                onClick = onOpenBattery,
-            )
-        }
-        item {
-            OptimizeRow(
-                title = stringResource(R.string.optimize_dnd),
-                body = stringResource(R.string.optimize_dnd_body),
-                granted = dndGranted,
-                tag = "optimize_dnd",
-                onClick = onOpenDnd,
-            )
-        }
-        item {
-            OptimizeRow(
-                title = stringResource(R.string.optimize_autostart),
-                body =
-                    if (guide == OemGuide.GENERIC) {
-                        stringResource(R.string.optimize_generic_body)
-                    } else {
-                        stringResource(R.string.optimize_autostart_body)
-                    },
-                granted = null,
-                tag = "optimize_autostart",
-                onClick = onOpenAutostart,
-            )
-        }
-    }
-}
-
-@Composable
-private fun OptimizeRow(
-    title: String,
-    body: String,
-    granted: Boolean?,
-    tag: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-                .testTag(tag),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = body, style = MaterialTheme.typography.bodySmall)
-        }
-        if (granted != null) {
-            Text(
-                text =
-                    stringResource(
-                        if (granted) R.string.optimize_granted else R.string.optimize_missing,
-                    ),
-                style = MaterialTheme.typography.labelMedium,
-                color =
-                    if (granted) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error,
-            )
-        }
         Text(
-            text = stringResource(R.string.optimize_open),
-            style = MaterialTheme.typography.labelLarge,
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
 }
+
+@Composable
+private fun Chevron() {
+    Icon(
+        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+internal fun PermissionItem.icon(): ImageVector =
+    when (this) {
+        PermissionItem.NOTIFICATIONS -> Icons.Outlined.Notifications
+        PermissionItem.EXACT_ALARM -> Icons.Outlined.Alarm
+        PermissionItem.FULL_SCREEN_INTENT -> Icons.Outlined.OpenInFull
+        PermissionItem.OVERLAY -> Icons.Outlined.Layers
+        PermissionItem.DND -> Icons.Outlined.DoNotDisturbOn
+        PermissionItem.BATTERY -> Icons.Outlined.BatterySaver
+        PermissionItem.CAMERA -> Icons.Outlined.PhotoCamera
+        PermissionItem.MICROPHONE -> Icons.Outlined.Mic
+    }
 
 internal fun PermissionItem.titleRes(): Int =
     when (this) {
@@ -403,17 +305,35 @@ internal fun PermissionItem.bodyRes(): Int =
         PermissionItem.MICROPHONE -> R.string.settings_permission_microphone_body
     }
 
-internal fun DiagnosticLabel.labelRes(): Int =
-    when (this) {
-        DiagnosticLabel.BATTERY -> R.string.diagnostics_label_battery
-        DiagnosticLabel.CHARGING -> R.string.diagnostics_label_charging
-        DiagnosticLabel.POWER_SAVE -> R.string.diagnostics_label_power_save
-        DiagnosticLabel.DEVICE_IDLE -> R.string.diagnostics_label_device_idle
-        DiagnosticLabel.STANDBY_BUCKET -> R.string.diagnostics_label_standby_bucket
-        DiagnosticLabel.BACKGROUND_RESTRICTED -> R.string.diagnostics_label_background_restricted
-        DiagnosticLabel.BATTERY_OPTIMIZATION -> R.string.diagnostics_label_battery_optimization
-        DiagnosticLabel.EXACT_ALARM -> R.string.diagnostics_label_exact_alarm
-        DiagnosticLabel.OVERLAY -> R.string.diagnostics_label_overlay
-        DiagnosticLabel.MEMORY -> R.string.diagnostics_label_memory
-        DiagnosticLabel.STORAGE -> R.string.diagnostics_label_storage
+@Composable
+private fun ReliabilityGroup(reliability: ReliabilityState, callbacks: SettingsCallbacks) {
+    GroupCard {
+        ToggleRow(
+            title = stringResource(R.string.settings_prevent_power_off),
+            supporting =
+                when {
+                    reliability.preventPowerOff && !reliability.preventPowerOffArmed ->
+                        stringResource(R.string.settings_prevent_power_off_needs)
+                    reliability.blockedCount > 0 ->
+                        stringResource(
+                            R.string.settings_prevent_power_off_blocked,
+                            reliability.blockedCount,
+                        )
+                    else -> stringResource(R.string.settings_prevent_power_off_body)
+                },
+            leading = { LeadingIcon(Icons.Outlined.PowerSettingsNew) },
+            checked = reliability.preventPowerOff,
+            tag = "toggle_prevent_power_off",
+            onCheckedChange = callbacks.onTogglePreventPowerOff,
+        )
+        GroupDivider()
+        ToggleRow(
+            title = stringResource(R.string.settings_prevent_uninstall),
+            supporting = stringResource(R.string.settings_prevent_uninstall_body),
+            leading = { LeadingIcon(Icons.Outlined.Block) },
+            checked = reliability.preventUninstall,
+            tag = "toggle_prevent_uninstall",
+            onCheckedChange = callbacks.onTogglePreventUninstall,
+        )
     }
+}

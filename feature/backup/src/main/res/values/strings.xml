@@ -4,6 +4,8 @@
     <string name="backup_back">Done</string>
     <string name="backup_explainer">Save your alarms and your own sounds to a single file, or restore them from one.</string>
     <string name="backup_export">Export to file</string>
+    <string name="backup_export_body">Writes your alarms and sounds into one ZIP file.</string>
+    <string name="backup_import_body">Replaces this device\'s alarms with a backup.</string>
     <string name="backup_import">Restore from file</string>
     <string name="backup_working">Working…</string>
     <string name="backup_exported">Exported %1$d alarms and %2$d sounds.</string>

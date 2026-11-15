@@ -130,6 +130,7 @@ private fun AlarmeApp(
                     onOpenDiagnostics = { screen = Screen.Diagnostics },
                     onOpenOptimize = { screen = Screen.Optimize },
                     onOpenBackup = { screen = Screen.Backup },
+                    onPickDefaultSound = { screen = Screen.Picker(PickerTarget.Default) },
                     onBack = { screen = Screen.List },
                     modifier = modifier,
                 )
@@ -163,6 +164,7 @@ private fun SettingsRoute(
     onOpenDiagnostics: () -> Unit,
     onOpenOptimize: () -> Unit,
     onOpenBackup: () -> Unit,
+    onPickDefaultSound: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -219,6 +221,7 @@ private fun SettingsRoute(
                 onOpenDiagnostics = onOpenDiagnostics,
                 onOpenOptimize = onOpenOptimize,
                 onOpenBackup = onOpenBackup,
+                onOpenDefaultSound = onPickDefaultSound,
                 onBack = onBack,
             ),
         modifier = modifier,

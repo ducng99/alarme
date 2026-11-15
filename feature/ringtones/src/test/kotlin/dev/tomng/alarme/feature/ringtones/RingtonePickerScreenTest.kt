@@ -1,10 +1,12 @@
 package dev.tomng.alarme.feature.ringtones
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.google.common.truth.Truth.assertThat
 import dev.tomng.alarme.core.model.ringtone.CatalogRingtone
 import dev.tomng.alarme.core.model.ringtone.RingtoneKind
@@ -106,6 +108,8 @@ class RingtonePickerScreenTest {
 
         compose.onNodeWithText("On this device").assertIsDisplayed()
         compose.onNodeWithText("Over the horizon").assertIsDisplayed()
+        compose.onNodeWithTag("ringtone:list").performScrollToNode(hasTestTag("ringtone:row:9"))
+        compose.onNodeWithTag("ringtone:row:9").assertIsDisplayed()
         compose.onNodeWithText("My sounds").assertIsDisplayed()
         compose.onNodeWithText("Recording 1").assertIsDisplayed()
     }
@@ -146,7 +150,7 @@ class RingtonePickerScreenTest {
 
         compose.onNodeWithText("Silent").assertDoesNotExist()
         compose.onNodeWithText("Shuffle my sounds").assertDoesNotExist()
-        compose.onNodeWithTag("ringtone:default:1").performClick()
+        compose.onNodeWithTag("ringtone:row:1").performClick()
 
         assertThat(recorded).containsExactly("default:1")
     }

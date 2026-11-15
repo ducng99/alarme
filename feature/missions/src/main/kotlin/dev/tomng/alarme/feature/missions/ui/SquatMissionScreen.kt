@@ -2,10 +2,10 @@ package dev.tomng.alarme.feature.missions.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,8 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.sensors.squat.CoverSensorTracker
@@ -27,7 +27,7 @@ import dev.tomng.alarme.feature.missions.R
 
 /**
  * The squat mission: cover the sensor, lift, repeat. Without a light or proximity sensor the
- * mission cannot complete — the screen says so and leans on the emergency path.
+ * mission cannot complete - the screen says so and leans on the emergency path.
  */
 @Composable
 fun SquatMissionScreen(
@@ -49,41 +49,47 @@ fun SquatMissionScreen(
 
     LaunchedEffect(progress.done) { if (progress.done) callbacks.onComplete() }
 
-    Column(
-        modifier = Modifier.padding(16.dp).testTag("mission:squat"),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    MissionStageScaffold(
+        title = stringResource(R.string.mission_squat_title),
+        icon = Icons.Outlined.FitnessCenter,
+        testTag = "mission:squat",
     ) {
         when (tracker.availability) {
             CoverSensorTracker.Availability.NO_SENSOR ->
-                Text(
-                    text = stringResource(R.string.mission_squat_no_sensor),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                MissionUnavailableCard(text = stringResource(R.string.mission_squat_no_sensor))
 
             CoverSensorTracker.Availability.AVAILABLE -> {
-                Text(
-                    text = stringResource(R.string.mission_squat_instruction, goal),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                LinearProgressIndicator(
-                    progress = { progress.reps.toFloat() / goal },
-                    modifier =
-                        Modifier.fillMaxWidth().height(12.dp).testTag("mission:squat:progress"),
-                )
-                Text(
-                    text = stringResource(R.string.mission_shake_progress, progress.reps, goal),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.testTag("mission:squat:count"),
-                )
-                if (progress.covered) {
-                    Text(text = stringResource(R.string.mission_squat_covered))
-                }
-                if (progress.cheat) {
-                    Text(
-                        text = stringResource(R.string.mission_squat_cheat),
-                        color = MaterialTheme.colorScheme.error,
+                Column(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    MissionProgressCard(
+                        progress = progress.reps.toFloat() / goal,
+                        valueText =
+                            stringResource(R.string.mission_shake_progress, progress.reps, goal),
+                        caption = stringResource(R.string.mission_squat_instruction, goal),
+                        valueTag = "mission:squat:count",
+                        progressTag = "mission:squat:progress",
                     )
+                    if (progress.covered) {
+                        Text(
+                            text = stringResource(R.string.mission_squat_covered),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    if (progress.cheat) {
+                        Text(
+                            text = stringResource(R.string.mission_squat_cheat),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }

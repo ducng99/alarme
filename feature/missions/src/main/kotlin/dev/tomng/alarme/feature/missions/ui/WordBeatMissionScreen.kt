@@ -2,8 +2,10 @@ package dev.tomng.alarme.feature.missions.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.component.GroupCard
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.R
@@ -75,60 +79,74 @@ fun WordBeatMissionScreen(
         }
     }
 
-    Column(
-        modifier = Modifier.padding(16.dp).testTag("mission:wordbeat"),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    MissionStageScaffold(
+        title = stringResource(R.string.mission_wordbeat_title),
+        icon = Icons.Outlined.RecordVoiceOver,
+        testTag = "mission:wordbeat",
     ) {
         when {
             !available || feedback is SpeechEvent.Unavailable ->
-                Text(
-                    text = stringResource(R.string.mission_wordbeat_unavailable),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                MissionUnavailableCard(text = stringResource(R.string.mission_wordbeat_unavailable))
 
             else -> {
-                Text(
-                    text = stringResource(R.string.mission_wordbeat_round, round + 1, rounds.size),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = stringResource(R.string.mission_wordbeat_instruction),
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Text(
-                    text = rounds.getOrNull(round).orEmpty(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.testTag("mission:wordbeat:target"),
-                )
-                Text(
-                    text =
-                        when (feedback) {
-                            is SpeechEvent.Recognized ->
-                                stringResource(R.string.mission_wordbeat_try_again)
+                Column(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text =
+                            stringResource(R.string.mission_wordbeat_round, round + 1, rounds.size),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(R.string.mission_wordbeat_instruction),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                    )
+                    GroupCard {
+                        Text(
+                            text = rounds.getOrNull(round).orEmpty(),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 22.dp)
+                                    .testTag("mission:wordbeat:target"),
+                        )
+                    }
+                    Text(
+                        text =
+                            when (feedback) {
+                                is SpeechEvent.Recognized ->
+                                    stringResource(R.string.mission_wordbeat_try_again)
 
-                            is SpeechEvent.NoSpeech ->
-                                stringResource(R.string.mission_wordbeat_try_again)
+                                is SpeechEvent.NoSpeech ->
+                                    stringResource(R.string.mission_wordbeat_try_again)
 
-                            else -> stringResource(R.string.mission_wordbeat_listening)
-                        },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color =
-                        if (
-                            feedback is SpeechEvent.Recognized || feedback is SpeechEvent.NoSpeech
-                        ) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                    modifier = Modifier.testTag("mission:wordbeat:status"),
-                )
-                Button(
+                                else -> stringResource(R.string.mission_wordbeat_listening)
+                            },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color =
+                            if (
+                                feedback is SpeechEvent.Recognized ||
+                                    feedback is SpeechEvent.NoSpeech
+                            ) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.testTag("mission:wordbeat:status"),
+                    )
+                }
+                MissionPrimaryButton(
+                    text = stringResource(R.string.mission_wordbeat_listening),
                     onClick = { source.startListening(locale) },
                     modifier = Modifier.testTag("mission:wordbeat:listen"),
-                ) {
-                    Text(stringResource(R.string.mission_wordbeat_listening))
-                }
+                )
             }
         }
     }

@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="mission_math_title">Math mission</string>
     <string name="mission_math_question">Question %1$d of %2$d</string>
+    <string name="mission_memory_title">Memory mission</string>
+    <string name="mission_typing_title">Typing mission</string>
+    <string name="mission_shake_title">Shake mission</string>
+    <string name="mission_squat_title">Squat mission</string>
+    <string name="mission_step_title">Step mission</string>
+    <string name="mission_barcode_title">Barcode mission</string>
+    <string name="mission_photo_title">Photo mission</string>
+    <string name="mission_image_title">Find the object</string>
+    <string name="mission_wordbeat_title">Say the sentence</string>
+    <string name="mission_math_answer_hint">Your answer</string>
     <string name="mission_math_submit">Check</string>
     <string name="mission_math_wrong">Not quite — try again</string>
     <string name="mission_memory_memorize">Memorize the highlighted tiles</string>
@@ -10,6 +21,8 @@
     <string name="mission_memory_round_clear">Round %1$d clear!</string>
     <string name="mission_typing_prompt">Type the sentence exactly</string>
     <string name="mission_typing_submit">Submit</string>
+    <string name="mission_typing_hint">Type here</string>
+    <string name="mission_typing_round">Round %1$d of %2$d</string>
     <string name="mission_shake_instruction">Shake the phone %1$d times</string>
     <string name="mission_shake_progress">%1$d / %2$d</string>
     <string name="mission_squat_instruction">Cover the sensor, then lift — that\'s one. %1$d to go.</string>

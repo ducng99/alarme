@@ -6,7 +6,9 @@
     <string name="editor_delete">Delete</string>
     <string name="editor_back">Back</string>
     <string name="editor_ok">OK</string>
+    <string name="editor_time_cancel">Close time picker</string>
     <string name="editor_cancel">Cancel</string>
+    <string name="editor_pick_time">Set time</string>
     <string name="editor_decrease">Decrease</string>
     <string name="editor_increase">Increase</string>
     <string name="editor_time_hint">Tap to change the time</string>
@@ -36,6 +38,11 @@
     <string name="editor_missions">Missions (%1$d/%2$d)</string>
     <string name="editor_add_mission">Add mission</string>
     <string name="editor_mission_slot">%1$d. %2$s</string>
+    <string name="editor_section_details">Details</string>
+    <string name="editor_section_sound">Sound \&amp; vibration</string>
+    <string name="editor_section_wake_up">Snooze \&amp; wake-up</string>
+    <string name="editor_section_memo">Memo</string>
+    <string name="editor_missions_empty">No missions yet. Add one to make waking up harder.</string>
     <string name="editor_mission_incomplete">Needs setup</string>
     <string name="editor_mission_remove">Remove</string>
     <string name="editor_error_too_many_missions">An alarm can have at most 5 missions.</string>

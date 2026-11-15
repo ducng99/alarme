@@ -1,15 +1,16 @@
 package dev.tomng.alarme.feature.missions.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
@@ -58,10 +60,10 @@ fun MemoryMissionScreen(
         }
     }
 
-    Column(
-        modifier = Modifier.padding(16.dp).testTag("mission:memory"),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+    MissionStageScaffold(
+        title = stringResource(R.string.mission_memory_title),
+        icon = Icons.Outlined.Psychology,
+        testTag = "mission:memory",
     ) {
         Text(
             text =
@@ -81,16 +83,17 @@ fun MemoryMissionScreen(
 
                     else -> stringResource(R.string.mission_memory_find)
                 },
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.testTag("mission:memory:header"),
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().testTag("mission:memory:header"),
         )
 
         val columns = state.board.difficulty
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
-            modifier = Modifier.fillMaxSize().testTag("mission:memory:grid"),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth().weight(1f).testTag("mission:memory:grid"),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.board.tiles.size) { index ->
                 val tile = state.board.tiles[index]
@@ -105,19 +108,16 @@ fun MemoryMissionScreen(
                         tile.state == MemoryMissionEngine.TileState.WRONG ->
                             MaterialTheme.colorScheme.error
 
-                        else -> MaterialTheme.colorScheme.surfaceVariant
+                        else -> MaterialTheme.colorScheme.surfaceContainerHighest
                     }
                 Button(
                     onClick = { state = engine.tap(state, index) },
-                    modifier =
-                        Modifier.aspectRatio(1f).background(color).testTag("mission:memory:tile"),
                     enabled = state.phase == MemoryMissionEngine.Phase.PLAYING,
-                    colors =
-                        androidx.compose.material3.ButtonDefaults.buttonColors(
-                            containerColor = color,
-                        ),
-                    content = {},
-                )
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = color),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.aspectRatio(1f).testTag("mission:memory:tile"),
+                ) {}
             }
         }
     }

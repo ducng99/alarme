@@ -10,5 +10,6 @@ data class SettingsCallbacks(
     val onOpenDiagnostics: () -> Unit = {},
     val onOpenOptimize: () -> Unit = {},
     val onOpenBackup: () -> Unit = {},
+    val onOpenDefaultSound: () -> Unit = {},
     val onBack: () -> Unit = {},
 )

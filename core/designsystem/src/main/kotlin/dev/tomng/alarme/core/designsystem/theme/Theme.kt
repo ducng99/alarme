@@ -24,16 +24,28 @@ private val LightColors =
         onTertiary = OnTertiaryLight,
         tertiaryContainer = TertiaryContainerLight,
         onTertiaryContainer = OnTertiaryContainerLight,
+        error = ErrorLight,
+        onError = OnErrorLight,
+        errorContainer = ErrorContainerLight,
+        onErrorContainer = OnErrorContainerLight,
         background = BackgroundLight,
         onBackground = OnBackgroundLight,
         surface = SurfaceLight,
         onSurface = OnSurfaceLight,
         surfaceVariant = SurfaceVariantLight,
         onSurfaceVariant = OnSurfaceVariantLight,
-        error = ErrorLight,
-        onError = OnErrorLight,
-        errorContainer = ErrorContainerLight,
-        onErrorContainer = OnErrorContainerLight,
+        outline = OutlineLight,
+        outlineVariant = OutlineVariantLight,
+        surfaceDim = SurfaceDimLight,
+        surfaceBright = SurfaceBrightLight,
+        surfaceContainerLowest = SurfaceContainerLowestLight,
+        surfaceContainerLow = SurfaceContainerLowLight,
+        surfaceContainer = SurfaceContainerLight,
+        surfaceContainerHigh = SurfaceContainerHighLight,
+        surfaceContainerHighest = SurfaceContainerHighestLight,
+        inverseSurface = InverseSurfaceLight,
+        inverseOnSurface = InverseOnSurfaceLight,
+        inversePrimary = InversePrimaryLight,
     )
 
 private val DarkColors =
@@ -50,16 +62,28 @@ private val DarkColors =
         onTertiary = OnTertiaryDark,
         tertiaryContainer = TertiaryContainerDark,
         onTertiaryContainer = OnTertiaryContainerDark,
+        error = ErrorDark,
+        onError = OnErrorDark,
+        errorContainer = ErrorContainerDark,
+        onErrorContainer = OnErrorContainerDark,
         background = BackgroundDark,
         onBackground = OnBackgroundDark,
         surface = SurfaceDark,
         onSurface = OnSurfaceDark,
         surfaceVariant = SurfaceVariantDark,
         onSurfaceVariant = OnSurfaceVariantDark,
-        error = ErrorDark,
-        onError = OnErrorDark,
-        errorContainer = ErrorContainerDark,
-        onErrorContainer = OnErrorContainerDark,
+        outline = OutlineDark,
+        outlineVariant = OutlineVariantDark,
+        surfaceDim = SurfaceDimDark,
+        surfaceBright = SurfaceBrightDark,
+        surfaceContainerLowest = SurfaceContainerLowestDark,
+        surfaceContainerLow = SurfaceContainerLowDark,
+        surfaceContainer = SurfaceContainerDark,
+        surfaceContainerHigh = SurfaceContainerHighDark,
+        surfaceContainerHighest = SurfaceContainerHighestDark,
+        inverseSurface = InverseSurfaceDark,
+        inverseOnSurface = InverseOnSurfaceDark,
+        inversePrimary = InversePrimaryDark,
     )
 
 @Composable
@@ -77,5 +101,10 @@ fun AlarmeTheme(
             darkTheme -> DarkColors
             else -> LightColors
         }
-    MaterialTheme(colorScheme = colorScheme, typography = AlarmeTypography, content = content)
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = AlarmeTypography,
+        shapes = AlarmeShapes,
+        content = content,
+    )
 }

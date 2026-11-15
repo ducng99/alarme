@@ -5,6 +5,8 @@
     <string name="ringtone_done">Done</string>
     <string name="ringtone_silent">Silent</string>
     <string name="ringtone_random">Shuffle my sounds</string>
+    <string name="ringtone_section_quick">Quick options</string>
+    <string name="ringtone_section_add">Add your own</string>
     <string name="ringtone_section_bundled">Included</string>
     <string name="ringtone_section_device">On this device</string>
     <string name="ringtone_section_mine">My sounds</string>
@@ -14,6 +16,8 @@
     <string name="ringtone_delete">Delete</string>
     <string name="ringtone_preview">Play</string>
     <string name="ringtone_set_default">Set as default</string>
+    <string name="ringtone_kind_sound">Sound</string>
+    <string name="ringtone_kind_recording">Recording</string>
     <string name="ringtone_msg_imported">Sound imported</string>
     <string name="ringtone_msg_too_large">That file is too large</string>
     <string name="ringtone_msg_too_long">That audio is too long</string>

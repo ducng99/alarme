@@ -22,5 +22,7 @@
     <string name="alarmlist_sound">Sound</string>
     <string name="alarmlist_settings">Settings</string>
     <string name="alarmlist_new_alarm">New alarm</string>
-    <string name="alarmlist_default_sound">Default sound</string>
+    <string name="alarmlist_next_detail">%1$s · %2$s</string>
+    <string name="alarmlist_all_off_hint">Turn an alarm on to keep it armed</string>
+    <string name="alarmlist_actions">Alarm actions</string>
 </resources>

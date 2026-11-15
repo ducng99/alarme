@@ -3,6 +3,7 @@ package dev.tomng.alarme.feature.alarmlist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -83,8 +84,7 @@ class AlarmListScreenTest {
         setContent(listOf(alarm()))
 
         compose.onNodeWithText("7:00 AM").assertIsDisplayed()
-        compose.onNodeWithText("Work").assertIsDisplayed()
-        compose.onNodeWithText("Daily").assertIsDisplayed()
+        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Work · Daily")
     }
 
     @Test
@@ -135,6 +135,7 @@ class AlarmListScreenTest {
         compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
         compose.onNodeWithTag("alarmlist:skipped:7", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithText("(Will be skipped)", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("alarmlist:menu:7").performClick()
         compose.onNodeWithText("Undo skip").performClick()
 
         assertThat(recorded).containsExactly("undo:7")
@@ -144,8 +145,9 @@ class AlarmListScreenTest {
     fun `a quick alarm shows its badge and a one-shot schedule`() {
         setContent(listOf(alarm(type = AlarmType.QUICK, days = DaysOfWeek.NONE)))
 
-        compose.onNodeWithText("Quick alarm").assertIsDisplayed()
-        compose.onNodeWithText("Once").assertIsDisplayed()
+        compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
+        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Quick alarm")
+        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Once", substring = true)
     }
 
     @Test
@@ -168,7 +170,10 @@ class AlarmListScreenTest {
     fun `skip once and delete route to their actions`() {
         setContent(listOf(alarm()))
 
+        compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
+        compose.onNodeWithTag("alarmlist:menu:7").performClick()
         compose.onNodeWithText("Skip once").performClick()
+        compose.onNodeWithTag("alarmlist:menu:7").performClick()
         compose.onNodeWithText("Delete").performClick()
 
         assertThat(recorded).containsExactly("skip:7", "delete:7").inOrder()

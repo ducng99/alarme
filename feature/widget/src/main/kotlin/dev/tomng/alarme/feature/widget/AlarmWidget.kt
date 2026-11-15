@@ -17,11 +17,16 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -74,8 +79,9 @@ internal fun WidgetUi(content: WidgetContent, launch: Intent?) {
         Column(
             modifier =
                 GlanceModifier.fillMaxSize()
-                    .background(GlanceTheme.colors.surface)
-                    .padding(12.dp)
+                    .background(GlanceTheme.colors.primaryContainer)
+                    .cornerRadius(28.dp)
+                    .padding(horizontal = 18.dp, vertical = 14.dp)
                     .then(
                         if (launch != null) GlanceModifier.clickable(actionStartActivity(launch))
                         else GlanceModifier,
@@ -83,43 +89,71 @@ internal fun WidgetUi(content: WidgetContent, launch: Intent?) {
             verticalAlignment = Alignment.Vertical.CenterVertically,
         ) {
             if (content.hasAlarm) {
-                Text(
-                    text = content.timeText,
-                    style =
-                        TextStyle(
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = GlanceTheme.colors.onSurface,
-                        ),
-                )
-                if (content.label.isNotBlank()) {
-                    Text(
-                        text = content.label,
-                        style = TextStyle(fontSize = 14.sp, color = GlanceTheme.colors.onSurface),
-                    )
-                }
-                content.countdownBaseMillis?.let { base ->
-                    AndroidRemoteViews(remoteViews = countdown(LocalContext.current, base))
-                }
+                ArmedContent(content)
             } else {
-                val context = LocalContext.current
-                Text(
-                    text = context.getString(R.string.widget_no_alarm),
-                    style =
-                        TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = GlanceTheme.colors.onSurface,
-                        ),
-                )
-                Text(
-                    text = context.getString(R.string.widget_no_alarm_hint),
-                    style =
-                        TextStyle(fontSize = 12.sp, color = GlanceTheme.colors.onSurfaceVariant),
-                )
+                EmptyContent()
             }
         }
     }
+}
+
+@Composable
+private fun ArmedContent(content: WidgetContent) {
+    Text(
+        text = content.timeText,
+        style =
+            TextStyle(
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                color = GlanceTheme.colors.onPrimaryContainer,
+            ),
+    )
+    Spacer(GlanceModifier.height(4.dp))
+    if (content.countdownBaseMillis != null) {
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Vertical.CenterVertically,
+        ) {
+            if (content.label.isNotBlank()) {
+                Text(
+                    text = content.label,
+                    style =
+                        TextStyle(
+                            fontSize = 14.sp,
+                            color = GlanceTheme.colors.onPrimaryContainer,
+                        ),
+                )
+            }
+            Spacer(GlanceModifier.defaultWeight())
+            AndroidRemoteViews(
+                remoteViews = countdown(LocalContext.current, content.countdownBaseMillis),
+            )
+        }
+    } else if (content.label.isNotBlank()) {
+        Text(
+            text = content.label,
+            style = TextStyle(fontSize = 14.sp, color = GlanceTheme.colors.onPrimaryContainer),
+        )
+    }
+}
+
+@Composable
+private fun EmptyContent() {
+    val context = LocalContext.current
+    Text(
+        text = context.getString(R.string.widget_no_alarm),
+        style =
+            TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = GlanceTheme.colors.onPrimaryContainer,
+            ),
+    )
+    Spacer(GlanceModifier.height(2.dp))
+    Text(
+        text = context.getString(R.string.widget_no_alarm_hint),
+        style = TextStyle(fontSize = 13.sp, color = GlanceTheme.colors.onPrimaryContainer),
+    )
 }
 
 /** A self-ticking countdown: the Chronometer counts down to the alarm without widget updates. */

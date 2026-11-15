@@ -2,28 +2,35 @@ package dev.tomng.alarme.feature.editor
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -37,21 +44,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.component.ClockTime
+import dev.tomng.alarme.core.designsystem.component.SectionLabel
+import dev.tomng.alarme.core.designsystem.component.clockText
 import dev.tomng.alarme.core.model.mission.Mission
-import dev.tomng.alarme.core.model.mission.MissionType
 import dev.tomng.alarme.feature.ringtones.PickerMode
 import dev.tomng.alarme.feature.ringtones.RingtonePickerScreen
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.Locale
 import kotlinx.datetime.DayOfWeek
 
-/** The alarm editor: every per-alarm option, the mission chain, and save/delete. */
+/** The alarm editor: the time, the repeat days, and every per-alarm option grouped into cards. */
 @Composable
 fun AlarmEditorScreen(
     state: AlarmEditorUiState,
@@ -88,17 +95,6 @@ fun AlarmEditorScreen(
             callbacks.onNotArmedShown()
         }
     }
-    if (showTimePicker) {
-        TimePickerDialog(
-            hour = draft.hour,
-            minute = draft.minute,
-            onDismiss = { showTimePicker = false },
-            onConfirm = { hour, minute ->
-                callbacks.onTime(hour, minute)
-                showTimePicker = false
-            },
-        )
-    }
     editingMission?.let { index ->
         draft.missions.getOrNull(index)?.let { mission ->
             MissionConfigDialog(
@@ -112,134 +108,110 @@ fun AlarmEditorScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize().testTag("editor_screen"),
-        snackbarHost = { SnackbarHost(snackbar) },
-        topBar = {
-            EditorTopBar(
-                isNew = draft.isNew,
-                saving = state.saving,
-                onBack = onBack,
-                onSave = callbacks.onSave,
-                onDelete = callbacks.onDelete,
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize().testTag("editor_screen"),
+            containerColor = MaterialTheme.colorScheme.surface,
+            snackbarHost = { SnackbarHost(snackbar) },
+            topBar = {
+                EditorTopBar(
+                    isNew = draft.isNew,
+                    saving = state.saving,
+                    onBack = onBack,
+                    onSave = callbacks.onSave,
+                    onDelete = callbacks.onDelete,
+                )
+            },
+        ) { innerPadding ->
+            EditorBody(
+                draft = draft,
+                soundTitle = soundTitle,
+                errorText = errorText,
+                callbacks = callbacks,
+                innerPadding = innerPadding,
+                onOpenSound = { showPicker = true },
+                onOpenTime = { showTimePicker = true },
+                onEditMission = { editingMission = it },
             )
-        },
-    ) { innerPadding ->
-        EditorList(
-            draft = draft,
-            soundTitle = soundTitle,
-            errorText = errorText,
-            callbacks = callbacks,
-            onEditTime = { showTimePicker = true },
-            onEditMission = { editingMission = it },
-            onOpenSound = { showPicker = true },
-            modifier = Modifier.padding(innerPadding),
-        )
+        }
+        if (showTimePicker) {
+            TimePickerPage(
+                hour = draft.hour,
+                minute = draft.minute,
+                onDismiss = { showTimePicker = false },
+                onConfirm = { hour, minute ->
+                    callbacks.onTime(hour, minute)
+                    showTimePicker = false
+                },
+            )
+        }
     }
 }
 
 @Composable
-private fun EditorList(
+private fun EditorBody(
     draft: AlarmDraft,
     soundTitle: String?,
     errorText: String,
     callbacks: AlarmEditorCallbacks,
-    onEditTime: () -> Unit,
-    onEditMission: (Int) -> Unit,
+    innerPadding: PaddingValues,
     onOpenSound: () -> Unit,
-    modifier: Modifier = Modifier,
+    onOpenTime: () -> Unit,
+    onEditMission: (Int) -> Unit,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp).testTag("editor_list"),
+        modifier = Modifier.fillMaxSize().padding(innerPadding).testTag("editor_list"),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 40.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        item { TimeRow(hour = draft.hour, minute = draft.minute, onClick = onEditTime) }
+        item { TimeHero(draft.hour, draft.minute, onOpenTime = onOpenTime) }
+        item { DayPicker(draft = draft, callbacks = callbacks) }
+        item { SectionLabel(stringResource(R.string.editor_section_details)) }
         item {
-            OutlinedTextField(
-                value = draft.name,
-                onValueChange = callbacks.onName,
-                label = { Text(stringResource(R.string.editor_name)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("editor_name"),
+            DetailsGroup(
+                draft = draft,
+                soundTitle = soundTitle,
+                callbacks = callbacks,
+                onOpenSound = onOpenSound,
             )
         }
-        item { EmojiRow(selected = draft.emoji, onSelect = callbacks.onEmoji) }
-        item { RepeatSection(draft = draft, callbacks = callbacks) }
-        item {
-            SoundRow(
-                title = soundTitle ?: stringResource(R.string.editor_sound_default),
-                onClick = onOpenSound,
-            )
-        }
-        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-        item { RingOptions(draft = draft, callbacks = callbacks) }
-        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-        item { SnoozeSection(draft = draft, callbacks = callbacks) }
+        item { SectionLabel(stringResource(R.string.editor_section_sound)) }
+        item { SoundGroup(draft = draft, callbacks = callbacks) }
+        item { SectionLabel(stringResource(R.string.editor_section_wake_up)) }
+        item { SnoozeGroup(draft = draft, callbacks = callbacks) }
         item { WakeUpCheckSection(draft = draft, callbacks = callbacks) }
-        item { MemoSection(draft = draft, callbacks = callbacks) }
-        item { ExtrasSection(draft = draft, callbacks = callbacks) }
-        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            SectionTitle(
-                text =
-                    stringResource(
-                        R.string.editor_missions,
-                        draft.missions.size,
-                        Mission.MAX_PER_ALARM,
-                    ),
+            SectionLabel(
+                stringResource(
+                    R.string.editor_missions,
+                    draft.missions.size,
+                    Mission.MAX_PER_ALARM,
+                ),
             )
         }
-        itemsIndexed(draft.missions) { index, mission ->
-            MissionRow(
-                index = index,
-                mission = mission,
-                onEdit = { onEditMission(index) },
-                onRemove = { callbacks.onRemoveMission(index) },
+        item {
+            MissionGroup(
+                draft = draft,
+                callbacks = callbacks,
+                onEditMission = onEditMission,
             )
         }
-        item { AddMissionRow(enabled = draft.canAddMission, onAdd = callbacks.onAddMission) }
+        item { SectionLabel(stringResource(R.string.editor_section_memo)) }
+        item { MemoSection(draft = draft, callbacks = callbacks) }
         if (errorText.isNotEmpty()) {
             item {
                 Text(
                     text = errorText,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 12.dp).testTag("editor_errors"),
+                    modifier =
+                        Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
+                            .testTag("editor_errors"),
                 )
             }
         }
     }
 }
-
-/** The editor's user intents. */
-class AlarmEditorCallbacks(
-    val onTime: (hour: Int, minute: Int) -> Unit = { _, _ -> },
-    val onName: (String) -> Unit = {},
-    val onEmoji: (String) -> Unit = {},
-    val onToggleDay: (DayOfWeek) -> Unit = {},
-    val onEveryDay: () -> Unit = {},
-    val onOneShot: () -> Unit = {},
-    val onRingtone: (String?) -> Unit = {},
-    val onEnabled: (Boolean) -> Unit = {},
-    val onVibrate: (Boolean) -> Unit = {},
-    val onVolume: (Float) -> Unit = {},
-    val onCrescendo: (Boolean) -> Unit = {},
-    val onCrescendoSeconds: (Int) -> Unit = {},
-    val onSnoozeEnabled: (Boolean) -> Unit = {},
-    val onSnoozeMinutes: (Int) -> Unit = {},
-    val onSnoozeLimit: (Int) -> Unit = {},
-    val onWakeUpCheckMinutes: (Int) -> Unit = {},
-    val onMemo: (String) -> Unit = {},
-    val onTts: (Boolean) -> Unit = {},
-    val onBackupSound: (Boolean) -> Unit = {},
-    val onTimeAnnouncement: (Boolean) -> Unit = {},
-    val onAddMission: (MissionType) -> Unit = {},
-    val onRemoveMission: (Int) -> Unit = {},
-    val onReplaceMission: (Int, Mission) -> Unit = { _, _ -> },
-    val onSave: () -> Unit = {},
-    val onDelete: () -> Unit = {},
-    val onNotArmedShown: () -> Unit = {},
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -253,15 +225,18 @@ private fun EditorTopBar(
     TopAppBar(
         title = {
             Text(
-                stringResource(
-                    if (isNew) R.string.editor_title_new else R.string.editor_title_edit,
-                ),
+                text =
+                    stringResource(
+                        if (isNew) R.string.editor_title_new else R.string.editor_title_edit,
+                    ),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 4.dp),
             )
         },
         navigationIcon = {
             IconButton(onClick = onBack, modifier = Modifier.testTag("editor_back")) {
                 Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
+                    Icons.Filled.Close,
                     contentDescription = stringResource(R.string.editor_back),
                 )
             }
@@ -270,195 +245,119 @@ private fun EditorTopBar(
             if (!isNew) {
                 IconButton(onClick = onDelete, modifier = Modifier.testTag("editor_delete")) {
                     Icon(
-                        Icons.Filled.Delete,
+                        Icons.Outlined.Delete,
                         contentDescription = stringResource(R.string.editor_delete),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            TextButton(
+            FilledIconButton(
                 onClick = onSave,
                 enabled = !saving,
-                modifier = Modifier.testTag("editor_save"),
+                modifier =
+                    Modifier.padding(start = 4.dp, end = 8.dp).size(40.dp).testTag("editor_save"),
             ) {
-                Text(stringResource(R.string.editor_save))
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = stringResource(R.string.editor_save),
+                )
             }
         },
+        colors =
+            androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
     )
 }
 
 @Composable
-private fun TimeRow(hour: Int, minute: Int, onClick: () -> Unit) {
+private fun TimeHero(hour: Int, minute: Int, onOpenTime: () -> Unit) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clickable(onClick = onClick)
+                .padding(top = 4.dp)
+                .clip(MaterialTheme.shapes.large)
+                .clickable(onClick = onOpenTime)
                 .padding(vertical = 12.dp)
                 .testTag("editor_time"),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = formatTime(hour, minute),
+        ClockTime(
+            hour = hour,
+            minute = minute,
             style = MaterialTheme.typography.displayMedium,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = stringResource(R.string.editor_time_hint),
             style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
 @Composable
-private fun EmojiRow(selected: String, onSelect: (String) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        EMOJIS.forEach { emoji ->
-            FilterChip(
-                selected = emoji == selected,
-                onClick = { onSelect(emoji) },
-                label = { Text(emoji) },
-                modifier = Modifier.testTag("editor_emoji:$emoji"),
-            )
-        }
-    }
-}
-
-@Composable
-private fun RepeatSection(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        SectionTitle(stringResource(R.string.editor_repeat))
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+private fun DayPicker(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
             DayOfWeek.entries.forEach { day ->
-                FilterChip(
+                DayToggle(
+                    day = day,
                     selected = day in draft.days,
                     onClick = { callbacks.onToggleDay(day) },
-                    label = { Text(dayLabel(day)) },
-                    modifier = Modifier.testTag("editor_day:${day.name}"),
                 )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            TextButton(
                 onClick = callbacks.onEveryDay,
-                label = { Text(stringResource(R.string.editor_every_day)) },
                 modifier = Modifier.testTag("editor_every_day"),
-            )
-            AssistChip(
+            ) {
+                Text(stringResource(R.string.editor_every_day))
+            }
+            TextButton(
                 onClick = callbacks.onOneShot,
-                label = { Text(stringResource(R.string.editor_once)) },
                 modifier = Modifier.testTag("editor_once"),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SoundRow(title: String, onClick: () -> Unit) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(vertical = 12.dp)
-                .testTag("editor_sound"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.editor_sound),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(text = title, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun MissionRow(
-    index: Int,
-    mission: Mission,
-    onEdit: () -> Unit,
-    onRemove: () -> Unit,
-) {
-    val incomplete = !mission.isComplete()
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onEdit)
-                .padding(vertical = 10.dp)
-                .testTag("editor_mission:$index"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text =
-                    stringResource(
-                        R.string.editor_mission_slot,
-                        index + 1,
-                        missionTypeLabel(mission),
-                    ),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text =
-                    if (incomplete) stringResource(R.string.editor_mission_incomplete)
-                    else missionSummary(mission),
-                style = MaterialTheme.typography.bodyMedium,
-                color =
-                    if (incomplete) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        TextButton(
-            onClick = onRemove,
-            modifier = Modifier.testTag("editor_mission_remove:$index"),
-        ) {
-            Text(stringResource(R.string.editor_mission_remove))
-        }
-    }
-}
-
-@Composable
-private fun AddMissionRow(enabled: Boolean, onAdd: (MissionType) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        TextButton(
-            onClick = { expanded = !expanded },
-            enabled = enabled,
-            modifier = Modifier.testTag("editor_add_mission"),
-        ) {
-            Text(stringResource(R.string.editor_add_mission))
-        }
-        if (expanded) {
-            MissionType.entries.forEach { type ->
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .clickable {
-                                onAdd(type)
-                                expanded = false
-                            }
-                            .padding(vertical = 10.dp)
-                            .testTag("editor_mission_type:${type.name}"),
-                ) {
-                    Text(text = missionTypeLabel(type), style = MaterialTheme.typography.bodyLarge)
-                }
+            ) {
+                Text(stringResource(R.string.editor_once))
             }
         }
     }
 }
 
 @Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        modifier = Modifier.padding(top = 8.dp),
-    )
+private fun DayToggle(day: DayOfWeek, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.size(44.dp).testTag("editor_day:${day.name}"),
+        shape = CircleShape,
+        color =
+            if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor =
+            if (selected) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+    ) {
+        Box(
+            modifier = Modifier.clip(CircleShape).clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = dayLabel(day),
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimePickerDialog(
+private fun TimePickerPage(
     hour: Int,
     minute: Int,
     onDismiss: () -> Unit,
@@ -470,30 +369,57 @@ private fun TimePickerDialog(
             initialMinute = minute,
             is24Hour = android.text.format.DateFormat.is24HourFormat(LocalContext.current),
         )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(pickerState.hour, pickerState.minute) },
-                modifier = Modifier.testTag("editor_time_ok"),
+    Surface(
+        modifier = Modifier.fillMaxSize().testTag("editor_time_page"),
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.editor_ok))
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.testTag("editor_time_cancel"),
+                ) {
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.editor_time_cancel),
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                Text(
+                    text = stringResource(R.string.editor_pick_time),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.size(48.dp))
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.editor_cancel)) }
-        },
-        text = { TimePicker(state = pickerState) },
-    )
+            Spacer(Modifier.weight(1f))
+            TimePicker(state = pickerState)
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = { onConfirm(pickerState.hour, pickerState.minute) },
+                modifier = Modifier.fillMaxWidth().height(56.dp).testTag("editor_time_ok"),
+                shape = MaterialTheme.shapes.large,
+            ) {
+                Text(
+                    text = stringResource(R.string.editor_ok),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
 }
 
-private val EMOJIS = listOf("⏰", "🌅", "☕", "🏃", "📚", "💪", "🐱", "🎵")
-
-internal fun formatTime(hour: Int, minute: Int): String =
-    LocalTime.of(hour, minute)
-        .format(
-            DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault()),
-        )
+internal fun formatTime(hour: Int, minute: Int): String = clockText(hour, minute)
 
 internal fun dayLabel(day: DayOfWeek): String =
     java.time.DayOfWeek.of(day.isoDayNumber)
@@ -503,86 +429,6 @@ internal fun DraftError.textRes(): Int =
     when (this) {
         DraftError.TooManyMissions -> R.string.editor_error_too_many_missions
         DraftError.IncompleteMission -> R.string.editor_error_incomplete_mission
-    }
-
-@Composable
-internal fun missionTypeLabel(mission: Mission): String =
-    stringResource(
-        when (mission) {
-            is Mission.Math -> R.string.mission_math
-            is Mission.Memory -> R.string.mission_memory
-            is Mission.Shake -> R.string.mission_shake
-            is Mission.Step -> R.string.mission_step
-            is Mission.Squat -> R.string.mission_squat
-            is Mission.Typing -> R.string.mission_typing
-            is Mission.Barcode -> R.string.mission_barcode
-            is Mission.Photo -> R.string.mission_photo
-            is Mission.ImageRecognition -> R.string.mission_image_recognition
-            is Mission.WordBeat -> R.string.mission_word_beat
-        },
-    )
-
-@Composable
-internal fun missionTypeLabel(type: MissionType): String =
-    stringResource(
-        when (type) {
-            MissionType.MATH -> R.string.mission_math
-            MissionType.MEMORY -> R.string.mission_memory
-            MissionType.SHAKE -> R.string.mission_shake
-            MissionType.STEP -> R.string.mission_step
-            MissionType.SQUAT -> R.string.mission_squat
-            MissionType.TYPING -> R.string.mission_typing
-            MissionType.BARCODE -> R.string.mission_barcode
-            MissionType.PHOTO -> R.string.mission_photo
-            MissionType.IMAGE_RECOGNITION -> R.string.mission_image_recognition
-            MissionType.WORD_BEAT -> R.string.mission_word_beat
-        },
-    )
-
-/** Whether the mission has everything it needs to run. */
-internal fun Mission.isComplete(): Boolean =
-    when (this) {
-        is Mission.Math -> true
-        is Mission.Memory -> true
-        is Mission.Shake -> count > 0
-        is Mission.Step -> count > 0
-        is Mission.Squat -> count > 0
-        is Mission.Typing -> typingSentences.isNotEmpty()
-        is Mission.Barcode -> barcodeValue.isNotBlank()
-        is Mission.Photo -> photoPath.isNotBlank()
-        is Mission.ImageRecognition -> objects.isNotEmpty()
-        is Mission.WordBeat -> selectedRoundSetIds.isNotEmpty()
-    }
-
-@Composable
-internal fun missionSummary(mission: Mission): String =
-    when (mission) {
-        is Mission.Math ->
-            stringResource(R.string.summary_rounds_level, mission.rounds, mission.difficulty)
-        is Mission.Memory ->
-            stringResource(R.string.summary_rounds_level, mission.rounds, mission.difficulty)
-        is Mission.Shake -> stringResource(R.string.summary_count, mission.count)
-        is Mission.Step -> stringResource(R.string.summary_count, mission.count)
-        is Mission.Squat -> stringResource(R.string.summary_count, mission.count)
-        is Mission.Typing ->
-            stringResource(R.string.summary_sentences, mission.typingSentences.size)
-        is Mission.Barcode -> stringResource(R.string.summary_barcode)
-        is Mission.Photo -> stringResource(R.string.summary_photo)
-        is Mission.ImageRecognition ->
-            stringResource(R.string.summary_objects, mission.objects.size)
-        is Mission.WordBeat ->
-            stringResource(
-                R.string.summary_word_beat,
-                stringResource(languageLabel(mission.language)),
-                mission.rounds,
-            )
-    }
-
-internal fun languageLabel(language: dev.tomng.alarme.core.model.mission.WordBeatLanguage): Int =
-    when (language) {
-        dev.tomng.alarme.core.model.mission.WordBeatLanguage.ENGLISH -> R.string.language_english
-        dev.tomng.alarme.core.model.mission.WordBeatLanguage.KOREAN -> R.string.language_korean
-        dev.tomng.alarme.core.model.mission.WordBeatLanguage.JAPANESE -> R.string.language_japanese
     }
 
 private val DayOfWeek.isoDayNumber: Int

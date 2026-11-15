@@ -2,16 +2,26 @@ package dev.tomng.alarme.feature.ringtones
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material.icons.outlined.VolumeOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -19,18 +29,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.tomng.alarme.core.designsystem.component.GroupCard
+import dev.tomng.alarme.core.designsystem.component.GroupDivider
+import dev.tomng.alarme.core.designsystem.component.LeadingIcon
+import dev.tomng.alarme.core.designsystem.component.ScreenHeader
+import dev.tomng.alarme.core.designsystem.component.SectionLabel
+import dev.tomng.alarme.core.designsystem.component.SettingRow
 import dev.tomng.alarme.core.model.ringtone.CatalogRingtone
 import dev.tomng.alarme.core.model.ringtone.RingtoneKind
 import dev.tomng.alarme.core.model.ringtone.RingtoneUris
@@ -112,50 +126,35 @@ fun RingtonePickerContent(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { PickerTopBar(mode = mode, onDone = callbacks.onDone) },
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize().padding(innerPadding).testTag("ringtone:list"),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text =
-                            stringResource(
-                                if (mode == PickerMode.Default) R.string.ringtone_title_default
-                                else R.string.ringtone_title_alarm,
-                            ),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.weight(1f).testTag("ringtone:title"),
-                    )
-                    TextButton(
-                        onClick = callbacks.onDone,
-                        modifier = Modifier.testTag("ringtone:done"),
-                    ) {
-                        Text(stringResource(R.string.ringtone_done))
-                    }
-                }
-            }
             if (mode == PickerMode.Alarm) {
+                item { SectionLabel(stringResource(R.string.ringtone_section_quick)) }
                 item {
-                    PseudoChoice(
-                        R.string.ringtone_silent,
-                        RingtoneUris.SILENT,
-                        selectedUri,
-                        callbacks,
-                    )
-                }
-                item {
-                    PseudoChoice(
-                        R.string.ringtone_random,
-                        RingtoneUris.RANDOM,
-                        selectedUri,
-                        callbacks,
-                    )
+                    GroupCard {
+                        PseudoChoice(
+                            labelRes = R.string.ringtone_silent,
+                            uri = RingtoneUris.SILENT,
+                            selectedUri = selectedUri,
+                            icon = Icons.Outlined.VolumeOff,
+                            callbacks = callbacks,
+                        )
+                        GroupDivider()
+                        PseudoChoice(
+                            labelRes = R.string.ringtone_random,
+                            uri = RingtoneUris.RANDOM,
+                            selectedUri = selectedUri,
+                            icon = Icons.Outlined.Shuffle,
+                            callbacks = callbacks,
+                        )
+                    }
                 }
             }
             section(
@@ -164,6 +163,7 @@ fun RingtonePickerContent(
                 mode,
                 selectedUri,
                 callbacks,
+                defaultId = state.defaultRingtoneId,
             )
             section(
                 R.string.ringtone_section_device,
@@ -171,6 +171,7 @@ fun RingtonePickerContent(
                 mode,
                 selectedUri,
                 callbacks,
+                defaultId = state.defaultRingtoneId,
             )
             section(
                 R.string.ringtone_section_mine,
@@ -180,28 +181,42 @@ fun RingtonePickerContent(
                 mode,
                 selectedUri,
                 callbacks,
+                defaultId = state.defaultRingtoneId,
                 deletable = true,
             )
+            item { SectionLabel(stringResource(R.string.ringtone_section_add)) }
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     OutlinedButton(
                         onClick = callbacks.onImportClick,
                         modifier = Modifier.weight(1f).testTag("ringtone:import"),
                     ) {
-                        Text(stringResource(R.string.ringtone_import))
+                        Icon(
+                            Icons.Outlined.FileUpload,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 6.dp),
+                        )
+                        Text(stringResource(R.string.ringtone_import), maxLines = 1)
                     }
                     Button(
                         onClick = callbacks.onRecordToggle,
                         modifier = Modifier.weight(1f).testTag("ringtone:record"),
                     ) {
+                        Icon(
+                            Icons.Outlined.Mic,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 6.dp),
+                        )
                         Text(
-                            stringResource(
-                                if (state.recording) R.string.ringtone_record_stop
-                                else R.string.ringtone_record,
-                            ),
+                            text =
+                                stringResource(
+                                    if (state.recording) R.string.ringtone_record_stop
+                                    else R.string.ringtone_record,
+                                ),
+                            maxLines = 1,
                         )
                     }
                 }
@@ -211,77 +226,121 @@ fun RingtonePickerContent(
 }
 
 @Composable
+private fun PickerTopBar(mode: PickerMode, onDone: () -> Unit) {
+    ScreenHeader(
+        title =
+            stringResource(
+                if (mode == PickerMode.Default) R.string.ringtone_title_default
+                else R.string.ringtone_title_alarm,
+            ),
+        navigation = {
+            IconButton(onClick = onDone, modifier = Modifier.testTag("ringtone:done")) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.ringtone_done),
+                )
+            }
+        },
+        modifier = Modifier.statusBarsPadding().testTag("ringtone:title"),
+    )
+}
+
+@Composable
 private fun PseudoChoice(
     labelRes: Int,
     uri: String,
     selectedUri: String?,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     callbacks: RingtonePickerCallbacks,
 ) {
-    Row(
+    val selected = selectedUri == uri
+    SettingRow(
+        title = stringResource(labelRes),
+        leading = { LeadingIcon(icon) },
+        onClick = { callbacks.onSelect(uri, "") },
+        trailing = { RadioButton(selected = selected, onClick = null) },
         modifier =
-            Modifier.fillMaxWidth()
-                .clickable { callbacks.onSelect(uri, "") }
-                .testTag(if (uri == RingtoneUris.SILENT) "ringtone:silent" else "ringtone:random"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selectedUri == uri, onClick = null)
-        Text(
-            stringResource(labelRes),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 4.dp),
-        )
-    }
+            Modifier.testTag(
+                if (uri == RingtoneUris.SILENT) "ringtone:silent" else "ringtone:random",
+            ),
+    )
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.section(
-    @Suppress("UNUSED_PARAMETER") labelRes: Int,
+private fun LazyListScope.section(
+    labelRes: Int,
     rows: List<CatalogRingtone>,
     mode: PickerMode,
     selectedUri: String?,
     callbacks: RingtonePickerCallbacks,
+    defaultId: Long? = null,
     deletable: Boolean = false,
 ) {
     if (rows.isEmpty()) return
-    item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+    item { SectionLabel(stringResource(labelRes)) }
     item {
-        Text(
-            stringResource(labelRes),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.secondary,
-        )
-    }
-    items(rows, key = { "${it.kind}:${it.id}:${it.uri}" }) { row ->
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .clickable { callbacks.onSelect(row.uri, row.title) }
-                    .testTag("ringtone:row:${row.id}"),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            RadioButton(selected = selectedUri == row.uri, onClick = null)
-            Text(
-                row.title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f).padding(start = 4.dp),
-            )
-            if (mode == PickerMode.Default) {
-                TextButton(
-                    onClick = { callbacks.onSetDefault(row) },
-                    modifier = Modifier.testTag("ringtone:default:${row.id}"),
-                ) {
-                    Text(stringResource(R.string.ringtone_set_default))
-                }
-            }
-            if (deletable) {
-                TextButton(
-                    onClick = { callbacks.onDelete(row) },
-                    modifier = Modifier.testTag("ringtone:delete:${row.id}"),
-                ) {
-                    Text(stringResource(R.string.ringtone_delete))
-                }
+        GroupCard {
+            rows.forEachIndexed { index, row ->
+                if (index > 0) GroupDivider()
+                RingtoneRow(
+                    row = row,
+                    mode = mode,
+                    selected = selectedUri == row.uri,
+                    defaultId = defaultId,
+                    deletable = deletable,
+                    callbacks = callbacks,
+                )
             }
         }
     }
+}
+
+@Composable
+private fun RingtoneRow(
+    row: CatalogRingtone,
+    mode: PickerMode,
+    selected: Boolean,
+    defaultId: Long?,
+    deletable: Boolean,
+    callbacks: RingtonePickerCallbacks,
+) {
+    SettingRow(
+        title = row.title,
+        supporting =
+            stringResource(
+                if (row.kind == RingtoneKind.RECORD) R.string.ringtone_kind_recording
+                else R.string.ringtone_kind_sound,
+            ),
+        leading = {
+            LeadingIcon(
+                if (row.kind == RingtoneKind.RECORD) Icons.Outlined.Mic
+                else Icons.Outlined.MusicNote,
+            )
+        },
+        onClick = {
+            if (mode == PickerMode.Default) callbacks.onSetDefault(row)
+            else callbacks.onSelect(row.uri, row.title)
+        },
+        trailing = {
+            if (deletable) {
+                IconButton(
+                    onClick = { callbacks.onDelete(row) },
+                    modifier = Modifier.testTag("ringtone:delete:${row.id}"),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = stringResource(R.string.ringtone_delete),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            RadioButton(
+                selected = if (mode == PickerMode.Default) row.id == defaultId else selected,
+                onClick = null,
+                modifier = Modifier.testTag("ringtone:default:${row.id}"),
+            )
+        },
+        modifier = Modifier.testTag("ringtone:row:${row.id}"),
+    )
 }
 
 private fun PickerMessage.textRes(): Int =

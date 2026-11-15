@@ -5,7 +5,8 @@
 
     <string name="settings_permissions_title">Permissions</string>
     <string name="settings_permissions_all_granted">All permissions granted</string>
-    <string name="settings_permissions_missing">%1$d missing</string>
+    <string name="settings_permissions_missing">%1$d permissions missing</string>
+    <string name="settings_permissions_body">Alarms may ring late without them.</string>
     <string name="settings_permission_granted">Granted</string>
     <string name="settings_permission_missing">Not granted</string>
     <string name="settings_permission_open">Open</string>
@@ -27,6 +28,11 @@
     <string name="settings_permission_microphone">Microphone</string>
     <string name="settings_permission_microphone_body">Used by the voice mission and the voice memo recorder.</string>
 
+    <string name="settings_sound_title">Alarm sound</string>
+    <string name="settings_default_sound_title">Default alarm sound</string>
+    <string name="settings_default_sound_body">Used by alarms without their own sound.</string>
+    <string name="settings_troubleshooting_title">Troubleshooting</string>
+
     <string name="settings_reliability_title">Cheat prevention</string>
     <string name="settings_prevent_power_off">Prevent phone turn-off</string>
     <string name="settings_prevent_power_off_body">Pulls the alarm back when you try to power off or leave the ring screen.</string>
@@ -42,8 +48,10 @@
     <string name="settings_optimize_body">Battery, Do Not Disturb and vendor autostart settings.</string>
     <string name="settings_backup_title">Backup &amp; restore</string>
     <string name="settings_backup_body">Export your alarms and sounds to a file, or restore them.</string>
+    <string name="settings_backup_row">Export \&amp; restore</string>
 
     <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_section">Device health</string>
     <string name="diagnostics_ok">OK</string>
     <string name="diagnostics_attention">Check</string>
     <string name="diagnostics_label_battery">Battery level</string>
@@ -59,6 +67,7 @@
     <string name="diagnostics_label_storage">Free storage</string>
 
     <string name="optimize_title">Keep alarms on time</string>
+    <string name="optimize_section">Allow alarms through</string>
     <string name="optimize_battery">Battery optimization</string>
     <string name="optimize_battery_body">Allow Alarme to run without battery restrictions.</string>
     <string name="optimize_dnd">Do Not Disturb access</string>
