@@ -94,7 +94,7 @@ class RingActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         takeover = RingTakeoverController(InsetsSystemBarsHider(window))
-        takeover.takeOver(window)
+        takeover.takeOver(this)
         // Belt and braces: the key policy already swallows back in dispatchKeyEvent.
         onBackPressedDispatcher.addCallback(this) { /* swallowed */ }
 
@@ -136,6 +136,7 @@ class RingActivity : ComponentActivity() {
     }
 
     /** Own services only — exactly what we need: is the alarm still ringing behind this screen? */
+    @Suppress("DEPRECATION")
     private fun ringServiceRunning(): Boolean =
         getSystemService(android.app.ActivityManager::class.java)
             ?.getRunningServices(Int.MAX_VALUE)
@@ -207,7 +208,7 @@ class RingActivity : ComponentActivity() {
         focusScope.cancel()
         watchdog.stop()
         dialogCloser.stop()
-        takeover.release(window)
+        takeover.release(this)
         super.onDestroy()
     }
 

@@ -94,6 +94,6 @@ class AndroidTtsSpeaker @Inject constructor(@ApplicationContext private val cont
     }
 
     private fun resumeQuietly(continuation: CancellableContinuation<Unit>) {
-        continuation.resume(Unit) {}
+        continuation.resume(Unit) { _, _, _ -> }
     }
 }

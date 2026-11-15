@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material.icons.outlined.VolumeOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tomng.alarme.core.designsystem.component.AlarmeScaffold
 import dev.tomng.alarme.core.designsystem.component.GroupCard
@@ -150,7 +150,7 @@ fun RingtonePickerContent(
                             labelRes = R.string.ringtone_silent,
                             uri = RingtoneUris.SILENT,
                             selectedUri = selectedUri,
-                            icon = Icons.Outlined.VolumeOff,
+                            icon = Icons.AutoMirrored.Outlined.VolumeOff,
                             callbacks = callbacks,
                         )
                         GroupDivider()

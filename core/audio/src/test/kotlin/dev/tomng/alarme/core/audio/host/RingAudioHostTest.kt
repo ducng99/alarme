@@ -126,6 +126,7 @@ class RingAudioHostTest {
         host.stop()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `crescendo ramps the player gain quadratically to full`() = runTest {
         val host = newHost()

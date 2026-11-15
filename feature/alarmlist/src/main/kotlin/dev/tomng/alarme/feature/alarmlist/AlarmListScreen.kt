@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Alarm
@@ -32,7 +33,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Snooze
-import androidx.compose.material.icons.outlined.Undo
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -67,7 +67,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tomng.alarme.core.designsystem.component.AlarmeScaffold
 import dev.tomng.alarme.core.designsystem.component.AlarmeSwitch
@@ -543,7 +543,7 @@ private fun AlarmActionsMenu(
         if (alarm.isSkipped) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.alarmlist_undo_skip)) },
-                leadingIcon = { Icon(Icons.Outlined.Undo, contentDescription = null) },
+                leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Undo, contentDescription = null) },
                 onClick = {
                     onDismiss()
                     callbacks.onUndoSkip(alarm)

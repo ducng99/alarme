@@ -4,6 +4,7 @@ import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.tomng.alarme.core.alarmengine.notifications.RingScreenIntentFactory
@@ -33,7 +34,7 @@ constructor(
         val sendOptions =
             ActivityOptions.makeBasic()
                 .setPendingIntentBackgroundActivityStartMode(
-                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED,
+                    backgroundStartMode(),
                 )
                 .toBundle()
         try {
@@ -51,7 +52,7 @@ constructor(
         val creatorOptions =
             ActivityOptions.makeBasic()
                 .setPendingIntentCreatorBackgroundActivityStartMode(
-                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED,
+                    backgroundStartMode(),
                 )
                 .toBundle()
         return PendingIntent.getActivity(
@@ -64,6 +65,13 @@ constructor(
             creatorOptions,
         )
     }
+
+    private fun backgroundStartMode(): Int =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS
+        } else {
+            @Suppress("DEPRECATION") ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+        }
 
     private companion object {
         const val TAG = "Alarme.RingScreen"

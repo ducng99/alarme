@@ -43,7 +43,7 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.navigation.compose)
-    implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.lifecycle.viewmodel.compose)
 
     implementation(libs.activity.compose)
     implementation(libs.core.ktx)

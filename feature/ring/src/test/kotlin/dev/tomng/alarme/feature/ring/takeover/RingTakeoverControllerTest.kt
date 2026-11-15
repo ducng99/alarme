@@ -8,6 +8,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
@@ -24,11 +25,11 @@ class RingTakeoverControllerTest {
     fun `taking over wakes the screen, draws over the lock and keeps it on`() {
         val controller = RingTakeoverController(bars)
         withActivity { activity ->
-            controller.takeOver(activity.window)
+            controller.takeOver(activity)
 
             val flags = activity.window.attributes.flags
-            assertThat(flags and WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED).isNotEqualTo(0)
-            assertThat(flags and WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON).isNotEqualTo(0)
+            assertThat(shadowOf(activity).showWhenLocked).isTrue()
+            assertThat(shadowOf(activity).turnScreenOn).isTrue()
             assertThat(flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON).isNotEqualTo(0)
         }
         assertThat(bars.hidden).isEqualTo(1)
@@ -39,7 +40,7 @@ class RingTakeoverControllerTest {
     fun `re-entering immersive keeps the bars hidden`() {
         val controller = RingTakeoverController(bars)
         withActivity { activity ->
-            controller.takeOver(activity.window)
+            controller.takeOver(activity)
             controller.keepImmersive()
 
             assertThat(bars.hidden).isEqualTo(2)
@@ -50,12 +51,12 @@ class RingTakeoverControllerTest {
     fun `releasing clears every flag and shows the bars`() {
         val controller = RingTakeoverController(bars)
         withActivity { activity ->
-            controller.takeOver(activity.window)
-            controller.release(activity.window)
+            controller.takeOver(activity)
+            controller.release(activity)
 
             val flags = activity.window.attributes.flags
-            assertThat(flags and WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED).isEqualTo(0)
-            assertThat(flags and WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON).isEqualTo(0)
+            assertThat(shadowOf(activity).showWhenLocked).isFalse()
+            assertThat(shadowOf(activity).turnScreenOn).isFalse()
             assertThat(flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON).isEqualTo(0)
         }
         assertThat(bars.shown).isEqualTo(1)

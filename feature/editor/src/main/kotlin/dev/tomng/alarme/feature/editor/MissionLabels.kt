@@ -1,10 +1,10 @@
 package dev.tomng.alarme.feature.editor
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Keyboard
@@ -72,7 +72,7 @@ internal fun missionIcon(type: MissionType): ImageVector =
         MissionType.MATH -> Icons.Outlined.Calculate
         MissionType.MEMORY -> Icons.Outlined.Psychology
         MissionType.SHAKE -> Icons.Outlined.Accessibility
-        MissionType.STEP -> Icons.Outlined.DirectionsWalk
+        MissionType.STEP -> Icons.AutoMirrored.Outlined.DirectionsWalk
         MissionType.SQUAT -> Icons.Outlined.FitnessCenter
         MissionType.TYPING -> Icons.Outlined.Keyboard
         MissionType.BARCODE -> Icons.Outlined.QrCodeScanner

@@ -1,5 +1,6 @@
 package dev.tomng.alarme.feature.ring.takeover
 
+import android.app.Activity
 import android.view.Window
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
@@ -44,14 +45,11 @@ class InsetsSystemBarsHider(window: Window) : SystemBarsHider {
  */
 class RingTakeoverController(private val bars: SystemBarsHider) {
 
-    private val takeoverFlags =
-        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-
-    fun takeOver(window: Window) {
-        window.addFlags(takeoverFlags)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+    fun takeOver(activity: Activity) {
+        activity.setShowWhenLocked(true)
+        activity.setTurnScreenOn(true)
+        activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
         bars.hide()
     }
 
@@ -60,8 +58,10 @@ class RingTakeoverController(private val bars: SystemBarsHider) {
         bars.hide()
     }
 
-    fun release(window: Window) {
-        window.clearFlags(takeoverFlags)
+    fun release(activity: Activity) {
+        activity.setShowWhenLocked(false)
+        activity.setTurnScreenOn(false)
+        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         bars.show()
     }
 }

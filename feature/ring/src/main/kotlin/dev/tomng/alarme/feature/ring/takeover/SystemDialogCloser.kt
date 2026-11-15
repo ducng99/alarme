@@ -36,6 +36,7 @@ class SystemDialogCloser(
     }
 
     @android.annotation.SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
     private fun sendCloseBroadcast() {
         // Restricted for third-party apps since API 31; only reachable when broadcastAllowed is
         // true, which production never sets on minSdk 35.

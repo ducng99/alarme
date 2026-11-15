@@ -41,7 +41,7 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.navigation.compose)
-    implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.lifecycle.viewmodel.compose)
 
     implementation(libs.core.ktx)
     implementation(libs.datetime)

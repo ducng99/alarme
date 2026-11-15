@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import dev.tomng.alarme.core.data.db.AlarmeDatabase
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

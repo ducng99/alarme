@@ -8,9 +8,9 @@ import dev.tomng.alarme.core.data.db.AlarmeDatabase
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.alarm.DaysOfWeek
 import dev.tomng.alarme.core.model.mission.Mission
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals

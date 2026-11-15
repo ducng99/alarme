@@ -36,8 +36,9 @@ class DeviceAdminControllerTest {
 
         assertThat(intent.action).isEqualTo(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
         assertThat(
-                intent.getParcelableExtra<android.content.ComponentName>(
+                intent.getParcelableExtra(
                     DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                    android.content.ComponentName::class.java,
                 ),
             )
             .isEqualTo(controller.component)

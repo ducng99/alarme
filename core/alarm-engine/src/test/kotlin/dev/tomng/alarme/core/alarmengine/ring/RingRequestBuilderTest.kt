@@ -112,7 +112,7 @@ class RingRequestBuilderTest {
         val request = build(alarm = alarm(backupEnabled = true))
         assertThat(request.backupSound).isNotNull()
         assertThat(request.backupSound!!.delaySeconds).isEqualTo(40)
-        assertThat(request.backupSound!!.backupUri).isNotEmpty()
+        assertThat(request.backupSound.backupUri).isNotEmpty()
     }
 
     @Test
@@ -129,7 +129,7 @@ class RingRequestBuilderTest {
     fun `tts only speaks the time when memo tts off`() {
         val request = build(alarm = alarm(timeTts = true, memoTts = false))
         assertThat(request.tts!!.speakLabel).isFalse()
-        assertThat(request.tts!!.speakTime).isTrue()
+        assertThat(request.tts.speakTime).isTrue()
     }
 
     @Test

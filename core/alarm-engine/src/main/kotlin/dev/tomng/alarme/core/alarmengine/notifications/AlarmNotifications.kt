@@ -32,19 +32,19 @@ constructor(
 
     fun ensureChannels() {
         if (
-            notificationManager?.getNotificationChannel(CHANNEL_ALARM_STATUS) != null &&
-                notificationManager?.getNotificationChannel(CHANNEL_NEXT_ALARM) != null
+            notificationManager.getNotificationChannel(CHANNEL_ALARM_STATUS) != null &&
+                notificationManager.getNotificationChannel(CHANNEL_NEXT_ALARM) != null
         ) {
             return
         }
-        notificationManager?.createNotificationChannel(
+        notificationManager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ALARM_STATUS,
                 context.getString(R.string.alarme_notif_channel_status),
                 NotificationManager.IMPORTANCE_HIGH,
             ),
         )
-        notificationManager?.createNotificationChannel(
+        notificationManager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_NEXT_ALARM,
                 context.getString(R.string.alarme_notif_channel_next),
@@ -85,7 +85,7 @@ constructor(
 
     /** Re-posts the ringing notification (e.g. once the alarm name is known). */
     fun postRinging(builder: NotificationCompat.Builder) {
-        notificationManager?.notify(RINGING_NOTIFICATION_ID, builder.build())
+        notificationManager.notify(RINGING_NOTIFICATION_ID, builder.build())
     }
 
     /**
@@ -117,7 +117,7 @@ constructor(
     }
 
     fun postWakeUpCheck(builder: NotificationCompat.Builder) {
-        notificationManager?.notify(WAKE_UP_CHECK_NOTIFICATION_ID, builder.build())
+        notificationManager.notify(WAKE_UP_CHECK_NOTIFICATION_ID, builder.build())
     }
 
     /** The ongoing "snoozed until HH:mm" form of the ring notification (same id, id 1001). */
@@ -170,7 +170,7 @@ constructor(
     }
 
     fun postReminder(builder: NotificationCompat.Builder) {
-        notificationManager?.notify(REMINDER_NOTIFICATION_ID, builder.build())
+        notificationManager.notify(REMINDER_NOTIFICATION_ID, builder.build())
     }
 
     companion object {

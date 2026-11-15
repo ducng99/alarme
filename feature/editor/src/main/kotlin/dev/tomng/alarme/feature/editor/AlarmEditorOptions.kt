@@ -23,26 +23,27 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Label
+import androidx.compose.material.icons.automirrored.outlined.Notes
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.Notes
 import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Snooze
-import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Vibration
-import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -87,7 +88,7 @@ internal fun DetailsGroup(
         LabelField(
             value = draft.name,
             onValueChange = callbacks.onName,
-            leading = { LeadingIcon(Icons.Outlined.Label) },
+            leading = { LeadingIcon(Icons.AutoMirrored.Outlined.Label) },
         )
         EmojiRow(selected = draft.emoji, onSelect = callbacks.onEmoji)
         GroupDivider()
@@ -126,7 +127,7 @@ internal fun SoundGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
             title = stringResource(R.string.editor_crescendo),
             checked = draft.crescendoEnabled,
             tag = "editor_crescendo",
-            icon = Icons.Outlined.TrendingUp,
+            icon = Icons.AutoMirrored.Outlined.TrendingUp,
             onCheckedChange = callbacks.onCrescendo,
         )
         AnimatedVisibility(visible = draft.crescendoEnabled) {
@@ -231,7 +232,7 @@ internal fun MemoSection(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
             onValueChange = callbacks.onMemo,
             label = stringResource(R.string.editor_memo_hint),
             tag = "editor_memo",
-            leading = { LeadingIcon(Icons.Outlined.Notes) },
+            leading = { LeadingIcon(Icons.AutoMirrored.Outlined.Notes) },
         )
         GroupDivider()
         ToggleRow(
@@ -345,15 +346,17 @@ private fun EmojiRow(selected: String, onSelect: (String) -> Unit) {
 private fun VolumeRow(value: Float, onValueChange: (Float) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            LeadingIcon(Icons.Outlined.VolumeUp)
+            LeadingIcon(Icons.AutoMirrored.Outlined.VolumeUp)
             Text(
                 text = stringResource(R.string.editor_volume, (value * 100).roundToInt()),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 16.dp),
             )
         }
+        val sliderState = remember { SliderState(value) }
+        sliderState.value = value
         Slider(
-            value = value,
+            state = sliderState,
             onValueChange = onValueChange,
             modifier = Modifier.padding(start = 56.dp, top = 4.dp).testTag("editor_volume"),
         )

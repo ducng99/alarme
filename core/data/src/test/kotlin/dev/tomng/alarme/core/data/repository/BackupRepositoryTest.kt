@@ -15,9 +15,9 @@ import dev.tomng.alarme.core.model.mission.TypingSentenceType
 import dev.tomng.alarme.core.model.mission.WordBeatLanguage
 import dev.tomng.alarme.core.model.ringtone.CatalogRingtone
 import dev.tomng.alarme.core.model.ringtone.RingtoneKind
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before

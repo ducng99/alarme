@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DirectionsWalk
+import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +48,7 @@ fun StepMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_step_title),
-        icon = Icons.Outlined.DirectionsWalk,
+        icon = Icons.AutoMirrored.Outlined.DirectionsWalk,
         testTag = "mission:step",
     ) {
         if (!tracker.stepCounterAvailable) {

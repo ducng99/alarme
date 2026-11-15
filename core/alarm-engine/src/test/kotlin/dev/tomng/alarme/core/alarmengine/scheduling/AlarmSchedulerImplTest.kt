@@ -1,6 +1,7 @@
 package dev.tomng.alarme.core.alarmengine.scheduling
 
 import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
@@ -25,6 +26,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowAlarmManager
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -79,9 +81,9 @@ class AlarmSchedulerImplTest {
     /** Scheduled alarm whose wrapped broadcast targets [receiver], or null. */
     private fun shadowAlarmFor(
         receiver: Class<*>,
-    ): org.robolectric.shadows.ShadowAlarmManager.ScheduledAlarm? =
+    ): ShadowAlarmManager.ScheduledAlarm? =
         shadowOf(alarmManager).scheduledAlarms.firstOrNull { alarm ->
-            val intent = alarm.operation?.let { shadowOf(it).savedIntents.firstOrNull() }
+            val intent = alarm.pendingIntent()?.let { shadowOf(it).savedIntents.firstOrNull() }
             intent?.component?.className == receiver.name
         }
 
@@ -97,13 +99,13 @@ class AlarmSchedulerImplTest {
         assertThat(result.nextAt).isEqualTo(expected)
 
         val ring = shadowAlarmFor(AlarmRingReceiver::class.java)!!
-        assertThat(ring.triggerAtTime).isEqualTo(expected.toEpochMilliseconds())
+        assertThat(ring.triggerAtMs).isEqualTo(expected.toEpochMilliseconds())
         assertThat(ring.alarmClockInfo).isNotNull() // setAlarmClock, not setExact
 
         val expectedId = ScheduleIds.format("dev1", 2, expected, clock.now(), clock.zone())
         assertThat(store.load()).isEqualTo(expectedId.raw)
 
-        val intent = shadowOf(ring.operation!!).savedIntents.first()
+        val intent = shadowOf(ring.pendingIntent()!!).savedIntents.first()
         assertThat(intent.getLongExtra(AlarmIntents.EXTRA_ALARM_ID, -1)).isEqualTo(2)
         assertThat(intent.getStringExtra(AlarmIntents.EXTRA_SCHEDULE_ID)).isEqualTo(expectedId.raw)
         assertThat(intent.getLongExtra(AlarmIntents.EXTRA_ALARM_TIME, -1))
@@ -159,7 +161,7 @@ class AlarmSchedulerImplTest {
         scheduler.rearm(RescheduleReason.MODIFY_ALARM)
 
         val ring = shadowAlarmFor(AlarmRingReceiver::class.java)!!
-        assertThat(ring.triggerAtTime)
+        assertThat(ring.triggerAtMs)
             .isEqualTo(Instant.parse("2026-11-04T07:00:00Z").toEpochMilliseconds())
         assertThat(store.load()).isNotEqualTo(firstId)
         // exactly one ring alarm remains armed
@@ -190,9 +192,9 @@ class AlarmSchedulerImplTest {
 
         val warmup = shadowAlarmFor(AlarmWarmupReceiver::class.java)!!
         assertThat(warmup.alarmClockInfo).isNull() // setExactAndAllowWhileIdle
-        assertThat(warmup.triggerAtTime)
+        assertThat(warmup.triggerAtMs)
             .isEqualTo(Instant.parse("2026-11-04T05:59:30Z").toEpochMilliseconds())
-        val intent = shadowOf(warmup.operation!!).savedIntents.first()
+        val intent = shadowOf(warmup.pendingIntent()!!).savedIntents.first()
         assertThat(intent.getBooleanExtra(AlarmIntents.EXTRA_ACQUIRE_WAKE_LOCK, false)).isTrue()
     }
 
@@ -214,7 +216,7 @@ class AlarmSchedulerImplTest {
         scheduler.rearm(RescheduleReason.ADD_ALARM)
 
         val prepare = shadowAlarmFor(AlarmPrepareReceiver::class.java)!!
-        assertThat(prepare.triggerAtTime)
+        assertThat(prepare.triggerAtMs)
             .isEqualTo(Instant.parse("2026-11-04T05:55:00Z").toEpochMilliseconds())
     }
 
@@ -226,7 +228,7 @@ class AlarmSchedulerImplTest {
         scheduler.rearm(RescheduleReason.ADD_ALARM)
 
         val prepare = shadowAlarmFor(AlarmPrepareReceiver::class.java)!!
-        assertThat(prepare.triggerAtTime)
+        assertThat(prepare.triggerAtMs)
             .isEqualTo(Instant.parse("2026-11-04T05:45:00Z").toEpochMilliseconds())
     }
 
@@ -263,8 +265,8 @@ class AlarmSchedulerImplTest {
         scheduler.armWakeUpCheck(alarmId = 7, at = at)
         val wuc = shadowAlarmFor(WakeUpCheckReceiver::class.java)!!
         assertThat(wuc.alarmClockInfo).isNull()
-        assertThat(wuc.triggerAtTime).isEqualTo(at.toEpochMilliseconds())
-        val intent = shadowOf(wuc.operation!!).savedIntents.first()
+        assertThat(wuc.triggerAtMs).isEqualTo(at.toEpochMilliseconds())
+        val intent = shadowOf(wuc.pendingIntent()!!).savedIntents.first()
         assertThat(intent.getLongExtra(AlarmIntents.EXTRA_ALARM_ID, -1)).isEqualTo(7)
 
         scheduler.cancelWakeUpCheck()
@@ -286,8 +288,8 @@ class AlarmSchedulerImplTest {
 
         val snooze = scheduledAlarmWithTrigger(TriggerType.SNOOZE)!!
         assertThat(snooze.alarmClockInfo).isNotNull()
-        assertThat(snooze.triggerAtTime).isEqualTo(at.toEpochMilliseconds())
-        val intent = shadowOf(snooze.operation!!).savedIntents.first()
+        assertThat(snooze.triggerAtMs).isEqualTo(at.toEpochMilliseconds())
+        val intent = shadowOf(snooze.pendingIntent()!!).savedIntents.first()
         assertThat(intent.getLongExtra(AlarmIntents.EXTRA_ALARM_ID, -1)).isEqualTo(7)
         assertThat(intent.getStringExtra(AlarmIntents.EXTRA_SCHEDULE_ID)).isEqualTo(store.load())
         assertThat(intent.getIntExtra(AlarmIntents.EXTRA_SNOOZE_COUNT, -1)).isEqualTo(2)
@@ -302,9 +304,13 @@ class AlarmSchedulerImplTest {
 
     private fun scheduledAlarmWithTrigger(
         trigger: TriggerType,
-    ): org.robolectric.shadows.ShadowAlarmManager.ScheduledAlarm? =
+    ): ShadowAlarmManager.ScheduledAlarm? =
         shadowOf(alarmManager).scheduledAlarms.firstOrNull { alarm ->
-            val intent = alarm.operation?.let { shadowOf(it).savedIntents.firstOrNull() }
+            val intent = alarm.pendingIntent()?.let { shadowOf(it).savedIntents.firstOrNull() }
             intent?.getStringExtra(AlarmIntents.EXTRA_TRIGGER_TYPE) == trigger.name
         }
 }
+
+// Robolectric deprecates the public field but exposes no getter for the operation PendingIntent.
+@Suppress("DEPRECATION")
+private fun ShadowAlarmManager.ScheduledAlarm.pendingIntent(): PendingIntent? = operation

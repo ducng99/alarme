@@ -24,6 +24,7 @@ class SystemDialogCloserTest {
     private val app: android.content.ContextWrapper = ApplicationProvider.getApplicationContext()
     private val looper: ShadowLooper = shadowOf(Looper.getMainLooper())
 
+    @Suppress("DEPRECATION")
     private fun closeBroadcastCount(): Int =
         shadowOf(app).broadcastIntents.count { it.action == Intent.ACTION_CLOSE_SYSTEM_DIALOGS }
 

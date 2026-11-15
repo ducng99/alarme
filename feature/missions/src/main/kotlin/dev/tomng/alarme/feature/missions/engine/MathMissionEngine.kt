@@ -89,8 +89,8 @@ class MathMissionEngine(private val random: Random = Random.Default) {
         List(count) { offset ->
                 answer +
                     random.nextLong(
-                        -answerPlusMinus(answer).toLong(),
-                        answerPlusMinus(answer).toLong() + 1,
+                        -answerPlusMinus(answer),
+                        answerPlusMinus(answer) + 1,
                     )
             }
             .map { it.coerceAtLeast(1L) }

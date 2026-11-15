@@ -13,8 +13,8 @@ import dev.tomng.alarme.core.model.mission.TypingSentence
 import dev.tomng.alarme.core.model.mission.TypingSentenceType
 import dev.tomng.alarme.core.model.mission.WordBeatLanguage
 import dev.tomng.alarme.core.model.mission.WordBeatVolumeLevel
+import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
