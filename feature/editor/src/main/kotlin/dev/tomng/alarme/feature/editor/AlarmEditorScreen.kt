@@ -66,6 +66,7 @@ import dev.tomng.alarme.core.designsystem.component.ClockTime
 import dev.tomng.alarme.core.designsystem.component.SectionLabel
 import dev.tomng.alarme.core.designsystem.component.clockText
 import dev.tomng.alarme.core.model.mission.Mission
+import dev.tomng.alarme.core.model.mission.MissionType
 import dev.tomng.alarme.feature.ringtones.PickerMode
 import dev.tomng.alarme.feature.ringtones.RingtonePickerScreen
 import java.util.Locale
@@ -85,6 +86,7 @@ fun AlarmEditorScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var showDiscard by remember { mutableStateOf(false) }
     var editingMission by remember { mutableStateOf<Int?>(null) }
+    var newMission by remember { mutableStateOf<Mission?>(null) }
 
     if (showPicker) {
         BackHandler { showPicker = false }
@@ -125,6 +127,16 @@ fun AlarmEditorScreen(
                 },
             )
         }
+    }
+    newMission?.let { mission ->
+        MissionConfigSheet(
+            mission = mission,
+            onDismiss = { newMission = null },
+            onConfirm = { configured ->
+                callbacks.onAddMission(configured)
+                newMission = null
+            },
+        )
     }
     if (showTimePicker) {
         TimePickerSheet(
@@ -171,6 +183,7 @@ fun AlarmEditorScreen(
             onOpenSound = { showPicker = true },
             onOpenTime = { showTimePicker = true },
             onEditMission = { editingMission = it },
+            onNewMission = { newMission = MissionDefaults.of(it) },
         )
     }
 }
@@ -186,6 +199,7 @@ private fun EditorBody(
     onOpenSound: () -> Unit,
     onOpenTime: () -> Unit,
     onEditMission: (Int) -> Unit,
+    onNewMission: (MissionType) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(innerPadding).testTag("editor_list"),
@@ -223,6 +237,7 @@ private fun EditorBody(
                 draft = draft,
                 callbacks = callbacks,
                 onEditMission = onEditMission,
+                onNewMission = onNewMission,
             )
         }
         item { SectionLabel(stringResource(R.string.editor_section_memo)) }

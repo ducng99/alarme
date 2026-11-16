@@ -10,7 +10,6 @@ import dev.tomng.alarme.core.data.repository.AlarmRepository
 import dev.tomng.alarme.core.data.repository.RingtoneRepository
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.mission.Mission
-import dev.tomng.alarme.core.model.mission.MissionType
 import dev.tomng.alarme.core.model.scheduling.NextOccurrenceCalculator
 import javax.inject.Inject
 import kotlin.time.Instant
@@ -149,9 +148,8 @@ constructor(
         it.copy(wakeUpCheckMinutes = minutes.coerceIn(0, MAX_WAKE_UP_CHECK))
     }
 
-    fun addMission(type: MissionType) = edit { draft ->
-        if (!draft.canAddMission) draft
-        else draft.copy(missions = draft.missions + MissionDefaults.of(type))
+    fun addMission(mission: Mission) = edit { draft ->
+        if (!draft.canAddMission) draft else draft.copy(missions = draft.missions + mission)
     }
 
     fun removeMission(index: Int) = edit { draft ->

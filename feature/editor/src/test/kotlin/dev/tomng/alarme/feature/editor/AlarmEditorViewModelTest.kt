@@ -172,8 +172,8 @@ class AlarmEditorViewModelTest {
         vm.load(Alarm.NEW_ID)
         advanceUntilIdle()
 
-        vm.addMission(MissionType.MATH)
-        vm.addMission(MissionType.SHAKE)
+        vm.addMission(MissionDefaults.of(MissionType.MATH))
+        vm.addMission(MissionDefaults.of(MissionType.SHAKE))
         assertThat(vm.state.value.draft.missions).hasSize(2)
 
         vm.replaceMission(1, Mission.Shake(count = 30))
@@ -190,7 +190,7 @@ class AlarmEditorViewModelTest {
         vm.load(Alarm.NEW_ID)
         advanceUntilIdle()
 
-        repeat(7) { vm.addMission(MissionType.MATH) }
+        repeat(7) { vm.addMission(MissionDefaults.of(MissionType.MATH)) }
 
         assertThat(vm.state.value.draft.missions).hasSize(Mission.MAX_PER_ALARM)
     }
@@ -200,7 +200,7 @@ class AlarmEditorViewModelTest {
         val vm = viewModel()
         vm.load(Alarm.NEW_ID)
         advanceUntilIdle()
-        vm.addMission(MissionType.MATH)
+        vm.addMission(MissionDefaults.of(MissionType.MATH))
 
         vm.removeMission(5)
         vm.replaceMission(5, Mission.Shake())
@@ -308,7 +308,7 @@ class AlarmEditorViewModelTest {
         val vm = viewModel()
         vm.load(Alarm.NEW_ID)
         advanceUntilIdle()
-        vm.addMission(MissionType.BARCODE)
+        vm.addMission(MissionDefaults.of(MissionType.BARCODE))
 
         vm.save()
         advanceUntilIdle()
@@ -323,7 +323,7 @@ class AlarmEditorViewModelTest {
         val vm = viewModel()
         vm.load(Alarm.NEW_ID)
         advanceUntilIdle()
-        vm.addMission(MissionType.BARCODE)
+        vm.addMission(MissionDefaults.of(MissionType.BARCODE))
         vm.save()
         advanceUntilIdle()
 

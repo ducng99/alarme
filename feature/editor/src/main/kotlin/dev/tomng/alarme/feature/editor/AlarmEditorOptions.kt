@@ -250,6 +250,7 @@ internal fun MissionGroup(
     draft: AlarmDraft,
     callbacks: AlarmEditorCallbacks,
     onEditMission: (Int) -> Unit,
+    onNewMission: (MissionType) -> Unit,
 ) {
     GroupCard {
         if (draft.missions.isEmpty()) {
@@ -269,7 +270,7 @@ internal fun MissionGroup(
             )
             GroupDivider()
         }
-        AddMissionRow(enabled = draft.canAddMission, onAdd = callbacks.onAddMission)
+        AddMissionRow(enabled = draft.canAddMission, onAdd = onNewMission)
     }
 }
 
@@ -573,7 +574,7 @@ class AlarmEditorCallbacks(
     val onTts: (Boolean) -> Unit = {},
     val onBackupSound: (Boolean) -> Unit = {},
     val onTimeAnnouncement: (Boolean) -> Unit = {},
-    val onAddMission: (MissionType) -> Unit = {},
+    val onAddMission: (Mission) -> Unit = {},
     val onRemoveMission: (Int) -> Unit = {},
     val onReplaceMission: (Int, Mission) -> Unit = { _, _ -> },
     val onSave: () -> Unit = {},

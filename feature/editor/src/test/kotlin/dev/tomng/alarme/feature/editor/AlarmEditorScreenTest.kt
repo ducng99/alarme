@@ -31,7 +31,7 @@ class AlarmEditorScreenTest {
     private val calls = mutableListOf<String>()
     private var saved = 0
     private var deleted = 0
-    private var addedMission: MissionType? = null
+    private var addedMission: Mission? = null
     private var replacedMission: Mission? = null
 
     private fun setScreen(
@@ -62,7 +62,7 @@ class AlarmEditorScreenTest {
                         onTts = { calls += "tts:$it" },
                         onAddMission = {
                             addedMission = it
-                            calls += "addMission:${it.name}"
+                            calls += "addMission"
                         },
                         onRemoveMission = { calls += "removeMission:$it" },
                         onReplaceMission = { _, mission ->
@@ -242,15 +242,36 @@ class AlarmEditorScreenTest {
     }
 
     @Test
-    fun `a mission can be added from the type list`() {
+    fun `picking a mission type opens its configuration before adding it`() {
         setScreen()
 
+        pickMissionType(MissionType.MEMORY)
+
+        compose.onNodeWithTag("mission_config").assertIsDisplayed()
+        assertThat(addedMission).isNull()
+
+        compose.onNodeWithTag("mission_config_ok").performClick()
+
+        assertThat(addedMission).isEqualTo(MissionDefaults.of(MissionType.MEMORY))
+        compose.onNodeWithTag("mission_config").assertDoesNotExist()
+    }
+
+    @Test
+    fun `cancelling the configuration of a new mission adds nothing`() {
+        setScreen()
+
+        pickMissionType(MissionType.SHAKE)
+        compose.onNodeWithTag("mission_config_cancel").performClick()
+
+        assertThat(addedMission).isNull()
+        compose.onNodeWithTag("mission_config").assertDoesNotExist()
+    }
+
+    private fun pickMissionType(type: MissionType) {
         scrollToTag("editor_add_mission")
         compose.onNodeWithTag("editor_add_mission").performClick()
-        scrollToTag("editor_mission_type:MEMORY")
-        compose.onNodeWithTag("editor_mission_type:MEMORY").performClick()
-
-        assertThat(addedMission).isEqualTo(MissionType.MEMORY)
+        scrollToTag("editor_mission_type:${type.name}")
+        compose.onNodeWithTag("editor_mission_type:${type.name}").performClick()
     }
 
     @Test
