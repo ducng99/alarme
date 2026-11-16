@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -17,7 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.sensors.shake.ShakeSensorTracker
 import dev.tomng.alarme.core.sensors.source.SensorManagerSource
@@ -51,12 +49,11 @@ fun ShakeMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_shake_title),
-        icon = Icons.Outlined.Accessibility,
         testTag = "mission:shake",
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl),
             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.weight(1f))

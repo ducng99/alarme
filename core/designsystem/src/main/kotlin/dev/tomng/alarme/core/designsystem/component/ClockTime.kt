@@ -63,7 +63,7 @@ private fun clockTimeText(hour: Int, minute: Int, style: TextStyle): AnnotatedSt
         append(' ')
         withStyle(
             SpanStyle(
-                fontSize = (style.fontSize.value * 0.4f).sp,
+                fontSize = (style.fontSize.value * MERIDIEM_RATIO).sp,
                 fontWeight = FontWeight.Normal,
                 letterSpacing = 0.sp,
             ),
@@ -72,3 +72,5 @@ private fun clockTimeText(hour: Int, minute: Int, style: TextStyle): AnnotatedSt
         }
     }
 }
+
+private const val MERIDIEM_RATIO = 0.4f

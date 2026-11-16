@@ -17,7 +17,16 @@ enum class PermissionItem {
     DND,
     BATTERY,
     CAMERA,
-    MICROPHONE,
+    MICROPHONE;
+
+    /** Without these an alarm can ring late, silently, or not at all. */
+    val critical: Boolean
+        get() = this == NOTIFICATIONS || this == EXACT_ALARM || this == FULL_SCREEN_INTENT
+
+    companion object {
+        /** What first-run setup walks through, in order. */
+        val onboarding = listOf(NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN_INTENT, BATTERY)
+    }
 }
 
 /** Where the user goes to grant one capability. */

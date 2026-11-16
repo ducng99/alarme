@@ -1,10 +1,12 @@
 package dev.tomng.alarme.core.designsystem.component
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,13 +22,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 
 /**
  * The frame shared by secondary screens: a large flexible app bar that collapses as the content
@@ -41,6 +53,7 @@ fun AlarmeScaffold(
     onBack: (() -> Unit)? = null,
     backContentDescription: String? = null,
     backTag: String? = null,
+    backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     actions: @Composable RowScope.() -> Unit = {},
     snackbarHostState: SnackbarHostState? = null,
     floatingActionButton: @Composable () -> Unit = {},
@@ -48,8 +61,15 @@ fun AlarmeScaffold(
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val density = LocalDensity.current
+    var width by remember { mutableStateOf(0.dp) }
+    val gutter = ((width - Spacing.maxContentWidth) / 2).coerceAtLeast(0.dp)
     Scaffold(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .onSizeChanged { width = with(density) { it.width.toDp() } }
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = { if (snackbarHostState != null) SnackbarHost(snackbarHostState) },
         floatingActionButton = floatingActionButton,
@@ -69,7 +89,7 @@ fun AlarmeScaffold(
                             modifier = if (backTag != null) Modifier.testTag(backTag) else Modifier,
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = backIcon,
                                 contentDescription = backContentDescription,
                             )
                         }
@@ -77,6 +97,8 @@ fun AlarmeScaffold(
                 },
                 actions = actions,
                 scrollBehavior = scrollBehavior,
+                windowInsets =
+                    TopAppBarDefaults.windowInsets.add(WindowInsets(left = gutter, right = gutter)),
                 colors =
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -84,24 +106,40 @@ fun AlarmeScaffold(
                     ),
             )
         },
-        content = content,
-    )
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            Box(modifier = Modifier.widthIn(max = Spacing.maxContentWidth).fillMaxSize()) {
+                content(innerPadding)
+            }
+        }
+    }
 }
 
-/** Merges the scaffold's insets with the screen's own padding around a scrolling list. */
+/**
+ * Merges the scaffold's insets with the screen's own padding around a scrolling list. The scaffold
+ * padding is read lazily because it changes as the app bar grows or collapses.
+ */
 @Composable
 fun rememberListPadding(
     innerPadding: PaddingValues,
     horizontal: Dp,
     bottom: Dp,
-): PaddingValues {
-    val direction = LocalLayoutDirection.current
-    return remember(innerPadding, horizontal, bottom, direction) {
-        PaddingValues(
-            start = innerPadding.calculateStartPadding(direction) + horizontal,
-            end = innerPadding.calculateEndPadding(direction) + horizontal,
-            top = innerPadding.calculateTopPadding(),
-            bottom = innerPadding.calculateBottomPadding() + bottom,
-        )
-    }
+): PaddingValues =
+    remember(innerPadding, horizontal, bottom) { ListPadding(innerPadding, horizontal, bottom) }
+
+@Stable
+private class ListPadding(
+    private val inner: PaddingValues,
+    private val horizontal: Dp,
+    private val bottom: Dp,
+) : PaddingValues {
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp =
+        inner.calculateLeftPadding(layoutDirection) + horizontal
+
+    override fun calculateTopPadding(): Dp = inner.calculateTopPadding()
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp =
+        inner.calculateRightPadding(layoutDirection) + horizontal
+
+    override fun calculateBottomPadding(): Dp = inner.calculateBottomPadding() + bottom
 }

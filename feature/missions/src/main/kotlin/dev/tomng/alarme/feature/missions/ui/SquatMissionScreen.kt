@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.sensors.squat.CoverSensorTracker
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
@@ -51,7 +49,6 @@ fun SquatMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_squat_title),
-        icon = Icons.Outlined.FitnessCenter,
         testTag = "mission:squat",
     ) {
         when (tracker.availability) {
@@ -61,7 +58,7 @@ fun SquatMissionScreen(
             CoverSensorTracker.Availability.AVAILABLE -> {
                 Column(
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.l),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Spacer(Modifier.weight(1f))

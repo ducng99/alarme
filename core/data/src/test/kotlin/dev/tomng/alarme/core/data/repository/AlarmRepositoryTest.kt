@@ -3,13 +3,17 @@ package dev.tomng.alarme.core.data.repository
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import dev.tomng.alarme.core.common.time.AppClock
 import dev.tomng.alarme.core.common.time.FakeAppClock
 import dev.tomng.alarme.core.data.db.AlarmeDatabase
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.alarm.DaysOfWeek
 import dev.tomng.alarme.core.model.mission.Mission
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
 import org.junit.After
@@ -144,6 +148,28 @@ class AlarmRepositoryTest {
             repository.observeNextAlarm().first()!!.nextOccurrence,
         )
         assertEquals(late, repository.observeAlarms().first().last().id)
+    }
+
+    @Test
+    fun observeNextAlarmMovesOnOnceTheRingPassesWithoutAnyWrite() = runTest {
+        val start = clock.now()
+        val ticking =
+            object : AppClock {
+                override fun now() = start + testScheduler.currentTime.milliseconds
+
+                override fun zone() = berlin
+            }
+        val live =
+            AlarmRepositoryImpl(db.alarmDao(), db.missionDao(), db.typingPhraseDao(), ticking)
+        live.upsertAlarm(alarm(hour = 23, minute = 30))
+
+        val seen = live.observeNextAlarm().take(2).toList().map { it?.nextOccurrence }
+
+        // 23:00 Berlin now: tonight 23:30 first, then tomorrow 23:30 once tonight's has passed.
+        assertEquals(
+            listOf(Instant.parse("2026-11-03T22:30:00Z"), Instant.parse("2026-11-04T22:30:00Z")),
+            seen,
+        )
     }
 
     private fun hourAlarmWith(missions: List<Mission>): Alarm = alarm(hour = 7, missions = missions)

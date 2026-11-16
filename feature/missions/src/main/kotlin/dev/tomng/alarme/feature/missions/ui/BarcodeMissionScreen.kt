@@ -2,8 +2,6 @@ package dev.tomng.alarme.feature.missions.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -63,7 +61,6 @@ fun BarcodeMissionScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             ui.controller?.let { MissionCameraPreview(controller = it) }
             MissionCameraChrome(
-                icon = Icons.Outlined.QrCodeScanner,
                 title = stringResource(R.string.mission_barcode_title),
                 message = message,
                 messageIsError = scannedValue != null && !matched,

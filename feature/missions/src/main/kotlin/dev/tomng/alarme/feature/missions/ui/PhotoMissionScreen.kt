@@ -2,8 +2,6 @@ package dev.tomng.alarme.feature.missions.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -49,7 +47,6 @@ fun PhotoMissionScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             ui.controller?.let { MissionCameraPreview(controller = it) }
             MissionCameraChrome(
-                icon = Icons.Outlined.CameraAlt,
                 title = stringResource(R.string.mission_photo_title),
                 message =
                     if (mission.photoPath.isBlank()) {

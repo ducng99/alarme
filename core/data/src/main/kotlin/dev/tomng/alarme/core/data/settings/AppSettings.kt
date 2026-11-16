@@ -16,4 +16,5 @@ data class AppSettings(
     val preventPowerOff: Boolean = false,
     val preventUninstall: Boolean = false,
     val defaultRingtoneId: Long? = null,
+    val onboardingDone: Boolean = false,
 )

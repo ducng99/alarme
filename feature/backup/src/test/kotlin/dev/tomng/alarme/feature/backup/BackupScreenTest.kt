@@ -39,9 +39,22 @@ class BackupScreenTest {
 
         compose.onNodeWithTag("backup_export").assertIsDisplayed().performClick()
         compose.onNodeWithTag("backup_import").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("backup_import_confirm").performClick()
 
         assertThat(exports).isEqualTo(1)
         assertThat(imports).isEqualTo(1)
+    }
+
+    @Test
+    fun `restore asks before replacing the alarm list`() {
+        setScreen(BackupUiState.Idle)
+
+        compose.onNodeWithTag("backup_import").performClick()
+        compose.onNodeWithText("Replace your alarms?").assertIsDisplayed()
+        compose.onNodeWithTag("backup_import_cancel").performClick()
+
+        assertThat(imports).isEqualTo(0)
+        compose.onNodeWithText("Replace your alarms?").assertDoesNotExist()
     }
 
     @Test
@@ -57,6 +70,7 @@ class BackupScreenTest {
     fun `export result shows counts`() {
         setScreen(BackupUiState.Exported(alarmCount = 4, audioFileCount = 2))
 
+        compose.onNodeWithTag("backup_result").assertIsDisplayed()
         compose.onNodeWithText("Exported 4 alarms and 2 sounds.").assertIsDisplayed()
     }
 
@@ -71,6 +85,7 @@ class BackupScreenTest {
     fun `errors are shown with their reason`() {
         setScreen(BackupUiState.Failed(BackupError.NEWER_VERSION))
 
+        compose.onNodeWithTag("backup_error").assertIsDisplayed()
         compose
             .onNodeWithText("This backup was made by a newer version of Alarme.")
             .assertIsDisplayed()

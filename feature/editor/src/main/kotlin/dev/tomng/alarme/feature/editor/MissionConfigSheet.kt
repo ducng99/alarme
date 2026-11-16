@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -39,24 +41,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import dev.tomng.alarme.core.designsystem.component.GroupCard
-import dev.tomng.alarme.core.designsystem.component.MedallionShape
-import dev.tomng.alarme.core.designsystem.component.ShapeMedallion
+import dev.tomng.alarme.core.designsystem.component.IconBadge
+import dev.tomng.alarme.core.designsystem.component.rememberFeedback
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 
 /**
  * Per-type mission configuration in a full-height sheet. The sheet edits a copy and hands back the
  * finished mission on Done; dismissing it any other way discards the edits.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MissionConfigSheet(
     mission: Mission,
@@ -64,6 +64,7 @@ fun MissionConfigSheet(
     onConfirm: (Mission) -> Unit,
 ) {
     var current by remember(mission) { mutableStateOf(mission) }
+    val feedback = rememberFeedback()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -75,9 +76,9 @@ fun MissionConfigSheet(
             modifier =
                 Modifier.weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = Spacing.l)
                     .testTag("mission_config_scroll"),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             MissionHeader(current)
             MissionFields(mission = current, onChange = { current = it })
@@ -85,24 +86,35 @@ fun MissionConfigSheet(
                 seconds = current.timeLimitSeconds,
                 onChange = { current = current.withTimeLimit(it) },
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Spacing.xs))
         }
         Row(
             modifier =
                 Modifier.fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = Spacing.l, vertical = Spacing.m),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             OutlinedButton(
                 onClick = onDismiss,
-                modifier = Modifier.weight(1f).height(52.dp).testTag("mission_config_cancel"),
+                shapes = ButtonDefaults.shapes(),
+                modifier =
+                    Modifier.weight(1f)
+                        .height(ButtonDefaults.MediumContainerHeight)
+                        .testTag("mission_config_cancel"),
             ) {
                 Text(stringResource(R.string.editor_cancel))
             }
             Button(
-                onClick = { onConfirm(current) },
-                modifier = Modifier.weight(1f).height(52.dp).testTag("mission_config_ok"),
+                onClick = {
+                    feedback.confirm()
+                    onConfirm(current)
+                },
+                shapes = ButtonDefaults.shapes(),
+                modifier =
+                    Modifier.weight(1f)
+                        .height(ButtonDefaults.MediumContainerHeight)
+                        .testTag("mission_config_ok"),
             ) {
                 Text(stringResource(R.string.config_done))
             }
@@ -113,18 +125,16 @@ fun MissionConfigSheet(
 @Composable
 private fun MissionHeader(mission: Mission) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ShapeMedallion(shape = MedallionShape.Cookie, size = 64.dp) {
-            Icon(
-                imageVector = missionIcon(mission),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(28.dp),
-            )
-        }
-        Spacer(Modifier.width(16.dp))
+        IconBadge(
+            icon = missionIcon(mission),
+            size = 56.dp,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        )
+        Spacer(Modifier.width(Spacing.l))
         Column {
             Text(text = missionTypeLabel(mission), style = MaterialTheme.typography.headlineSmall)
             Text(
@@ -173,10 +183,17 @@ internal fun ConfigSection(
     trailing: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    GroupCard {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp).animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(Spacing.l)
+                    .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -190,7 +207,7 @@ internal fun ConfigSection(
                     }
                 }
                 if (trailing != null) {
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(Spacing.m))
                     trailing()
                 }
             }
@@ -239,7 +256,7 @@ internal fun <T> ChoiceChips(
     onSelect: (T) -> Unit,
 ) {
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         options.forEach { option ->
@@ -276,7 +293,6 @@ internal fun <T> SegmentedChoice(
     tag: (T) -> String,
     onSelect: (T) -> Unit,
 ) {
-    val haptics = LocalHapticFeedback.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
@@ -284,10 +300,7 @@ internal fun <T> SegmentedChoice(
         options.forEachIndexed { index, option ->
             ToggleButton(
                 checked = option == selected,
-                onCheckedChange = {
-                    haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                    onSelect(option)
-                },
+                onCheckedChange = { onSelect(option) },
                 shapes =
                     when (index) {
                         0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()

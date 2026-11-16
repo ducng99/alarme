@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Alarme</string>
+    <string name="app_detail_empty_title">Pick an alarm</string>
+    <string name="app_detail_empty_body">Choose an alarm from the list to edit it, or create a new one.</string>
 </resources>

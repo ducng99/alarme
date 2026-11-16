@@ -83,3 +83,38 @@ class FakePermissionProbe : PermissionProbe {
 
     override fun isGranted(item: PermissionItem): Boolean = item in granted
 }
+
+class PermissionCenterStateTest {
+
+    private fun state(vararg granted: PermissionItem) =
+        PermissionCenterState(
+            rows = PermissionItem.entries.map { PermissionRow(it, it in granted) },
+        )
+
+    @Test
+    fun `critical missing lists only the grants alarms cannot ring without`() {
+        val state = state(PermissionItem.NOTIFICATIONS, PermissionItem.CAMERA)
+
+        assertThat(state.criticalMissing)
+            .containsExactly(PermissionItem.EXACT_ALARM, PermissionItem.FULL_SCREEN_INTENT)
+            .inOrder()
+    }
+
+    @Test
+    fun `onboarding walks the missing setup grants in order`() {
+        val state = state(PermissionItem.EXACT_ALARM)
+
+        assertThat(state.onboardingSteps())
+            .containsExactly(
+                PermissionItem.NOTIFICATIONS,
+                PermissionItem.FULL_SCREEN_INTENT,
+                PermissionItem.BATTERY,
+            )
+            .inOrder()
+    }
+
+    @Test
+    fun `onboarding has no steps when everything is granted`() {
+        assertThat(state(*PermissionItem.entries.toTypedArray()).onboardingSteps()).isEmpty()
+    }
+}

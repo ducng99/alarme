@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="ring_dismiss">Dismiss</string>
-    <string name="ring_snooze">Snooze</string>
+    <string name="ring_snooze_minutes">Snooze %1$d min</string>
+    <string name="ring_snooze_left">%1$d left</string>
+    <string name="ring_slide_to_dismiss">Slide to dismiss</string>
+    <string name="ring_snoozed_body">Your alarm rings again then. Dismiss now if you are already up.</string>
+    <string name="ring_emergency_body">Time ran out. Finish now or the alarm starts again.</string>
+    <string name="ring_mission_add_time_short">+10 s</string>
+    <string name="ring_mission_progress">Mission %1$d of %2$d</string>
     <string name="ring_prepare_title">Get ready</string>
     <string name="ring_prepare_start">Start</string>
-    <string name="ring_mission_done">Done</string>
     <string name="ring_mission_add_time">+10 seconds</string>
     <string name="ring_emergency_title">Last chance</string>
     <string name="ring_emergency_done">I\'m done</string>

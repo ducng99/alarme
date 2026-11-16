@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.sensors.step.StepSensorTracker
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
@@ -48,7 +46,6 @@ fun StepMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_step_title),
-        icon = Icons.AutoMirrored.Outlined.DirectionsWalk,
         testTag = "mission:step",
     ) {
         if (!tracker.stepCounterAvailable) {
@@ -56,7 +53,7 @@ fun StepMissionScreen(
         } else {
             Column(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.l),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.weight(1f))

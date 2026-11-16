@@ -119,6 +119,8 @@ private class RingtoneSettingsFake : dev.tomng.alarme.core.data.repository.Setti
         defaultRingtoneId = id
     }
 
+    override suspend fun setOnboardingDone(done: Boolean) = Unit
+
     override suspend fun deviceId(): String = "dev"
 }
 

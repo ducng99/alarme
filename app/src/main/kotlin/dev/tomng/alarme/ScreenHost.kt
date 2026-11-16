@@ -1,13 +1,13 @@
 package dev.tomng.alarme
 
-import androidx.activity.BackEventCompat
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.SeekableTransitionState
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -18,163 +18,165 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.tomng.alarme.core.designsystem.component.LocalNavAnimatedScope
+import dev.tomng.alarme.core.designsystem.component.LocalSharedTransitionScope
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 /**
- * Renders [screen] with Material shared-axis transitions: deeper screens slide in from the end,
- * going back slides them out. While a system back gesture is in progress the current screen shrinks
- * and follows the finger (predictive back); committing navigates to [parent].
+ * Renders the top of [nav] with Material motion: shared-axis for drilling in and out, a container
+ * transform between the list and the editor, and predictive back that scrubs the real transition to
+ * the previous screen while the gesture is in progress.
  *
- * Every destination gets its own [ViewModelStore], cleared when the destination leaves, so opening
- * the editor twice starts from a fresh ViewModel instead of the previous session's state.
+ * Every stack entry owns its [ViewModelStore] and saved state until it leaves the stack, so a
+ * picker opened above the editor does not wipe the editor's draft. [paneKey] lets several stack
+ * entries share one rendered pane (the list-detail layout on wide screens).
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun ScreenHost(
-    screen: Screen,
-    parent: Screen?,
-    onBack: (Screen) -> Unit,
+    nav: NavState,
     modifier: Modifier = Modifier,
+    containerTransforms: Boolean = true,
+    paneKey: (Screen) -> String = { it.key },
     content: @Composable (Screen) -> Unit,
 ) {
-    val progress = remember { Animatable(0f) }
-    val edge = remember { Animatable(0f) }
+    val transitionState = remember { SeekableTransitionState(nav.current) }
+    val transition = rememberTransition(transitionState, label = "screens")
     val scope = rememberCoroutineScope()
     val stateHolder = rememberSaveableStateHolder()
-    val activityOwner = checkNotNull(LocalViewModelStoreOwner.current)
+    val entries = rememberEntryStores()
+    val depths = remember { mutableMapOf<String, Int>() }
+    val motion = MaterialTheme.motionScheme
 
-    PredictiveBackHandler(enabled = parent != null) { events: Flow<BackEventCompat> ->
+    SideEffect { nav.stack.forEachIndexed { index, screen -> depths[screen.key] = index } }
+
+    // Once a transition settles, entries that left the stack drop their ViewModels and state.
+    val stackKeys = nav.stack.flatMap { listOf(it.key, paneKey(it)) }.distinct()
+    LaunchedEffect(transitionState.currentState, stackKeys) {
+        if (transitionState.currentState == transitionState.targetState) {
+            entries.retain(stackKeys).forEach(stateHolder::removeState)
+        }
+    }
+
+    LaunchedEffect(nav.current) {
+        if (
+            transitionState.currentState != nav.current ||
+                transitionState.targetState != nav.current
+        ) {
+            transitionState.animateTo(nav.current)
+        }
+    }
+
+    PredictiveBackHandler(enabled = nav.canPop) { events ->
+        val previous = nav.previous ?: return@PredictiveBackHandler
         try {
-            events.collect { event ->
-                edge.snapTo(if (event.swipeEdge == BackEventCompat.EDGE_LEFT) 1f else -1f)
-                progress.snapTo(event.progress)
-            }
-            parent?.let(onBack)
-            scope.launch { progress.snapTo(0f) }
+            events.collect { event -> transitionState.seekTo(event.progress, previous) }
+            nav.pop()
         } catch (cancelled: CancellationException) {
-            scope.launch { progress.animateTo(0f) }
+            scope.launch { transitionState.animateTo(nav.current) }
             throw cancelled
         }
     }
 
-    AnimatedContent(
-        targetState = screen,
-        modifier = modifier.fillMaxSize(),
-        transitionSpec = { sharedAxis(forward = depth(targetState) >= depth(initialState)) },
-        contentKey = { it.key },
-        label = "screens",
-    ) { target ->
-        val owner = rememberScreenOwner(target.key, activityOwner)
-        val isCurrent = target == screen
-        Box(
-            modifier =
-                Modifier.fillMaxSize()
-                    .graphicsLayer {
-                        if (isCurrent && progress.value > 0f) {
-                            val p = progress.value
-                            val scale = 1f - PREDICTIVE_SCALE * p
-                            scaleX = scale
-                            scaleY = scale
-                            translationX = edge.value * PREDICTIVE_SHIFT.toPx() * p
-                            transformOrigin = TransformOrigin.Center
-                        }
-                    }
-                    .clip(
-                        if (isCurrent && progress.value > 0f) MaterialTheme.shapes.extraLarge
-                        else RectangleShape,
-                    ),
-        ) {
-            CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
-                stateHolder.SaveableStateProvider(target.key) { content(target) }
-            }
-        }
-        DisposableEffect(target.key) {
-            onDispose {
-                if (target.key != screen.key && owner !== activityOwner) {
-                    owner.viewModelStore.clear()
-                    stateHolder.removeState(target.key)
+    SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
+        transition.AnimatedContent(
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = {
+                val forward = (depths[targetState.key] ?: 0) >= (depths[initialState.key] ?: 0)
+                screenTransition(forward, motion, containerTransforms)
+            },
+            contentKey = paneKey,
+        ) { target ->
+            val owner = entries.owner(paneKey(target))
+            CompositionLocalProvider(
+                LocalViewModelStoreOwner provides owner,
+                LocalEntryStores provides entries,
+                LocalSharedTransitionScope provides
+                    if (containerTransforms) this@SharedTransitionLayout else null,
+                LocalNavAnimatedScope provides this@AnimatedContent,
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    stateHolder.SaveableStateProvider(paneKey(target)) { content(target) }
                 }
             }
         }
     }
 }
 
-private fun AnimatedContentTransitionScope<Screen>.sharedAxis(forward: Boolean): ContentTransform {
-    val duration = 400
+private fun AnimatedContentTransitionScope<Screen>.screenTransition(
+    forward: Boolean,
+    motion: MotionScheme,
+    containerTransforms: Boolean,
+): ContentTransform {
+    if (containerTransforms && isContainerTransform(initialState, targetState)) {
+        return (fadeIn(motion.defaultEffectsSpec()) togetherWith fadeOut(motion.fastEffectsSpec()))
+            .apply { targetContentZIndex = if (forward) 1f else 0f }
+    }
+    val slide = motion.defaultSpatialSpec<IntOffset>()
     val enter =
-        slideInHorizontally(tween(duration, easing = FastOutSlowInEasing)) { width ->
+        slideInHorizontally(slide) { width ->
             if (forward) width / SLIDE_FRACTION else -width / SLIDE_FRACTION
         } +
-            fadeIn(tween(duration / 2, delayMillis = duration / 4)) +
-            scaleIn(tween(duration), initialScale = if (forward) 1f else ENTER_SCALE)
+            fadeIn(motion.defaultEffectsSpec()) +
+            scaleIn(motion.defaultSpatialSpec(), initialScale = if (forward) 1f else BACK_SCALE)
     val exit =
-        slideOutHorizontally(tween(duration, easing = FastOutSlowInEasing)) { width ->
+        slideOutHorizontally(slide) { width ->
             if (forward) -width / SLIDE_FRACTION else width / SLIDE_FRACTION
         } +
-            fadeOut(tween(duration / 3)) +
-            scaleOut(tween(duration), targetScale = if (forward) ENTER_SCALE else 1f)
+            fadeOut(motion.fastEffectsSpec()) +
+            scaleOut(motion.defaultSpatialSpec(), targetScale = if (forward) 1f else BACK_SCALE)
     return (enter togetherWith exit).apply { targetContentZIndex = if (forward) 1f else 0f }
 }
 
-/** How deep [screen] sits below the list; used to pick the transition direction. */
-private fun depth(screen: Screen): Int {
-    var depth = 0
-    var current: Screen? = parentScreen(screen)
-    while (current != null) {
-        depth++
-        current = parentScreen(current)
+/** The list card (or the new-alarm button) morphs into the editor and back. */
+private fun isContainerTransform(from: Screen, to: Screen): Boolean =
+    (from == Screen.List && to is Screen.Editor) || (from is Screen.Editor && to == Screen.List)
+
+/** Holds one [ViewModelStore] per stack entry; lives as long as the activity, across rotation. */
+internal class EntryStoresViewModel : ViewModel() {
+    val stores = mutableMapOf<String, ViewModelStore>()
+
+    override fun onCleared() {
+        stores.values.forEach { it.clear() }
+        stores.clear()
     }
-    return depth
 }
 
-/** A stable identity for a destination: two editor sessions for the same alarm share it. */
-private val Screen.key: String
-    get() =
-        when (this) {
-            Screen.List -> "list"
-            Screen.Settings -> "settings"
-            Screen.Diagnostics -> "diagnostics"
-            Screen.Optimize -> "optimize"
-            Screen.Backup -> "backup"
-            is Screen.Editor -> "editor:$alarmId"
-            is Screen.Picker ->
-                when (val t = target) {
-                    PickerTarget.Default -> "picker:default"
-                    is PickerTarget.ForAlarm -> "picker:${t.alarm.id}"
-                }
-        }
-
-@Composable
-private fun rememberScreenOwner(key: String, parent: ViewModelStoreOwner): ViewModelStoreOwner =
-    remember(key) {
+/** Hands out ViewModel owners for stack entries, backed by [EntryStoresViewModel]. */
+internal class EntryStores(
+    private val holder: EntryStoresViewModel,
+    private val parent: ViewModelStoreOwner,
+) {
+    fun owner(key: String): ViewModelStoreOwner {
+        val store = holder.stores.getOrPut(key) { ViewModelStore() }
         val defaults = parent as? HasDefaultViewModelProviderFactory
-        if (key == "list") parent
-        else if (defaults == null) {
+        return if (defaults == null) {
             object : ViewModelStoreOwner {
-                override val viewModelStore = ViewModelStore()
+                override val viewModelStore = store
             }
         } else {
             object : ViewModelStoreOwner, HasDefaultViewModelProviderFactory {
-                override val viewModelStore = ViewModelStore()
+                override val viewModelStore = store
                 override val defaultViewModelProviderFactory: ViewModelProvider.Factory
                     get() = defaults.defaultViewModelProviderFactory
 
@@ -184,7 +186,22 @@ private fun rememberScreenOwner(key: String, parent: ViewModelStoreOwner): ViewM
         }
     }
 
-private const val SLIDE_FRACTION = 5
-private const val ENTER_SCALE = 0.94f
-private const val PREDICTIVE_SCALE = 0.1f
-private val PREDICTIVE_SHIFT = 16.dp
+    /** Clears every entry whose key is not in [keys] and returns the removed keys. */
+    fun retain(keys: List<String>): List<String> {
+        val gone = holder.stores.keys.filter { it !in keys }
+        gone.forEach { holder.stores.remove(it)?.clear() }
+        return gone
+    }
+}
+
+internal val LocalEntryStores = staticCompositionLocalOf<EntryStores?> { null }
+
+@Composable
+private fun rememberEntryStores(): EntryStores {
+    val parent = checkNotNull(LocalViewModelStoreOwner.current)
+    val holder: EntryStoresViewModel = viewModel(viewModelStoreOwner = parent)
+    return remember(holder, parent) { EntryStores(holder, parent) }
+}
+
+private const val SLIDE_FRACTION = 4
+private const val BACK_SCALE = 0.92f

@@ -1,11 +1,15 @@
 package dev.tomng.alarme.feature.ring.ui
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeRight
 import com.google.common.truth.Truth.assertThat
 import dev.tomng.alarme.core.alarmengine.statemachine.MissionTimer
 import dev.tomng.alarme.core.alarmengine.statemachine.RingStage
@@ -101,34 +105,92 @@ class RingScreenTest {
     }
 
     @Test
-    fun `the ring stage shows name time dismiss and snooze`() {
+    fun `the ring stage shows the time the label and both ways out`() {
         val cb = mutSetOf()
-        compose.setContent { RingScreen(state = ringing(), callbacks = cb) }
+        compose.setContent { RingScreen(state = ringing(), callbacks = cb, nowProvider = { now }) }
 
         compose.onNodeWithText("Work").assertIsDisplayed()
         compose.onNodeWithText("6:00 AM").assertIsDisplayed()
-        compose.onNodeWithText("Dismiss").assertIsDisplayed()
-        compose.onNodeWithText("Snooze").assertIsDisplayed()
+        compose.onNodeWithTag("ring:dismiss").assertIsDisplayed()
+        compose.onNodeWithText("Slide to dismiss").assertIsDisplayed()
+        compose.onNodeWithText("Snooze 5 min").assertIsDisplayed()
+        compose.onNodeWithText("3 left").assertIsDisplayed()
     }
 
     @Test
     fun `dismiss and snooze route to their events`() {
         val cb = mutSetOf()
-        compose.setContent { RingScreen(state = ringing(), callbacks = cb) }
+        compose.setContent { RingScreen(state = ringing(), callbacks = cb, nowProvider = { now }) }
 
-        compose.onNodeWithText("Dismiss").performClick()
-        compose.onNodeWithText("Snooze").performClick()
+        compose.onNodeWithTag("ring:dismiss").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("ring:snooze").performClick()
 
         assertThat(cb.recorded).containsExactly("dismiss", "snooze").inOrder()
     }
 
     @Test
+    fun `sliding all the way dismisses`() {
+        val cb = mutSetOf()
+        compose.setContent { RingScreen(state = ringing(), callbacks = cb, nowProvider = { now }) }
+
+        compose.onNodeWithTag("ring:dismiss").performTouchInput {
+            swipeRight(startX = left + 80f, endX = right)
+        }
+        compose.waitForIdle()
+
+        assertThat(cb.recorded).containsExactly("dismiss")
+    }
+
+    @Test
+    fun `a short slide springs back without dismissing`() {
+        val cb = mutSetOf()
+        compose.setContent { RingScreen(state = ringing(), callbacks = cb, nowProvider = { now }) }
+
+        compose.onNodeWithTag("ring:dismiss").performTouchInput {
+            swipeRight(startX = left + 80f, endX = left + width * 0.3f)
+        }
+        compose.waitForIdle()
+
+        assertThat(cb.recorded).isEmpty()
+    }
+
+    @Test
+    fun `the slide completes at seventy percent of its travel`() {
+        assertThat(slideCompleted(offset = 69f, travel = 100f)).isFalse()
+        assertThat(slideCompleted(offset = 70f, travel = 100f)).isTrue()
+        assertThat(slideCompleted(offset = 0f, travel = 0f)).isFalse()
+    }
+
+    @Test
+    fun `unlimited snoozes do not count down`() {
+        val cb = mutSetOf()
+        compose.setContent {
+            RingScreen(
+                state =
+                    ringing(
+                        alarm =
+                            alarm(
+                                snooze = SnoozeOption(minutes = 10, limit = SnoozeOption.UNLIMITED),
+                            ),
+                    ),
+                callbacks = cb,
+                nowProvider = { now },
+            )
+        }
+
+        compose.onNodeWithText("Snooze 10 min").assertIsDisplayed()
+        compose.onNodeWithText("left", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun `the snooze button disappears once the limit is reached`() {
         val cb = mutSetOf()
-        compose.setContent { RingScreen(state = ringing(snoozeCount = 3), callbacks = cb) }
+        compose.setContent {
+            RingScreen(state = ringing(snoozeCount = 3), callbacks = cb, nowProvider = { now })
+        }
 
-        compose.onNodeWithText("Dismiss").assertIsDisplayed()
-        compose.onNodeWithText("Snooze").assertDoesNotExist()
+        compose.onNodeWithTag("ring:dismiss").assertIsDisplayed()
+        compose.onNodeWithTag("ring:snooze").assertDoesNotExist()
     }
 
     @Test
@@ -138,10 +200,11 @@ class RingScreenTest {
             RingScreen(
                 state = ringing(alarm = alarm(snooze = SnoozeOption(enabled = false))),
                 callbacks = cb,
+                nowProvider = { now },
             )
         }
 
-        compose.onNodeWithText("Snooze").assertDoesNotExist()
+        compose.onNodeWithTag("ring:snooze").assertDoesNotExist()
     }
 
     @Test
@@ -193,14 +256,17 @@ class RingScreenTest {
         }
 
         compose.onNodeWithText("0:30").assertIsDisplayed()
+        compose.onNodeWithText("Mission 1 of 1").assertIsDisplayed()
         compose.onNodeWithTag("mission:typing").assertExists()
 
-        compose.onNodeWithText("+10 seconds").performClick()
+        compose.onNodeWithTag("ring:add_time").performClick()
         compose.onNodeWithTag("mission:typing:input").performTextInput("abc")
         compose.onNodeWithTag("mission:typing:submit").performClick()
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
 
         assertThat(cb.recorded)
-            .containsExactly("addTime", "missionTimerReset", "missionComplete")
+            .containsExactly("addTime", "missionTimerReset", "missionTimerStop", "missionComplete")
             .inOrder()
     }
 
@@ -220,7 +286,7 @@ class RingScreenTest {
         }
 
         compose.onNodeWithText("Type the sentence exactly").assertIsDisplayed()
-        compose.onNodeWithText("+10 seconds").assertDoesNotExist()
+        compose.onNodeWithTag("ring:add_time").assertDoesNotExist()
     }
 
     @Test

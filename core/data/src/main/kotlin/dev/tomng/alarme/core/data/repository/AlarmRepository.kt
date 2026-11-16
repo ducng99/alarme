@@ -8,8 +8,11 @@ import dev.tomng.alarme.core.data.mapper.AlarmEntityMapper
 import dev.tomng.alarme.core.data.mapper.AlarmRowBundle
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.scheduling.NextOccurrenceCalculator
-import kotlin.time.Instant
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 /** Source of truth for alarms and their mission chains. */
@@ -45,19 +48,33 @@ constructor(
      * The next alarm is recomputed from the current time, never read from the stored `time` column:
      * that column is only refreshed on upsert, so it goes stale (and into the past) as occurrences
      * pass. A skipped alarm still has an occurrence (the one after the skipped day), so it stays in
-     * the running like the scheduler does.
+     * the running like the scheduler does. The flow emits again when that occurrence passes, so the
+     * widget moves on after an alarm rings even though nothing was written.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeNextAlarm(): Flow<Alarm?> =
-        observeAlarms().map { alarms ->
-            alarms
-                .filter { it.enabled }
-                .map { alarm ->
-                    alarm to
-                        NextOccurrenceCalculator.nextOccurrence(alarm, clock.now(), clock.zone())
+        observeAlarms().flatMapLatest { alarms ->
+            flow {
+                while (true) {
+                    val next = nextOf(alarms)
+                    emit(next)
+                    val at = next?.nextOccurrence ?: return@flow
+                    delay(at - clock.now())
                 }
-                .minByOrNull { (_, occurrence) -> occurrence ?: Instant.DISTANT_FUTURE }
-                ?.let { (alarm, occurrence) -> alarm.copy(nextOccurrence = occurrence) }
+            }
         }
+
+    private fun nextOf(alarms: List<Alarm>): Alarm? {
+        val now = clock.now()
+        return alarms
+            .filter { it.enabled }
+            .map { alarm ->
+                alarm to NextOccurrenceCalculator.nextOccurrence(alarm, now, clock.zone())
+            }
+            .filter { (_, occurrence) -> occurrence != null }
+            .minByOrNull { (_, occurrence) -> occurrence!! }
+            ?.let { (alarm, occurrence) -> alarm.copy(nextOccurrence = occurrence) }
+    }
 
     override suspend fun getAlarm(id: Long): Alarm? = loadBundle(id)?.toAlarm()
 

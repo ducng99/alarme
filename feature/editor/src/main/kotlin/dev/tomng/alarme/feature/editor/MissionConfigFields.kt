@@ -17,11 +17,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.TypingSentence
@@ -105,7 +104,6 @@ private fun DifficultySection(
     description: String,
     onSelect: (Int) -> Unit,
 ) {
-    val haptics = LocalHapticFeedback.current
     ConfigSection(
         title = stringResource(R.string.config_difficulty),
         body = description,
@@ -122,10 +120,7 @@ private fun DifficultySection(
                 value = selected.toFloat(),
                 onValueChange = { value ->
                     val level = value.roundToInt()
-                    if (level != selected) {
-                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                        onSelect(level)
-                    }
+                    if (level != selected) onSelect(level)
                 },
                 valueRange = range.first.toFloat()..range.last.toFloat(),
                 steps = range.last - range.first - 1,
@@ -239,8 +234,8 @@ private fun SentencePreview(sentences: List<TypingSentence>) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m),
+            verticalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
             sentences.forEach { sentence ->
                 Text(

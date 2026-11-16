@@ -34,6 +34,8 @@ interface SettingsRepository {
 
     suspend fun setDefaultRingtoneId(id: Long?)
 
+    suspend fun setOnboardingDone(done: Boolean)
+
     suspend fun deviceId(): String
 }
 
@@ -88,6 +90,10 @@ constructor(
         }
     }
 
+    override suspend fun setOnboardingDone(done: Boolean) {
+        dataStore.edit { prefs -> prefs[ONBOARDING_DONE] = done }
+    }
+
     override suspend fun deviceId(): String = deviceMutex.withLock {
         val existing = dataStore.data.first()[DEVICE_ID]
         if (existing != null) return@withLock existing
@@ -115,6 +121,7 @@ constructor(
             preventPowerOff = this[PREVENT_POWER_OFF] ?: false,
             preventUninstall = this[PREVENT_UNINSTALL] ?: false,
             defaultRingtoneId = this[DEFAULT_RINGTONE_ID],
+            onboardingDone = this[ONBOARDING_DONE] ?: false,
         )
 
     internal companion object {
@@ -142,6 +149,7 @@ constructor(
         val PREVENT_UNINSTALL = booleanPreferencesKey("prevent_uninstall")
         val DEFAULT_RINGTONE_ID = longPreferencesKey("default_ringtone_id")
         val DEVICE_ID = stringPreferencesKey("device_id")
+        val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         const val OFF = -1
     }
 }

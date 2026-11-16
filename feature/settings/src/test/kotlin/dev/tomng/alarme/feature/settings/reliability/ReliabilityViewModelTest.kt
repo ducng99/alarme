@@ -131,6 +131,8 @@ private class FakeSettings : SettingsRepository {
 
     override suspend fun setDefaultRingtoneId(id: Long?) = Unit
 
+    override suspend fun setOnboardingDone(done: Boolean) = Unit
+
     override suspend fun deviceId(): String = "dev"
 }
 

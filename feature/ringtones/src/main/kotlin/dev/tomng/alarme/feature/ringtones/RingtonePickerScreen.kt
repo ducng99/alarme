@@ -2,54 +2,59 @@ package dev.tomng.alarme.feature.ringtones
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Shuffle
-import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tomng.alarme.core.designsystem.component.AlarmeScaffold
-import dev.tomng.alarme.core.designsystem.component.GroupCard
-import dev.tomng.alarme.core.designsystem.component.GroupDivider
-import dev.tomng.alarme.core.designsystem.component.LeadingIcon
-import dev.tomng.alarme.core.designsystem.component.SectionLabel
-import dev.tomng.alarme.core.designsystem.component.SettingRow
+import dev.tomng.alarme.core.designsystem.component.EmptyState
+import dev.tomng.alarme.core.designsystem.component.SectionHeader
 import dev.tomng.alarme.core.designsystem.component.rememberListPadding
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.ringtone.CatalogRingtone
 import dev.tomng.alarme.core.model.ringtone.RingtoneKind
 import dev.tomng.alarme.core.model.ringtone.RingtoneUris
 
-/** Whether the picker edits one alarm's sound or the app-wide default. */
+/** Whether the picker edits one alarm's sound, the backup sound, or the app-wide default. */
 enum class PickerMode {
     Alarm,
     Default,
@@ -78,14 +83,16 @@ fun RingtonePickerScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val messageText = state.message?.let { stringResource(it.textRes()) }
 
-    LaunchedEffect(messageText) {
-        if (messageText != null) {
-            snackbar.showSnackbar(messageText)
-            viewModel.consumeMessage()
-        }
-    }
+    DisposableEffect(viewModel) { onDispose { viewModel.stopPreview() } }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.stopPreview() }
+    PickerMessageEffect(
+        message = state.message,
+        snackbar = snackbar,
+        onUndo = viewModel::undoDelete,
+        onDeleteSettled = viewModel::commitDelete,
+        onConsumed = viewModel::consumeMessage,
+    )
 
     val importLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -100,20 +107,74 @@ fun RingtonePickerScreen(
         callbacks =
             RingtonePickerCallbacks(
                 onSelect = { uri, title ->
-                    if (uri != null && uri != RingtoneUris.SILENT && uri != RingtoneUris.RANDOM) {
+                    if (uri == null || uri == RingtoneUris.SILENT || uri == RingtoneUris.RANDOM) {
+                        viewModel.stopPreview()
+                    } else {
                         viewModel.preview(uri)
                     }
                     onPersist(uri, title)
                 },
-                onSetDefault = viewModel::setDefault,
+                onSetDefault = { row ->
+                    viewModel.setDefault(row)
+                    viewModel.preview(row.uri)
+                },
                 onImportClick = { importLauncher.launch(arrayOf("audio/*")) },
                 onRecordToggle = viewModel::toggleRecording,
-                onPreview = viewModel::preview,
+                onPreview = viewModel::togglePreview,
                 onDelete = viewModel::delete,
                 onDone = onDone,
             ),
         modifier = modifier,
     )
+}
+
+@Composable
+private fun PickerMessageEffect(
+    message: PickerMessage?,
+    snackbar: SnackbarHostState,
+    onUndo: () -> Unit,
+    onDeleteSettled: () -> Unit,
+    onConsumed: () -> Unit,
+) {
+    val text = message?.let { stringResource(it.textRes()) }
+    val undo = stringResource(R.string.ringtone_undo)
+    LaunchedEffect(message) {
+        if (message == null || text == null) return@LaunchedEffect
+        onConsumed()
+        if (message == PickerMessage.Deleted) {
+            val result =
+                snackbar.showSnackbar(
+                    message = text,
+                    actionLabel = undo,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short,
+                )
+            if (result == SnackbarResult.ActionPerformed) onUndo() else onDeleteSettled()
+        } else {
+            snackbar.showSnackbar(text)
+        }
+    }
+}
+
+/** Which tab a sound lives in. */
+private enum class PickerTab(val label: Int) {
+    Included(R.string.ringtone_tab_included),
+    Device(R.string.ringtone_tab_device),
+    Mine(R.string.ringtone_tab_mine),
+}
+
+private fun CatalogRingtone.tab(): PickerTab =
+    when (kind) {
+        RingtoneKind.DEVICE_ALARM -> PickerTab.Device
+        RingtoneKind.MUSIC,
+        RingtoneKind.RECORD -> PickerTab.Mine
+        else -> PickerTab.Included
+    }
+
+private fun initialTab(state: PickerState, current: String?): PickerTab {
+    if (current == null) return PickerTab.Included
+    val row = (state.rows + state.deviceTones).firstOrNull { it.uri == current }
+    return row?.tab() ?: PickerTab.Included
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -126,6 +187,21 @@ fun RingtonePickerContent(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    var picked by rememberSaveable(selectedUri) { mutableStateOf(selectedUri) }
+    val current = if (mode == PickerMode.Default) state.defaultUri else picked
+    var tab by rememberSaveable { mutableIntStateOf(initialTab(state, current).ordinal) }
+
+    val choose: (uri: String, title: String, row: CatalogRingtone?) -> Unit = { uri, title, row ->
+        when {
+            uri == current && row != null -> callbacks.onPreview(uri)
+            mode == PickerMode.Default && row != null -> callbacks.onSetDefault(row)
+            else -> {
+                picked = uri
+                callbacks.onSelect(uri, title)
+            }
+        }
+    }
+
     AlarmeScaffold(
         title =
             stringResource(
@@ -141,160 +217,155 @@ fun RingtonePickerContent(
         backTag = "ringtone:done",
         snackbarHostState = snackbarHostState,
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().testTag("ringtone:list"),
-            contentPadding = rememberListPadding(innerPadding, horizontal = 16.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+        Column(
+            modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding()),
         ) {
-            if (mode == PickerMode.Alarm) {
-                item { SectionLabel(stringResource(R.string.ringtone_section_quick)) }
-                item {
-                    GroupCard {
-                        PseudoChoice(
-                            labelRes = R.string.ringtone_silent,
-                            uri = RingtoneUris.SILENT,
-                            selectedUri = selectedUri,
-                            icon = Icons.AutoMirrored.Outlined.VolumeOff,
-                            callbacks = callbacks,
-                        )
-                        GroupDivider()
-                        PseudoChoice(
-                            labelRes = R.string.ringtone_random,
-                            uri = RingtoneUris.RANDOM,
-                            selectedUri = selectedUri,
-                            icon = Icons.Outlined.Shuffle,
-                            callbacks = callbacks,
-                        )
-                    }
-                }
-            }
-            section(
-                R.string.ringtone_section_bundled,
-                state.rows.filter { it.kind == RingtoneKind.BUNDLED },
-                mode,
-                selectedUri,
-                callbacks,
-                defaultId = state.defaultRingtoneId,
-            )
-            section(
-                R.string.ringtone_section_device,
-                state.deviceTones,
-                mode,
-                selectedUri,
-                callbacks,
-                defaultId = state.defaultRingtoneId,
-            )
-            section(
-                R.string.ringtone_section_mine,
-                state.rows.filter {
-                    it.kind == RingtoneKind.MUSIC || it.kind == RingtoneKind.RECORD
-                },
-                mode,
-                selectedUri,
-                callbacks,
-                defaultId = state.defaultRingtoneId,
-                deletable = true,
-            )
-            item { SectionLabel(stringResource(R.string.ringtone_section_add)) }
-            item { AddSoundButtons(recording = state.recording, callbacks = callbacks) }
-        }
-    }
-}
-
-@Composable
-private fun PseudoChoice(
-    labelRes: Int,
-    uri: String,
-    selectedUri: String?,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    callbacks: RingtonePickerCallbacks,
-) {
-    val selected = selectedUri == uri
-    SettingRow(
-        title = stringResource(labelRes),
-        leading = { LeadingIcon(icon) },
-        onClick = { callbacks.onSelect(uri, "") },
-        trailing = { RadioButton(selected = selected, onClick = null) },
-        modifier =
-            Modifier.testTag(
-                if (uri == RingtoneUris.SILENT) "ringtone:silent" else "ringtone:random",
-            ),
-    )
-}
-
-private fun LazyListScope.section(
-    labelRes: Int,
-    rows: List<CatalogRingtone>,
-    mode: PickerMode,
-    selectedUri: String?,
-    callbacks: RingtonePickerCallbacks,
-    defaultId: Long? = null,
-    deletable: Boolean = false,
-) {
-    if (rows.isEmpty()) return
-    item { SectionLabel(stringResource(labelRes)) }
-    item {
-        GroupCard {
-            rows.forEachIndexed { index, row ->
-                if (index > 0) GroupDivider()
-                RingtoneRow(
-                    row = row,
-                    mode = mode,
-                    selected = selectedUri == row.uri,
-                    defaultId = defaultId,
-                    deletable = deletable,
-                    callbacks = callbacks,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RingtoneRow(
-    row: CatalogRingtone,
-    mode: PickerMode,
-    selected: Boolean,
-    defaultId: Long?,
-    deletable: Boolean,
-    callbacks: RingtonePickerCallbacks,
-) {
-    SettingRow(
-        title = row.title,
-        supporting =
-            if (row.kind == RingtoneKind.RECORD) stringResource(R.string.ringtone_kind_recording)
-            else null,
-        leading = {
-            LeadingIcon(
-                if (row.kind == RingtoneKind.RECORD) Icons.Outlined.Mic
-                else Icons.Outlined.MusicNote,
-            )
-        },
-        onClick = {
-            if (mode == PickerMode.Default) callbacks.onSetDefault(row)
-            else callbacks.onSelect(row.uri, row.title)
-        },
-        trailing = {
-            if (deletable) {
-                IconButton(
-                    onClick = { callbacks.onDelete(row) },
-                    modifier = Modifier.testTag("ringtone:delete:${row.id}"),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.ringtone_delete),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            PrimaryTabRow(
+                selectedTabIndex = tab,
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                PickerTab.entries.forEach { entry ->
+                    Tab(
+                        selected = tab == entry.ordinal,
+                        onClick = { tab = entry.ordinal },
+                        text = {
+                            Text(
+                                stringResource(entry.label),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        modifier = Modifier.testTag("ringtone:tab:${entry.ordinal}"),
                     )
                 }
             }
-            RadioButton(
-                selected = if (mode == PickerMode.Default) row.id == defaultId else selected,
-                onClick = null,
-                modifier = Modifier.testTag("ringtone:default:${row.id}"),
+            val enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec())
+            val exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec())
+            AnimatedContent(
+                targetState = PickerTab.entries[tab],
+                transitionSpec = { enter togetherWith exit },
+                label = "pickerTab",
+                modifier = Modifier.weight(1f),
+            ) { shown ->
+                val bottomOnly = remember(innerPadding) { BottomPadding(innerPadding) }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().testTag("ringtone:list"),
+                    contentPadding =
+                        rememberListPadding(
+                            bottomOnly,
+                            horizontal = Spacing.screen,
+                            bottom = Spacing.xxl,
+                        ),
+                ) {
+                    val rowState = RowState(mode, current, state.previewing)
+                    when (shown) {
+                        PickerTab.Included -> includedTab(state, mode, rowState, choose)
+                        PickerTab.Device -> soundRows(state.deviceTones, rowState, choose)
+                        PickerTab.Mine -> mineTab(state, rowState, choose, callbacks)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** What every row needs to know to draw its selection and preview state. */
+private class RowState(val mode: PickerMode, val current: String?, val previewing: String?)
+
+private fun LazyListScope.includedTab(
+    state: PickerState,
+    mode: PickerMode,
+    rowState: RowState,
+    choose: (String, String, CatalogRingtone?) -> Unit,
+) {
+    if (mode == PickerMode.Alarm) {
+        item(key = "quick-header") {
+            SectionHeader(stringResource(R.string.ringtone_section_quick))
+        }
+        item(key = "silent") {
+            PseudoRow(
+                title = stringResource(R.string.ringtone_silent),
+                icon = Icons.AutoMirrored.Outlined.VolumeOff,
+                selected = rowState.current == RingtoneUris.SILENT,
+                shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                onClick = { choose(RingtoneUris.SILENT, "", null) },
+                modifier = Modifier.testTag("ringtone:silent"),
             )
-        },
-        modifier = Modifier.testTag("ringtone:row:${row.id}"),
-    )
+        }
+        item(key = "random") {
+            PseudoRow(
+                title = stringResource(R.string.ringtone_random),
+                supporting = stringResource(R.string.ringtone_random_body),
+                icon = Icons.Outlined.Shuffle,
+                selected = rowState.current == RingtoneUris.RANDOM,
+                shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                onClick = { choose(RingtoneUris.RANDOM, "", null) },
+                modifier = Modifier.testTag("ringtone:random"),
+            )
+        }
+    }
+    val bundled = state.rows.filter { it.kind == RingtoneKind.BUNDLED }
+    if (bundled.isNotEmpty()) {
+        item(key = "bundled-header") {
+            SectionHeader(stringResource(R.string.ringtone_section_bundled))
+        }
+        soundRows(bundled, rowState, choose)
+    }
+}
+
+private fun LazyListScope.mineTab(
+    state: PickerState,
+    rowState: RowState,
+    choose: (String, String, CatalogRingtone?) -> Unit,
+    callbacks: RingtonePickerCallbacks,
+) {
+    val mine = state.rows.filter { it.tab() == PickerTab.Mine }
+    if (mine.isEmpty()) {
+        item(key = "mine-empty") {
+            EmptyState(
+                icon = Icons.Outlined.LibraryMusic,
+                title = stringResource(R.string.ringtone_mine_empty_title),
+                body = stringResource(R.string.ringtone_mine_empty_body),
+                modifier = Modifier.animateItem(),
+            )
+        }
+    } else {
+        item(key = "mine-header") { SectionHeader(stringResource(R.string.ringtone_section_mine)) }
+        soundRows(mine, rowState, choose, onDelete = callbacks.onDelete)
+    }
+    item(key = "mine-actions") {
+        AddSoundButtons(
+            recording = state.recording,
+            onImport = callbacks.onImportClick,
+            onRecord = callbacks.onRecordToggle,
+            modifier = Modifier.animateItem().padding(top = Spacing.xl),
+        )
+    }
+}
+
+private fun LazyListScope.soundRows(
+    rows: List<CatalogRingtone>,
+    rowState: RowState,
+    choose: (String, String, CatalogRingtone?) -> Unit,
+    onDelete: ((CatalogRingtone) -> Unit)? = null,
+) {
+    itemsIndexed(rows, key = { _, row -> "row-${row.id}" }) { index, row ->
+        SoundRow(
+            row = row,
+            icon =
+                when (row.kind) {
+                    RingtoneKind.RECORD -> Icons.Outlined.Mic
+                    RingtoneKind.DEVICE_ALARM -> Icons.Outlined.Alarm
+                    else -> Icons.Outlined.MusicNote
+                },
+            selected = rowState.current == row.uri,
+            playing = rowState.previewing == row.uri,
+            shapes = ListItemDefaults.segmentedShapes(index = index, count = rows.size),
+            onClick = { choose(row.uri, row.title, row) },
+            onDelete = onDelete?.let { delete -> { delete(row) } },
+            modifier = Modifier.animateItem(),
+        )
+    }
 }
 
 private fun PickerMessage.textRes(): Int =
@@ -307,53 +378,5 @@ private fun PickerMessage.textRes(): Int =
         PickerMessage.Recorded -> R.string.ringtone_msg_recorded
         PickerMessage.RecordingTooShort -> R.string.ringtone_msg_recording_too_short
         PickerMessage.RecordingFailed -> R.string.ringtone_msg_recording_failed
+        PickerMessage.Deleted -> R.string.ringtone_msg_deleted
     }
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun AddSoundButtons(recording: Boolean, callbacks: RingtonePickerCallbacks) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        OutlinedButton(
-            onClick = callbacks.onImportClick,
-            shapes = ButtonDefaults.shapes(),
-            modifier = Modifier.weight(1f).heightIn(min = 56.dp).testTag("ringtone:import"),
-        ) {
-            Icon(
-                Icons.Outlined.FileUpload,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 6.dp),
-            )
-            Text(stringResource(R.string.ringtone_import), maxLines = 1)
-        }
-        Button(
-            onClick = callbacks.onRecordToggle,
-            shapes = ButtonDefaults.shapes(),
-            colors =
-                if (recording) {
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError,
-                    )
-                } else {
-                    ButtonDefaults.buttonColors()
-                },
-            modifier = Modifier.weight(1f).heightIn(min = 56.dp).testTag("ringtone:record"),
-        ) {
-            Icon(
-                if (recording) Icons.Outlined.Stop else Icons.Outlined.Mic,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 6.dp),
-            )
-            Text(
-                text =
-                    stringResource(
-                        if (recording) R.string.ringtone_record_stop else R.string.ringtone_record,
-                    ),
-                maxLines = 1,
-            )
-        }
-    }
-}

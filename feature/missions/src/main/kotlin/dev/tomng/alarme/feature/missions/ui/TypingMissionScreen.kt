@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -29,8 +27,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
-import dev.tomng.alarme.core.designsystem.component.GroupCard
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.R
@@ -75,12 +72,11 @@ fun TypingMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_typing_title),
-        icon = Icons.Outlined.Keyboard,
         testTag = "mission:typing",
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -93,7 +89,7 @@ fun TypingMissionScreen(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            GroupCard {
+            MissionCard {
                 Text(
                     text =
                         buildAnnotatedString {
@@ -104,7 +100,7 @@ fun TypingMissionScreen(
                         },
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.xl, vertical = Spacing.xl),
                 )
             }
             OutlinedTextField(

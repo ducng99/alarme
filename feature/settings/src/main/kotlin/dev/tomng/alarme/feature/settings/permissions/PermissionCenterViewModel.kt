@@ -14,7 +14,16 @@ data class PermissionCenterState(
     val rows: List<PermissionRow> = emptyList(),
     val missingCount: Int = 0,
     val allGranted: Boolean = false,
-)
+) {
+    val criticalMissing: List<PermissionItem>
+        get() = rows.filter { it.item.critical && !it.granted }.map { it.item }
+
+    fun isGranted(item: PermissionItem): Boolean = rows.any { it.item == item && it.granted }
+
+    /** The setup steps still worth showing, in walk-through order. */
+    fun onboardingSteps(): List<PermissionItem> =
+        PermissionItem.onboarding.filter { item -> !isGranted(item) }
+}
 
 /**
  * The permission matrix. State is re-read on every [refresh] (the screen calls it on resume), so a

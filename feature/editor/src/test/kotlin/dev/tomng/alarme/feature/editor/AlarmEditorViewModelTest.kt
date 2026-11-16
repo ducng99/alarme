@@ -187,6 +187,60 @@ class AlarmEditorViewModelTest {
     }
 
     @Test
+    fun `missions can be reordered`() = runTest {
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+        vm.addMission(Mission.Math())
+        vm.addMission(Mission.Shake())
+        vm.addMission(Mission.Step())
+
+        vm.moveMission(from = 2, to = 0)
+
+        assertThat(vm.state.value.draft.missions.map { it::class })
+            .containsExactly(Mission.Step::class, Mission.Math::class, Mission.Shake::class)
+            .inOrder()
+    }
+
+    @Test
+    fun `moving a mission out of range is ignored`() = runTest {
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+        vm.addMission(Mission.Math())
+
+        vm.moveMission(from = 0, to = 3)
+
+        assertThat(vm.state.value.draft.missions).hasSize(1)
+    }
+
+    @Test
+    fun `a removed mission can be restored in place`() = runTest {
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+        vm.addMission(Mission.Math())
+        vm.addMission(Mission.Shake())
+
+        vm.removeMission(0)
+        vm.restoreMission()
+
+        assertThat(vm.state.value.draft.missions.first()).isInstanceOf(Mission.Math::class.java)
+        assertThat(vm.state.value.draft.missions).hasSize(2)
+    }
+
+    @Test
+    fun `repeat presets replace the day set`() = runTest {
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+
+        vm.setDays(setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY))
+
+        assertThat(vm.state.value.draft.days).containsExactly(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+    }
+
+    @Test
     fun `the mission chain stops at five`() = runTest {
         val vm = viewModel()
         vm.load(Alarm.NEW_ID)

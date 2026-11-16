@@ -55,6 +55,14 @@ class SettingsRepositoryTest {
         assertEquals(false, settings.preventPowerOff)
         assertEquals(false, settings.preventUninstall)
         assertEquals(null, settings.defaultRingtoneId)
+        assertEquals(false, settings.onboardingDone)
+    }
+
+    @Test
+    fun onboardingDonePersists() = runTest {
+        newRepository().setOnboardingDone(true)
+
+        assertEquals(true, newRepository().settings.first().onboardingDone)
     }
 
     @Test

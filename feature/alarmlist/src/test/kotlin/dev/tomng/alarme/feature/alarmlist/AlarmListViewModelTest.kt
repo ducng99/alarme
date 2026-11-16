@@ -8,6 +8,8 @@ import dev.tomng.alarme.core.data.repository.SkipAlarmUseCase
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.alarm.AlarmType
 import dev.tomng.alarme.core.model.alarm.DaysOfWeek
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,7 +17,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -65,6 +69,15 @@ class AlarmListViewModelTest {
         )
 
     @Test
+    fun `the list is unknown until the repository answers`() = runTest {
+        val fresh =
+            AlarmListViewModel(NeverRepository(repo), SkipAlarmUseCase(repo), scheduler, clock)
+        backgroundScope.launch { fresh.alarms.collect {} }
+
+        assertThat(fresh.alarms.value).isNull()
+    }
+
+    @Test
     fun `toggling an alarm persists and rearms`() = runTest {
         repo.alarms.value = listOf(alarm())
 
@@ -81,7 +94,6 @@ class AlarmListViewModelTest {
         viewModel.skip(alarm())
 
         assertThat(repo.alarms.value.single().isSkipped).isTrue()
-        assertThat(viewModel.message.value).isNull()
         // The already-armed delivery must be replaced, or the skipped occurrence still rings.
         assertThat(scheduler.reasons).containsExactly(RescheduleReason.PROCESS_SKIP)
     }
@@ -160,14 +172,75 @@ class AlarmListViewModelTest {
 
     @Test
     fun `a quick alarm is created one-shot at the requested offset`() = runTest {
-        viewModel.createQuick(hours = 8)
+        viewModel.createQuick(minutes = 8 * 60 + 30)
 
         val created = repo.alarms.value.single()
         assertThat(created.type).isEqualTo(AlarmType.QUICK)
         assertThat(created.daysOfWeek).isEqualTo(DaysOfWeek.NONE)
         assertThat(created.hour).isEqualTo(14)
-        assertThat(created.minute).isEqualTo(0)
+        assertThat(created.minute).isEqualTo(30)
         assertThat(scheduler.reasons).containsExactly(RescheduleReason.ADD_ALARM)
+        assertThat(viewModel.message.value)
+            .isEqualTo(AlarmListMessage.QuickCreated(Instant.parse("2026-11-10T14:30:00Z")))
+    }
+
+    @Test
+    fun `undoing a quick alarm deletes it again`() = runTest {
+        viewModel.createQuick(minutes = 60)
+
+        viewModel.undoQuick()
+
+        assertThat(repo.alarms.value).isEmpty()
+        assertThat(scheduler.reasons)
+            .containsExactly(RescheduleReason.ADD_ALARM, RescheduleReason.DELETE_ALARM)
+            .inOrder()
+    }
+
+    @Test
+    fun `turning an alarm on says when it will ring`() = runTest {
+        repo.alarms.value = listOf(alarm(enabled = false))
+        scheduler.next = alarm()
+
+        viewModel.setEnabled(alarm(enabled = false), enabled = true)
+
+        assertThat(viewModel.message.value)
+            .isEqualTo(AlarmListMessage.TurnedOn(Instant.parse("2026-11-10T07:00:00Z")))
+    }
+
+    @Test
+    fun `turning an alarm off says nothing`() = runTest {
+        repo.alarms.value = listOf(alarm())
+
+        viewModel.setEnabled(alarm(), enabled = false)
+
+        assertThat(viewModel.message.value).isNull()
+    }
+
+    @Test
+    fun `skipping confirms with an undoable message`() = runTest {
+        repo.alarms.value = listOf(alarm())
+
+        viewModel.skip(alarm())
+
+        assertThat(viewModel.message.value).isEqualTo(AlarmListMessage.Skipped(7))
+    }
+
+    @Test
+    fun `alarms are listed enabled first, soonest first, with their next ring`() = runTest {
+        repo.alarms.value =
+            listOf(
+                alarm(id = 1, enabled = false).copy(hour = 5),
+                alarm(id = 2).copy(hour = 9),
+                alarm(id = 3).copy(hour = 6, minute = 30),
+                alarm(id = 4).copy(hour = 5),
+            )
+
+        val listed = viewModel.alarms.first { !it.isNullOrEmpty() }!!
+
+        // 06:00 now: 06:30 and 09:00 ring today, 05:00 tomorrow; disabled sink to the end.
+        assertThat(listed.map { it.id }).containsExactly(3L, 2L, 4L, 1L).inOrder()
+        assertThat(listed.first().nextOccurrence).isEqualTo(Instant.parse("2026-11-10T06:30:00Z"))
+        assertThat(listed.last().nextOccurrence).isNull()
     }
 
     @Test
@@ -192,24 +265,52 @@ class AlarmListViewModelTest {
     }
 
     @Test
-    fun `a successful arming leaves no message`() = runTest {
+    fun `a successful arming is not reported as a failure`() = runTest {
         repo.alarms.value = listOf(alarm())
         scheduler.next = alarm()
 
         viewModel.setEnabled(alarm(), enabled = true)
 
-        assertThat(viewModel.message.value).isNull()
+        assertThat(viewModel.message.value).isNotEqualTo(AlarmListMessage.NotArmed)
     }
 
     @Test
     fun `the next alarm is the earliest enabled one`() = runTest {
         repo.alarms.value =
             listOf(
-                alarm(id = 1).copy(nextOccurrence = Instant.parse("2026-11-11T07:00:00Z")),
-                alarm(id = 2).copy(nextOccurrence = Instant.parse("2026-11-10T09:00:00Z")),
+                alarm(id = 1).copy(hour = 5),
+                alarm(id = 2).copy(hour = 9),
+                alarm(id = 3, enabled = false).copy(hour = 7),
             )
 
-        assertThat(viewModel.nextAlarm.first()?.id).isEqualTo(2L)
+        assertThat(viewModel.nextAlarm.first { it != null }?.id).isEqualTo(2L)
+    }
+
+    @Test
+    fun `a ring time that passes rolls over without any change to the alarms`() = runTest {
+        repo.alarms.value = listOf(alarm(id = 1).copy(hour = 6, minute = 30))
+        val collector =
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.alarms.collect {}
+            }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.nextAlarm.collect {}
+        }
+        assertThat(viewModel.alarms.value!!.single().nextOccurrence)
+            .isEqualTo(Instant.parse("2026-11-10T06:30:00Z"))
+
+        clock.advanceBy(30.minutes)
+        advanceTimeBy(30.minutes + 1.milliseconds)
+
+        assertThat(viewModel.alarms.value!!.single().nextOccurrence)
+            .isEqualTo(Instant.parse("2026-11-11T06:30:00Z"))
+        assertThat(viewModel.nextAlarm.value?.nextOccurrence)
+            .isEqualTo(Instant.parse("2026-11-11T06:30:00Z"))
+        collector.cancel()
+    }
+
+    private class NeverRepository(delegate: AlarmRepository) : AlarmRepository by delegate {
+        override fun observeAlarms(): Flow<List<Alarm>> = kotlinx.coroutines.flow.emptyFlow()
     }
 
     private class FakeRepo : AlarmRepository {

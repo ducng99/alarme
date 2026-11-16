@@ -105,6 +105,8 @@ constructor(
 
     fun setEveryDay() = edit { it.copy(days = DayOfWeek.entries.toSet()) }
 
+    fun setDays(days: Set<DayOfWeek>) = edit { it.copy(days = days) }
+
     fun setOneShot() = edit { it.copy(days = emptySet()) }
 
     fun setEnabled(enabled: Boolean) = edit { it.copy(enabled = enabled) }
@@ -153,9 +155,40 @@ constructor(
         if (!draft.canAddMission) draft else draft.copy(missions = draft.missions + mission)
     }
 
+    private var removedMission: Pair<Int, Mission>? = null
+
     fun removeMission(index: Int) = edit { draft ->
-        if (index !in draft.missions.indices) draft
-        else draft.copy(missions = draft.missions.filterIndexed { i, _ -> i != index })
+        if (index !in draft.missions.indices) {
+            draft
+        } else {
+            removedMission = index to draft.missions[index]
+            draft.copy(missions = draft.missions.filterIndexed { i, _ -> i != index })
+        }
+    }
+
+    /** Puts back the mission taken out by the last [removeMission], at its old position. */
+    fun restoreMission() {
+        val (index, mission) = removedMission ?: return
+        removedMission = null
+        edit { draft ->
+            if (!draft.canAddMission) {
+                draft
+            } else {
+                val missions = draft.missions.toMutableList()
+                missions.add(index.coerceAtMost(missions.size), mission)
+                draft.copy(missions = missions)
+            }
+        }
+    }
+
+    fun moveMission(from: Int, to: Int) = edit { draft ->
+        if (from !in draft.missions.indices || to !in draft.missions.indices) {
+            draft
+        } else {
+            val missions = draft.missions.toMutableList()
+            missions.add(to, missions.removeAt(from))
+            draft.copy(missions = missions)
+        }
     }
 
     fun replaceMission(index: Int, mission: Mission) = edit { draft ->

@@ -1,15 +1,18 @@
 package dev.tomng.alarme.feature.editor
 
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextReplacement
 import com.google.common.truth.Truth.assertThat
@@ -37,12 +40,13 @@ class AlarmEditorScreenTest {
     private fun setScreen(
         draft: AlarmDraft = AlarmDraft(),
         errors: List<DraftError> = emptyList(),
+        loading: Boolean = false,
         soundTitle: String? = null,
         backupSoundTitle: String? = null,
     ) {
         compose.setContent {
             AlarmEditorScreen(
-                state = AlarmEditorUiState(draft = draft, loading = false, errors = errors),
+                state = AlarmEditorUiState(draft = draft, loading = loading, errors = errors),
                 soundTitle = soundTitle,
                 backupSoundTitle = backupSoundTitle,
                 onBack = { calls += "back" },
@@ -52,8 +56,7 @@ class AlarmEditorScreenTest {
                         onName = { calls += "name:$it" },
                         onEmoji = { calls += "emoji:$it" },
                         onToggleDay = { calls += "day:${it.name}" },
-                        onEveryDay = { calls += "everyDay" },
-                        onOneShot = { calls += "once" },
+                        onDays = { calls += "days:${it.size}" },
                         onEnabled = { calls += "enabled:$it" },
                         onVibrate = { calls += "vibrate:$it" },
                         onVolume = { calls += "volume:$it" },
@@ -71,6 +74,11 @@ class AlarmEditorScreenTest {
                             replacedMission = mission
                             calls += "replaceMission"
                         },
+                        onRestoreMission = { calls += "restoreMission" },
+                        onMoveMission = { from, to -> calls += "move:$from:$to" },
+                        onOpenSound = { calls += "openSound:$it" },
+                        onOpenBackupSound = { calls += "openBackup:$it" },
+                        onSnoozeMinutes = { calls += "snoozeMinutes:$it" },
                         onSave = { saved++ },
                         onDelete = { deleted++ },
                     ),
@@ -84,6 +92,14 @@ class AlarmEditorScreenTest {
 
     private fun scrollToText(text: String) {
         compose.onNodeWithTag("editor_list").performScrollToNode(hasText(text))
+    }
+
+    @Test
+    fun `the form stays hidden until the alarm has loaded`() {
+        setScreen(loading = true)
+
+        compose.onNodeWithTag("editor_hour").assertDoesNotExist()
+        compose.onNodeWithTag("editor_save").assertDoesNotExist()
     }
 
     @Test
@@ -116,13 +132,23 @@ class AlarmEditorScreenTest {
     }
 
     @Test
-    fun `the time row opens a picker that reports the chosen time`() {
+    fun `the time wheels step the time without a dialog`() {
         setScreen(draft = AlarmDraft(hour = 6, minute = 30))
 
-        compose.onNodeWithTag("editor_time").performClick()
-        compose.onNodeWithTag("editor_time_ok").performClick()
+        compose.onNodeWithTag("editor_minute").assertContentDescriptionEquals("Minute")
+        compose.onNodeWithTag("editor_minute").performCustomAction("Increase")
+        compose.onNodeWithTag("editor_hour").performCustomAction("Decrease")
 
-        assertThat(calls).contains("time:6:30")
+        assertThat(calls).containsAtLeast("time:6:31", "time:5:30")
+    }
+
+    @Test
+    fun `the time can be typed instead`() {
+        setScreen(draft = AlarmDraft(hour = 6, minute = 30))
+
+        compose.onNodeWithTag("editor_time_mode").performClick()
+
+        compose.onNodeWithTag("editor_time_input").assertIsDisplayed()
     }
 
     @Test
@@ -140,9 +166,18 @@ class AlarmEditorScreenTest {
 
         compose.onNodeWithTag("editor_day:WEDNESDAY").performClick()
         compose.onNodeWithTag("editor_every_day").performClick()
+        compose.onNodeWithTag("editor_weekdays").performClick()
         compose.onNodeWithTag("editor_once").performClick()
 
-        assertThat(calls).containsAtLeast("day:WEDNESDAY", "everyDay", "once")
+        assertThat(calls).containsAtLeast("day:WEDNESDAY", "days:7", "days:5", "days:0")
+    }
+
+    @Test
+    fun `the matching preset is shown as selected`() {
+        setScreen(draft = AlarmDraft(days = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)))
+
+        compose.onNodeWithTag("editor_weekends").assertIsOn()
+        compose.onNodeWithTag("editor_once").assertIsOff()
     }
 
     @Test
@@ -151,7 +186,9 @@ class AlarmEditorScreenTest {
 
         scrollToText("My song")
         compose.onNodeWithText("My song").assertIsDisplayed()
-        compose.onNodeWithTag("editor_sound").assertIsDisplayed()
+        compose.onNodeWithTag("editor_sound").performClick()
+
+        assertThat(calls).contains("openSound:file:///a.mp3")
     }
 
     @Test
@@ -216,8 +253,23 @@ class AlarmEditorScreenTest {
     fun `snooze details appear when snooze is on`() {
         setScreen(draft = AlarmDraft(snoozeEnabled = true, snoozeMinutes = 5))
 
-        scrollToTag("editor_snooze_minutes:value")
-        compose.onNodeWithTag("editor_snooze_minutes:value").assertIsDisplayed()
+        scrollToTag("editor_snooze_minutes")
+        compose
+            .onNodeWithTag("editor_snooze_minutes:value", useUnmergedTree = true)
+            .assertTextEquals("5 min")
+    }
+
+    @Test
+    fun `the snooze length is picked on a wheel`() {
+        setScreen(draft = AlarmDraft(snoozeEnabled = true, snoozeMinutes = 5))
+
+        scrollToTag("editor_snooze_minutes")
+        compose.onNodeWithTag("editor_snooze_minutes").performClick()
+        compose.onNodeWithTag("editor_snooze_minutes:sheet:wheel").performCustomAction("Increase")
+        compose.onNodeWithTag("editor_snooze_minutes:sheet:ok").performClick()
+        compose.waitForIdle()
+
+        assertThat(calls).contains("snoozeMinutes:6")
     }
 
     @Test
@@ -258,8 +310,19 @@ class AlarmEditorScreenTest {
 
         scrollToTag("editor_mission_remove:1")
         compose.onNodeWithTag("editor_mission_remove:1").performClick()
+        compose.onNodeWithText("Undo").performClick()
 
-        assertThat(calls).contains("removeMission:1")
+        assertThat(calls).containsAtLeast("removeMission:1", "restoreMission").inOrder()
+    }
+
+    @Test
+    fun `missions can be moved`() {
+        setScreen(draft = AlarmDraft(missions = listOf(Mission.Math(), Mission.Shake())))
+
+        scrollToTag("editor_mission_move:1")
+        compose.onNodeWithTag("editor_mission_move:1").performClick()
+
+        assertThat(calls).contains("move:1:0")
     }
 
     @Test
@@ -299,8 +362,7 @@ class AlarmEditorScreenTest {
     private fun pickMissionType(type: MissionType) {
         scrollToTag("editor_add_mission")
         compose.onNodeWithTag("editor_add_mission").performClick()
-        scrollToTag("editor_mission_type:${type.name}")
-        compose.onNodeWithTag("editor_mission_type:${type.name}").performClick()
+        compose.onNodeWithTag("editor_mission_type:${type.name}").performScrollTo().performClick()
     }
 
     @Test
@@ -324,10 +386,20 @@ class AlarmEditorScreenTest {
     }
 
     @Test
-    fun `errors are shown`() {
-        setScreen(errors = listOf(DraftError.IncompleteMission))
+    fun `errors are shown next to the missions`() {
+        setScreen(
+            draft = AlarmDraft(missions = listOf(Mission.Barcode())),
+            errors = listOf(DraftError.IncompleteMission),
+        )
 
-        scrollToText("Finish setting up your missions before saving.")
+        scrollToTag("editor_errors")
         compose.onNodeWithText("Finish setting up your missions before saving.").assertIsDisplayed()
     }
+}
+
+/** Runs the accessibility custom action labelled [label] on this node. */
+internal fun androidx.compose.ui.test.SemanticsNodeInteraction.performCustomAction(label: String) {
+    val actions =
+        fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsActions.CustomActions]
+    actions.single { it.label == label }.action()
 }

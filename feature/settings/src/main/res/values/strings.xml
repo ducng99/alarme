@@ -78,4 +78,46 @@
     <string name="optimize_granted">Allowed</string>
     <string name="optimize_missing">Not allowed</string>
     <string name="optimize_generic_body">Your device has no vendor autostart screen; check the app details page instead.</string>
+
+    <string name="settings_status_ready">Ready to ring</string>
+    <string name="settings_status_ready_body">Alarme has everything it needs to wake you up on time.</string>
+    <string name="settings_status_critical">Alarms can\'t ring reliably</string>
+    <string name="settings_status_optional">%1$d optional permissions off</string>
+    <string name="settings_status_optional_body">Some missions and extras won\'t work until you allow them.</string>
+    <string name="settings_status_fix">Fix now</string>
+    <string name="settings_permissions_row">App permissions</string>
+    <string name="settings_permissions_row_ok">Everything allowed</string>
+    <string name="settings_permissions_row_missing">%1$d not allowed</string>
+    <string name="settings_default_sound_value">Choose</string>
+
+    <string name="permissions_title">Permissions</string>
+    <string name="permissions_required">Required for alarms</string>
+    <string name="permissions_optional">Optional</string>
+    <string name="permissions_allow">Allow</string>
+    <string name="permissions_allowed">Allowed</string>
+
+    <string name="diagnostics_all_healthy">All healthy</string>
+    <string name="diagnostics_all_healthy_body">Nothing on this device should delay your alarms.</string>
+    <string name="diagnostics_issues">%1$d things to check</string>
+    <string name="diagnostics_issues_body">These can make alarms ring late. Open Keep alarms on time to fix them.</string>
+
+    <string name="onboarding_skip">Not now</string>
+    <string name="onboarding_allow">Allow</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_done">Start using Alarme</string>
+    <string name="onboarding_granted">Allowed</string>
+    <string name="onboarding_step">Step %1$d of %2$d</string>
+    <string name="onboarding_welcome_title">Let\'s make sure you wake up</string>
+    <string name="onboarding_welcome_body">Android needs a few permissions before an alarm can ring on time, over the lock screen, every time.</string>
+    <string name="onboarding_welcome_start">Set up</string>
+    <string name="onboarding_ready_title">You\'re all set</string>
+    <string name="onboarding_ready_body">Your alarms will ring on time. You can review permissions in Settings anytime.</string>
+    <string name="onboarding_notifications_title">Show the alarm</string>
+    <string name="onboarding_notifications_body">The ringing alarm lives in a notification. Without it Android can stop the alarm in the background.</string>
+    <string name="onboarding_exact_alarm_title">Ring on the minute</string>
+    <string name="onboarding_exact_alarm_body">Exact alarms let Alarme ring at 7:00, not somewhere around it.</string>
+    <string name="onboarding_full_screen_title">Wake the screen</string>
+    <string name="onboarding_full_screen_body">Opens the ring screen over the lock screen so you can dismiss the alarm right away.</string>
+    <string name="onboarding_battery_title">Stay awake overnight</string>
+    <string name="onboarding_battery_body">Unrestricted battery use stops Android from delaying alarms while the phone sleeps.</string>
 </resources>

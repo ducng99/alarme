@@ -1,41 +1,62 @@
 package dev.tomng.alarme.feature.backup
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import dev.tomng.alarme.core.designsystem.component.AlarmeScaffold
-import dev.tomng.alarme.core.designsystem.component.GroupCard
-import dev.tomng.alarme.core.designsystem.component.GroupDivider
-import dev.tomng.alarme.core.designsystem.component.LeadingIcon
-import dev.tomng.alarme.core.designsystem.component.SettingRow
+import dev.tomng.alarme.core.designsystem.component.BannerTone
+import dev.tomng.alarme.core.designsystem.component.InlineBanner
+import dev.tomng.alarme.core.designsystem.component.rememberFeedback
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 
 /**
  * Backup & restore. Both actions go through the system file picker (the caller owns the SAF
- * launchers), so this screen only renders state and reports outcomes.
+ * launchers), so this screen only renders state and reports outcomes. Restoring replaces every
+ * alarm, so it asks first.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -47,8 +68,31 @@ fun BackupScreen(
     modifier: Modifier = Modifier,
 ) {
     val working = state == BackupUiState.Working
+    var confirmRestore by rememberSaveable { mutableStateOf(false) }
+    val feedback = rememberFeedback()
+
+    LaunchedEffect(state) {
+        when (state) {
+            is BackupUiState.Exported,
+            is BackupUiState.Imported -> feedback.confirm()
+            is BackupUiState.Failed -> feedback.reject()
+            else -> Unit
+        }
+    }
+
+    if (confirmRestore) {
+        RestoreDialog(
+            onConfirm = {
+                confirmRestore = false
+                onImport()
+            },
+            onDismiss = { confirmRestore = false },
+        )
+    }
+
     AlarmeScaffold(
         title = stringResource(R.string.backup_title),
+        subtitle = stringResource(R.string.backup_subtitle),
         modifier = modifier,
         onBack = onBack,
         backContentDescription = stringResource(R.string.backup_back),
@@ -59,94 +103,40 @@ fun BackupScreen(
                 Modifier.fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(innerPadding)
+                    .padding(horizontal = Spacing.screen)
                     .testTag("backup_screen"),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
-            Text(
-                text = stringResource(R.string.backup_explainer),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 20.dp),
+            ActionCard(
+                title = stringResource(R.string.backup_export),
+                body = stringResource(R.string.backup_export_body),
+                icon = Icons.Outlined.FileUpload,
+                actionLabel = stringResource(R.string.backup_export_action),
+                primary = true,
+                enabled = !working,
+                onClick = onExport,
+                tag = "backup_export",
             )
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                GroupCard {
-                    SettingRow(
-                        title = stringResource(R.string.backup_export),
-                        supporting = stringResource(R.string.backup_export_body),
-                        leading = { LeadingIcon(Icons.Outlined.FileUpload) },
-                        enabled = !working,
-                        onClick = onExport,
-                        modifier = Modifier.testTag("backup_export"),
-                    )
-                    GroupDivider()
-                    SettingRow(
-                        title = stringResource(R.string.backup_import),
-                        supporting = stringResource(R.string.backup_import_body),
-                        leading = { LeadingIcon(Icons.Outlined.FileDownload) },
-                        enabled = !working,
-                        onClick = onImport,
-                        modifier = Modifier.testTag("backup_import"),
-                    )
-                }
-            }
-            AnimatedVisibility(visible = working) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(start = 24.dp, top = 20.dp),
-                ) {
-                    LoadingIndicator(modifier = Modifier.size(40.dp).testTag("backup_progress"))
-                    Text(
-                        text = stringResource(R.string.backup_working),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            when (state) {
-                is BackupUiState.Exported ->
-                    ResultCard(
-                        text =
-                            stringResource(
-                                R.string.backup_exported,
-                                state.alarmCount,
-                                state.audioFileCount,
-                            ),
-                        error = false,
-                        tag = "backup_result",
-                    )
-
-                is BackupUiState.Imported ->
-                    ResultCard(
-                        text =
-                            stringResource(
-                                R.string.backup_imported,
-                                state.alarmCount,
-                                state.audioFileCount,
-                            ),
-                        error = false,
-                        tag = "backup_result",
-                    )
-
-                is BackupUiState.Failed ->
-                    ResultCard(
-                        text = stringResource(errorText(state.error)),
-                        error = true,
-                        tag = "backup_error",
-                    )
-
-                BackupUiState.Idle,
-                BackupUiState.Working -> Unit
-            }
+            ActionCard(
+                title = stringResource(R.string.backup_import),
+                body = stringResource(R.string.backup_import_body),
+                icon = Icons.Outlined.FileDownload,
+                actionLabel = stringResource(R.string.backup_import_action),
+                primary = false,
+                enabled = !working,
+                onClick = { confirmRestore = true },
+                tag = "backup_import",
+            )
+            StatusArea(state)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier =
-                    Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                modifier = Modifier.padding(horizontal = Spacing.s, vertical = Spacing.s),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Info,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(ButtonDefaults.IconSize),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
@@ -155,39 +145,167 @@ fun BackupScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            Spacer(Modifier.height(Spacing.xxl))
+        }
+    }
+}
+
+/** Progress while working, then the outcome as a banner. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StatusArea(state: BackupUiState) {
+    val enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec())
+    val exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec())
+    AnimatedContent(
+        targetState = state,
+        transitionSpec = { enter togetherWith exit },
+        label = "backupStatus",
+        modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+    ) { shown ->
+        when (shown) {
+            BackupUiState.Working ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                    modifier = Modifier.padding(Spacing.s),
+                ) {
+                    LoadingIndicator(modifier = Modifier.testTag("backup_progress"))
+                    Text(
+                        text = stringResource(R.string.backup_working),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            is BackupUiState.Exported ->
+                InlineBanner(
+                    title = stringResource(R.string.backup_exported_title),
+                    body =
+                        stringResource(
+                            R.string.backup_exported,
+                            shown.alarmCount,
+                            shown.audioFileCount,
+                        ),
+                    icon = Icons.Outlined.CheckCircle,
+                    tone = BannerTone.Success,
+                    modifier = Modifier.testTag("backup_result"),
+                )
+            is BackupUiState.Imported ->
+                InlineBanner(
+                    title = stringResource(R.string.backup_imported_title),
+                    body =
+                        stringResource(
+                            R.string.backup_imported,
+                            shown.alarmCount,
+                            shown.audioFileCount,
+                        ),
+                    icon = Icons.Outlined.CheckCircle,
+                    tone = BannerTone.Success,
+                    modifier = Modifier.testTag("backup_result"),
+                )
+            is BackupUiState.Failed ->
+                InlineBanner(
+                    title = stringResource(R.string.backup_failed_title),
+                    body = stringResource(errorText(shown.error)),
+                    icon = Icons.Outlined.ErrorOutline,
+                    tone = BannerTone.Error,
+                    modifier = Modifier.testTag("backup_error"),
+                )
+            BackupUiState.Idle -> Spacer(Modifier.fillMaxWidth())
+        }
+    }
+}
+
+/** One backup action: what it does, and a button that does it. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ActionCard(
+    title: String,
+    body: String,
+    icon: ImageVector,
+    actionLabel: String,
+    primary: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    tag: String,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(ICON_SIZE),
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        body,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            val content: @Composable () -> Unit = {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize),
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(actionLabel)
+            }
+            if (primary) {
+                Button(
+                    onClick = onClick,
+                    enabled = enabled,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.fillMaxWidth().testTag(tag),
+                ) {
+                    content()
+                }
+            } else {
+                FilledTonalButton(
+                    onClick = onClick,
+                    enabled = enabled,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.fillMaxWidth().testTag(tag),
+                ) {
+                    content()
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ResultCard(text: String, error: Boolean, tag: String) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color =
-            if (error) MaterialTheme.colorScheme.errorContainer
-            else MaterialTheme.colorScheme.secondaryContainer,
-        contentColor =
-            if (error) MaterialTheme.colorScheme.onErrorContainer
-            else MaterialTheme.colorScheme.onSecondaryContainer,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Archive,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-            )
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.testTag(tag),
-            )
-        }
-    }
+private fun RestoreDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Outlined.Warning, contentDescription = null) },
+        title = { Text(stringResource(R.string.backup_confirm_title)) },
+        text = { Text(stringResource(R.string.backup_confirm_body)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm, modifier = Modifier.testTag("backup_import_confirm")) {
+                Text(stringResource(R.string.backup_confirm_action))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("backup_import_cancel")) {
+                Text(stringResource(R.string.backup_confirm_cancel))
+            }
+        },
+    )
 }
 
 private fun errorText(error: BackupError): Int =
@@ -202,3 +320,5 @@ private fun errorText(error: BackupError): Int =
         BackupError.CANNOT_OPEN -> R.string.backup_error_cannot_open
         BackupError.CANNOT_WRITE -> R.string.backup_error_cannot_write
     }
+
+private val ICON_SIZE = Spacing.xxl

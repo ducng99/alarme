@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +24,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import dev.tomng.alarme.core.designsystem.component.GroupCard
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.R
@@ -88,7 +85,6 @@ fun WordBeatMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_wordbeat_title),
-        icon = Icons.Outlined.RecordVoiceOver,
         testTag = "mission:wordbeat",
     ) {
         when {
@@ -98,7 +94,8 @@ fun WordBeatMissionScreen(
             else -> {
                 Column(
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                    verticalArrangement =
+                        Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
@@ -112,7 +109,7 @@ fun WordBeatMissionScreen(
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                     )
-                    GroupCard {
+                    MissionCard {
                         Text(
                             text = rounds.getOrNull(round).orEmpty(),
                             style = MaterialTheme.typography.headlineSmall,
@@ -120,7 +117,7 @@ fun WordBeatMissionScreen(
                             textAlign = TextAlign.Center,
                             modifier =
                                 Modifier.fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 22.dp)
+                                    .padding(horizontal = Spacing.xl, vertical = Spacing.xl)
                                     .testTag("mission:wordbeat:target"),
                         )
                     }

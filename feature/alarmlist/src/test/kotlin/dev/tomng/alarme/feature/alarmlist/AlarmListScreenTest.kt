@@ -1,15 +1,20 @@
 package dev.tomng.alarme.feature.alarmlist
 
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
 import com.google.common.truth.Truth.assertThat
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.alarm.AlarmType
@@ -69,14 +74,31 @@ class AlarmListScreenTest {
             onDelete = { recorded += "delete:${it.id}" },
             onQuickCreate = { recorded += "quick:$it" },
             onPickSound = { recorded += "sound:${it.id}" },
-            onPickDefault = { recorded += "default" },
             onOpenEditor = { recorded += "edit:$it" },
+            onFixPermissions = { recorded += "fix" },
         )
 
-    private fun setContent(alarms: List<Alarm>, next: Alarm? = alarms.firstOrNull()) {
+    private fun setContent(
+        alarms: List<Alarm>?,
+        next: Alarm? = alarms?.firstOrNull(),
+        criticalMissing: Boolean = false,
+    ) {
         compose.setContent {
-            AlarmListContent(alarms = alarms, nextAlarm = next, callbacks = callbacks())
+            AlarmListContent(
+                alarms = alarms,
+                nextAlarm = next,
+                callbacks = callbacks(),
+                criticalMissing = criticalMissing,
+            )
         }
+    }
+
+    @Test
+    fun `nothing is claimed while the alarms are still loading`() {
+        setContent(alarms = null, next = null)
+
+        compose.onNodeWithText("No alarms yet").assertDoesNotExist()
+        compose.onNodeWithTag("alarmlist:new").assertIsDisplayed()
     }
 
     @Test
@@ -84,14 +106,41 @@ class AlarmListScreenTest {
         setContent(listOf(alarm()))
 
         compose.onNodeWithText("7:00 AM").assertIsDisplayed()
-        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Work · Daily")
+        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Work", substring = true)
+        compose
+            .onNodeWithTag("alarmlist:card:7")
+            .assertContentDescriptionContains("Every day", substring = true)
     }
 
     @Test
-    fun `the next alarm header shows the next ring time`() {
-        setContent(listOf(alarm(hour = 6, minute = 30)))
+    fun `the app bar says how long until the next alarm`() {
+        val next =
+            alarm()
+                .copy(
+                    nextOccurrence =
+                        Instant.fromEpochMilliseconds(
+                            System.currentTimeMillis() + 90 * 60_000L + 1,
+                        ),
+                )
 
-        compose.onNodeWithText("Next alarm: 6:30 AM").assertIsDisplayed()
+        setContent(listOf(next), next = next)
+
+        assertThat(
+                compose
+                    .onAllNodesWithText("Next alarm in 1 h 3", substring = true)
+                    .fetchSemanticsNodes(),
+            )
+            .isNotEmpty()
+    }
+
+    @Test
+    fun `missing critical permissions show a fix-it banner`() {
+        setContent(listOf(alarm()), criticalMissing = true)
+
+        compose.onNodeWithText("Alarms can't ring yet").assertIsDisplayed()
+        compose.onNodeWithTag("alarmlist:fix").performClick()
+
+        assertThat(recorded).containsExactly("fix")
     }
 
     @Test
@@ -117,7 +166,6 @@ class AlarmListScreenTest {
         setContent(emptyList(), next = null)
 
         compose.onNodeWithText("No alarms yet").assertIsDisplayed()
-        compose.onNodeWithText("Create a quick alarm to get started.").assertIsDisplayed()
     }
 
     @Test
@@ -134,8 +182,8 @@ class AlarmListScreenTest {
 
         compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
         compose.onNodeWithTag("alarmlist:skipped:7", useUnmergedTree = true).assertIsDisplayed()
-        compose.onNodeWithText("Will be skipped", useUnmergedTree = true).assertIsDisplayed()
-        compose.onNodeWithTag("alarmlist:menu:7").performClick()
+        compose.onNodeWithText("Skipping next", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("alarmlist:card:7").performTouchInput { longClick() }
         compose.onNodeWithText("Undo skip").performClick()
 
         assertThat(recorded).containsExactly("undo:7")
@@ -146,8 +194,12 @@ class AlarmListScreenTest {
         setContent(listOf(alarm(type = AlarmType.QUICK, days = DaysOfWeek.NONE)))
 
         compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
-        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Quick alarm")
-        compose.onNodeWithTag("alarmlist:card:7").assertTextContains("Once", substring = true)
+        compose
+            .onNodeWithTag("alarmlist:card:7")
+            .assertTextContains("Quick alarm", substring = true)
+        compose
+            .onNodeWithTag("alarmlist:card:7")
+            .assertContentDescriptionContains("Once", substring = true)
     }
 
     @Test
@@ -167,25 +219,49 @@ class AlarmListScreenTest {
     }
 
     @Test
-    fun `skip once and delete route to their actions`() {
+    fun `long press offers skip next and delete`() {
         setContent(listOf(alarm()))
 
-        compose.onNodeWithTag("alarmlist:list").performScrollToNode(hasTestTag("alarmlist:card:7"))
-        compose.onNodeWithTag("alarmlist:menu:7").performClick()
-        compose.onNodeWithText("Skip once").performClick()
-        compose.onNodeWithTag("alarmlist:menu:7").performClick()
+        compose.onNodeWithTag("alarmlist:card:7").performTouchInput { longClick() }
+        compose.onNodeWithText("Skip next").performClick()
+        compose.onNodeWithTag("alarmlist:card:7").performTouchInput { longClick() }
         compose.onNodeWithText("Delete").performClick()
 
         assertThat(recorded).containsExactly("skip:7", "delete:7").inOrder()
     }
 
     @Test
-    fun `the quick creator offers the hour chips`() {
+    fun `card actions are reachable without gestures`() {
+        setContent(listOf(alarm()))
+
+        val actions =
+            compose
+                .onNodeWithTag("alarmlist:card:7")
+                .fetchSemanticsNode()
+                .config[SemanticsActions.CustomActions]
+        actions.single { it.label == "Delete" }.action()
+        actions.single { it.label == "Skip next" }.action()
+
+        assertThat(recorded).containsExactly("delete:7", "skip:7").inOrder()
+    }
+
+    @Test
+    fun `one-shot alarms do not offer skip`() {
+        setContent(listOf(alarm(days = DaysOfWeek.NONE)))
+
+        compose.onNodeWithTag("alarmlist:card:7").performTouchInput { longClick() }
+
+        compose.onNodeWithText("Skip next").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the quick sheet creates an alarm from a preset`() {
         setContent(emptyList(), next = null)
 
-        compose.onNodeWithTag("alarmlist:quick:1").performClick()
-        compose.onNodeWithTag("alarmlist:quick:8").performClick()
+        compose.onNodeWithTag("alarmlist:quick").performClick()
+        compose.onNodeWithTag("alarmlist:quick:30").performClick()
+        compose.waitForIdle()
 
-        assertThat(recorded).containsExactly("quick:1", "quick:8").inOrder()
+        assertThat(recorded).containsExactly("quick:30")
     }
 }

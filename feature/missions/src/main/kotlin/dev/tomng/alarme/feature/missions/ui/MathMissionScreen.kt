@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -34,7 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.tomng.alarme.core.designsystem.component.GroupCard
+import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.R
@@ -77,12 +75,11 @@ fun MathMissionScreen(
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_math_title),
-        icon = Icons.Outlined.Calculate,
         testTag = "mission:math",
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -90,12 +87,13 @@ fun MathMissionScreen(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            GroupCard(
+            MissionCard(
                 modifier = Modifier.offset(x = rememberShakeOffset(attempts.takeIf { wrong } ?: 0)),
             ) {
                 Box(
                     modifier =
-                        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = Spacing.xl, vertical = Spacing.xxl),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -114,7 +112,7 @@ fun MathMissionScreen(
             if (options != null) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m),
                 ) {
                     options.forEach { option ->
                         FilledTonalButton(
@@ -143,7 +141,7 @@ fun MathMissionScreen(
                     textStyle = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.fillMaxWidth().testTag("mission:math:input"),
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Spacing.xs))
             }
 
             if (wrong) {

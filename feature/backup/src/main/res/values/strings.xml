@@ -2,7 +2,7 @@
 <resources>
     <string name="backup_title">Backup &amp; restore</string>
     <string name="backup_back">Done</string>
-    <string name="backup_explainer">Save your alarms and your own sounds to a single file, or restore them from one.</string>
+    <string name="backup_subtitle">Alarms and your own sounds, in one file</string>
     <string name="backup_export">Export to file</string>
     <string name="backup_export_body">Writes your alarms and sounds into one ZIP file.</string>
     <string name="backup_import_body">Replaces this device\'s alarms with a backup.</string>
@@ -20,4 +20,13 @@
     <string name="backup_error_missing_audio">The backup is missing a sound file.</string>
     <string name="backup_error_cannot_open">Could not open the file.</string>
     <string name="backup_error_cannot_write">Could not restore a sound file.</string>
+    <string name="backup_export_action">Choose where to save</string>
+    <string name="backup_import_action">Choose a backup</string>
+    <string name="backup_exported_title">Backup saved</string>
+    <string name="backup_imported_title">Backup restored</string>
+    <string name="backup_failed_title">That didn\'t work</string>
+    <string name="backup_confirm_title">Replace your alarms?</string>
+    <string name="backup_confirm_body">Your current alarms will be replaced by the ones in the backup. Sounds in the backup are added to yours.</string>
+    <string name="backup_confirm_action">Choose backup</string>
+    <string name="backup_confirm_cancel">Cancel</string>
 </resources>

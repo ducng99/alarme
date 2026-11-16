@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.MissionType
@@ -100,21 +101,43 @@ internal fun Mission.isComplete(): Boolean =
 internal fun missionSummary(mission: Mission): String =
     when (mission) {
         is Mission.Math ->
-            stringResource(R.string.summary_rounds_level, mission.rounds, mission.difficulty)
+            pluralStringResource(
+                R.plurals.summary_rounds_level,
+                mission.rounds,
+                mission.rounds,
+                mission.difficulty,
+            )
         is Mission.Memory ->
-            stringResource(R.string.summary_rounds_level, mission.rounds, mission.difficulty)
-        is Mission.Shake -> stringResource(R.string.summary_count, mission.count)
-        is Mission.Step -> stringResource(R.string.summary_count, mission.count)
-        is Mission.Squat -> stringResource(R.string.summary_count, mission.count)
+            pluralStringResource(
+                R.plurals.summary_rounds_level,
+                mission.rounds,
+                mission.rounds,
+                mission.difficulty,
+            )
+        is Mission.Shake ->
+            pluralStringResource(R.plurals.summary_count, mission.count, mission.count)
+        is Mission.Step ->
+            pluralStringResource(R.plurals.summary_count, mission.count, mission.count)
+        is Mission.Squat ->
+            pluralStringResource(R.plurals.summary_count, mission.count, mission.count)
         is Mission.Typing ->
-            stringResource(R.string.summary_sentences, mission.typingSentences.size)
+            pluralStringResource(
+                R.plurals.summary_sentences,
+                mission.typingSentences.size,
+                mission.typingSentences.size,
+            )
         is Mission.Barcode -> stringResource(R.string.summary_barcode)
         is Mission.Photo -> stringResource(R.string.summary_photo)
         is Mission.ImageRecognition ->
-            stringResource(R.string.summary_objects, mission.objects.size)
+            pluralStringResource(
+                R.plurals.summary_objects,
+                mission.objects.size,
+                mission.objects.size,
+            )
         is Mission.WordBeat ->
-            stringResource(
-                R.string.summary_word_beat,
+            pluralStringResource(
+                R.plurals.summary_word_beat,
+                mission.rounds,
                 stringResource(languageLabel(mission.language)),
                 mission.rounds,
             )

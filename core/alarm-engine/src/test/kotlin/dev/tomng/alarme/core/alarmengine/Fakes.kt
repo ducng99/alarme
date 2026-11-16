@@ -67,6 +67,8 @@ class FakeSettingsRepository(private val id: String = "dev1") : SettingsReposito
 
     override suspend fun setDefaultRingtoneId(id: Long?) = Unit
 
+    override suspend fun setOnboardingDone(done: Boolean) = Unit
+
     override suspend fun deviceId(): String = id
 }
 

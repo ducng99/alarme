@@ -3,8 +3,6 @@ package dev.tomng.alarme.feature.settings
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -40,26 +38,60 @@ class SettingsScreenTest {
         )
 
     @Test
-    fun `permission rows show their grant state`() {
-        compose.setContent { SettingsScreen(permissions, ReliabilityState(), SettingsCallbacks()) }
-
-        compose.onNodeWithTag("permission_NOTIFICATIONS").assertIsDisplayed()
-        compose.onNodeWithText("Granted").assertIsDisplayed()
-        compose.onAllNodesWithText("Not granted").onFirst().assertIsDisplayed()
-    }
-
-    @Test
-    fun `tapping a permission row asks for its settings screen`() {
-        var opened: PermissionItem? = null
+    fun `missing critical grants turn the status hero into a fix-it prompt`() {
+        var fixed = false
         compose.setContent {
             SettingsScreen(
                 permissions,
                 ReliabilityState(),
-                SettingsCallbacks(onOpenPermission = { opened = it }),
+                SettingsCallbacks(onFixPermissions = { fixed = true }),
             )
         }
 
-        compose.onNodeWithTag("permission_EXACT_ALARM").performClick()
+        compose.onNodeWithText("Alarms can't ring reliably").assertIsDisplayed()
+        compose.onNodeWithTag("settings_fix").performClick()
+
+        assertThat(fixed).isTrue()
+    }
+
+    @Test
+    fun `all grants show the ready state`() {
+        val all =
+            PermissionCenterState(
+                rows = PermissionItem.entries.map { PermissionRow(it, granted = true) },
+                allGranted = true,
+            )
+        compose.setContent { SettingsScreen(all, ReliabilityState(), SettingsCallbacks()) }
+
+        compose.onNodeWithText("Ready to ring").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the permissions row opens the permissions screen`() {
+        var opened = false
+        compose.setContent {
+            SettingsScreen(
+                permissions,
+                ReliabilityState(),
+                SettingsCallbacks(onOpenPermissions = { opened = true }),
+            )
+        }
+
+        compose.onNodeWithTag("open_permissions").performClick()
+
+        assertThat(opened).isTrue()
+    }
+
+    @Test
+    fun `permission rows offer allow only while not granted`() {
+        var opened: PermissionItem? = null
+        compose.setContent {
+            PermissionsScreen(permissions, onOpenPermission = { opened = it }, onBack = {})
+        }
+
+        compose.onNodeWithTag("permission_NOTIFICATIONS").assertIsDisplayed()
+        compose.onNodeWithTag("permission_allow_NOTIFICATIONS").assertDoesNotExist()
+        compose.onNodeWithTag("permission_allow_EXACT_ALARM").performClick()
 
         assertThat(opened).isEqualTo(PermissionItem.EXACT_ALARM)
     }
