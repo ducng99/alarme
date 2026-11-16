@@ -15,7 +15,14 @@ import dev.tomng.alarme.core.audio.player.AlarmPlayerFactory
 import dev.tomng.alarme.core.audio.player.Media3AlarmPlayer
 import dev.tomng.alarme.core.audio.tts.AndroidTtsSpeaker
 import dev.tomng.alarme.core.audio.tts.TtsSpeaker
+import javax.inject.Qualifier
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+
+/** Main-thread scope for the ring audio: ExoPlayer must be used on the thread that created it. */
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class RingAudioScope
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -33,6 +40,12 @@ internal abstract class AudioModule {
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AudioProviderModule {
+
+    @Provides
+    @Singleton
+    @RingAudioScope
+    fun ringAudioScope(): CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     @Provides
     @Singleton

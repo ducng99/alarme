@@ -43,6 +43,7 @@ class AlarmDraftTest {
             crescendoOption =
                 dev.tomng.alarme.core.model.alarm.CrescendoOption(enabled = true, seconds = 30),
             backupSoundEnabled = true,
+            backupSoundUri = "file:///loud.mp3",
             timeAnnouncementEnabled = true,
             wakeUpCheck = dev.tomng.alarme.core.model.alarm.WakeUpCheck(minutes = 5),
             isSkipped = true,

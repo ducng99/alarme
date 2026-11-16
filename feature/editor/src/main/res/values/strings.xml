@@ -23,7 +23,9 @@
     <string name="editor_crescendo">Start quiet, get louder</string>
     <string name="editor_crescendo_seconds">Ramp up over (seconds)</string>
     <string name="editor_backup_sound">Backup sound</string>
-    <string name="editor_backup_sound_body">Play a second sound if the first one fails.</string>
+    <string name="editor_backup_sound_body">Switch to a louder sound at full volume if you have not reacted after 40 seconds.</string>
+    <string name="editor_backup_sound_pick">Backup sound</string>
+    <string name="editor_backup_sound_system">System alarm sound</string>
     <string name="editor_time_announcement">Announce the time</string>
     <string name="editor_snooze">Snooze</string>
     <string name="editor_snooze_minutes">Snooze length (minutes)</string>

@@ -21,6 +21,7 @@ class RingRequestBuilderTest {
         memoTts: Boolean = false,
         memo: String = "take the bins out",
         ringtoneUri: String? = null,
+        backupSoundUri: String? = null,
     ) =
         Alarm(
             id = 1,
@@ -34,6 +35,7 @@ class RingRequestBuilderTest {
             timeAnnouncementEnabled = timeTts,
             memoOption = MemoOption(memo = memo, ttsEnabled = memoTts),
             ringtoneUri = ringtoneUri,
+            backupSoundUri = backupSoundUri,
             createdAt = Instant.parse("2026-11-01T00:00:00Z"),
             updatedAt = Instant.parse("2026-11-01T00:00:00Z"),
         )
@@ -113,6 +115,19 @@ class RingRequestBuilderTest {
         assertThat(request.backupSound).isNotNull()
         assertThat(request.backupSound!!.delaySeconds).isEqualTo(40)
         assertThat(request.backupSound.backupUri).isNotEmpty()
+    }
+
+    @Test
+    fun `backup sound plays the sound the user chose`() {
+        val request =
+            build(alarm = alarm(backupEnabled = true, backupSoundUri = "file:///loud.mp3"))
+        assertThat(request.backupSound!!.backupUri).isEqualTo("file:///loud.mp3")
+    }
+
+    @Test
+    fun `backup sound without a choice uses the system alarm sound`() {
+        val request = build(alarm = alarm(backupEnabled = true, backupSoundUri = null))
+        assertThat(request.backupSound!!.backupUri).isEqualTo(RingRequestBuilder.DEFAULT_ALARM_URI)
     }
 
     @Test

@@ -156,6 +156,22 @@ class RingtonePickerScreenTest {
     }
 
     @Test
+    fun `backup mode hides pseudo choices and selects the row`() {
+        setContent(
+            mode = PickerMode.Backup,
+            state =
+                PickerState(rows = listOf(row(7, RingtoneKind.MUSIC, "siren", "file:///s.mp3"))),
+        )
+
+        compose.onNodeWithText("Backup sound").assertIsDisplayed()
+        compose.onNodeWithText("Silent").assertDoesNotExist()
+        compose.onNodeWithText("Shuffle my sounds").assertDoesNotExist()
+        compose.onNodeWithTag("ringtone:row:7").performClick()
+
+        assertThat(recorded).containsExactly("select:file:///s.mp3:siren")
+    }
+
+    @Test
     fun `done closes the picker`() {
         setContent()
 

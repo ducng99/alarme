@@ -111,6 +111,7 @@ class AlarmEditorViewModelTest {
         vm.setBackupSoundEnabled(true)
         vm.setTimeAnnouncementEnabled(true)
         vm.setRingtone("file:///a.mp3")
+        vm.setBackupSound("file:///loud.mp3")
 
         val draft = vm.state.value.draft
         assertThat(draft.hour).isEqualTo(9)
@@ -131,6 +132,7 @@ class AlarmEditorViewModelTest {
         assertThat(draft.backupSoundEnabled).isTrue()
         assertThat(draft.timeAnnouncementEnabled).isTrue()
         assertThat(draft.ringtoneUri).isEqualTo("file:///a.mp3")
+        assertThat(draft.backupSoundUri).isEqualTo("file:///loud.mp3")
     }
 
     @Test
@@ -371,6 +373,20 @@ class AlarmEditorViewModelTest {
         advanceUntilIdle()
 
         assertThat(vm.soundTitle.value).isEqualTo("My song")
+    }
+
+    @Test
+    fun `the backup sound title follows the draft and the catalogue`() = runTest {
+        ringtones.rows.value =
+            listOf(CatalogRingtone(2, RingtoneKind.MUSIC, "file:///loud.mp3", "Siren", clock.now()))
+        val vm = viewModel()
+        vm.load(Alarm.NEW_ID)
+        advanceUntilIdle()
+
+        vm.setBackupSound("file:///loud.mp3")
+        advanceUntilIdle()
+
+        assertThat(vm.backupSoundTitle.value).isEqualTo("Siren")
     }
 
     private fun alarm(id: Long, name: String, hour: Int = 7, minute: Int = 0) =

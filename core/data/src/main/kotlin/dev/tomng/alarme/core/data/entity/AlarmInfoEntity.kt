@@ -31,6 +31,7 @@ data class AlarmInfoEntity(
     val isCrescendoEnable: Boolean,
     val crescendoDuration: Int,
     val backupSound: Boolean,
+    val backupSoundUri: String? = null,
     val timePressure: Boolean,
     val labelReminder: Boolean,
     val isSkipped: Boolean,

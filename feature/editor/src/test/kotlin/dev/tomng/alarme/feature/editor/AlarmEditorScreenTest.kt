@@ -38,11 +38,13 @@ class AlarmEditorScreenTest {
         draft: AlarmDraft = AlarmDraft(),
         errors: List<DraftError> = emptyList(),
         soundTitle: String? = null,
+        backupSoundTitle: String? = null,
     ) {
         compose.setContent {
             AlarmEditorScreen(
                 state = AlarmEditorUiState(draft = draft, loading = false, errors = errors),
                 soundTitle = soundTitle,
+                backupSoundTitle = backupSoundTitle,
                 onBack = { calls += "back" },
                 callbacks =
                     AlarmEditorCallbacks(
@@ -158,6 +160,33 @@ class AlarmEditorScreenTest {
 
         scrollToText("Default sound")
         compose.onNodeWithText("Default sound").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the backup sound row appears only when backup sound is on`() {
+        setScreen(draft = AlarmDraft(backupSoundEnabled = false))
+
+        scrollToTag("editor_backup_sound")
+        compose.onNodeWithTag("editor_backup_sound_pick").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the backup sound row shows the chosen sound`() {
+        setScreen(
+            draft = AlarmDraft(backupSoundEnabled = true, backupSoundUri = "file:///loud.mp3"),
+            backupSoundTitle = "Siren",
+        )
+
+        scrollToTag("editor_backup_sound_pick")
+        compose.onNodeWithText("Siren").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the backup sound row falls back to the system alarm label`() {
+        setScreen(draft = AlarmDraft(backupSoundEnabled = true))
+
+        scrollToTag("editor_backup_sound_pick")
+        compose.onNodeWithText("System alarm sound").assertIsDisplayed()
     }
 
     @Test

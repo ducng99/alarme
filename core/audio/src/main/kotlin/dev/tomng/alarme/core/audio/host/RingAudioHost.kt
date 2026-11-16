@@ -7,6 +7,7 @@ import android.media.AudioManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.tomng.alarme.core.alarmengine.ring.RingHost
 import dev.tomng.alarme.core.alarmengine.ring.RingRequest
+import dev.tomng.alarme.core.audio.di.RingAudioScope
 import dev.tomng.alarme.core.audio.player.AlarmPlayer
 import dev.tomng.alarme.core.audio.player.AlarmPlayerFactory
 import dev.tomng.alarme.core.audio.tts.TtsSpeaker
@@ -16,7 +17,6 @@ import dev.tomng.alarme.core.audio.volume.VolumeLock
 import dev.tomng.alarme.core.audio.volume.crescendoFloor
 import dev.tomng.alarme.core.audio.volume.crescendoGain
 import dev.tomng.alarme.core.audio.volume.targetVolume
-import dev.tomng.alarme.core.common.di.ApplicationScope
 import dev.tomng.alarme.core.common.time.AppClock
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,7 +45,7 @@ class RingAudioHost
 @Inject
 constructor(
     @ApplicationContext private val context: Context,
-    @ApplicationScope private val scope: CoroutineScope,
+    @RingAudioScope private val scope: CoroutineScope,
     private val clock: AppClock,
     private val players: AlarmPlayerFactory,
     private val speaker: TtsSpeaker,

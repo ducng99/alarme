@@ -81,8 +81,10 @@ fun AlarmEditorScreen(
     onBack: () -> Unit,
     callbacks: AlarmEditorCallbacks,
     modifier: Modifier = Modifier,
+    backupSoundTitle: String? = null,
 ) {
     var showPicker by remember { mutableStateOf(false) }
+    var showBackupPicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var showDiscard by remember { mutableStateOf(false) }
     var editingMission by remember { mutableStateOf<Int?>(null) }
@@ -98,6 +100,21 @@ fun AlarmEditorScreen(
                 showPicker = false
             },
             onDone = { showPicker = false },
+            modifier = modifier,
+        )
+        return
+    }
+
+    if (showBackupPicker) {
+        BackHandler { showBackupPicker = false }
+        RingtonePickerScreen(
+            mode = PickerMode.Backup,
+            selectedUri = state.draft.backupSoundUri,
+            onPersist = { uri, _ ->
+                callbacks.onBackupSoundUri(uri)
+                showBackupPicker = false
+            },
+            onDone = { showBackupPicker = false },
             modifier = modifier,
         )
         return
@@ -177,10 +194,12 @@ fun AlarmEditorScreen(
             draft = draft,
             nextRing = state.nextRing,
             soundTitle = soundTitle,
+            backupSoundTitle = backupSoundTitle,
             errorText = errorText,
             callbacks = callbacks,
             innerPadding = innerPadding,
             onOpenSound = { showPicker = true },
+            onOpenBackupSound = { showBackupPicker = true },
             onOpenTime = { showTimePicker = true },
             onEditMission = { editingMission = it },
             onNewMission = { newMission = MissionDefaults.of(it) },
@@ -193,10 +212,12 @@ private fun EditorBody(
     draft: AlarmDraft,
     nextRing: Instant?,
     soundTitle: String?,
+    backupSoundTitle: String?,
     errorText: String,
     callbacks: AlarmEditorCallbacks,
     innerPadding: PaddingValues,
     onOpenSound: () -> Unit,
+    onOpenBackupSound: () -> Unit,
     onOpenTime: () -> Unit,
     onEditMission: (Int) -> Unit,
     onNewMission: (MissionType) -> Unit,
@@ -218,7 +239,14 @@ private fun EditorBody(
             )
         }
         item { SectionLabel(stringResource(R.string.editor_section_sound)) }
-        item { SoundGroup(draft = draft, callbacks = callbacks) }
+        item {
+            SoundGroup(
+                draft = draft,
+                backupSoundTitle = backupSoundTitle,
+                callbacks = callbacks,
+                onOpenBackupSound = onOpenBackupSound,
+            )
+        }
         item { SectionLabel(stringResource(R.string.editor_section_wake_up)) }
         item { SnoozeGroup(draft = draft, callbacks = callbacks) }
         item { Spacer(Modifier.height(8.dp)) }

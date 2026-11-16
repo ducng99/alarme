@@ -116,6 +116,7 @@ object AlarmEntityMapper {
                 isCrescendoEnable = alarm.crescendoOption.enabled,
                 crescendoDuration = alarm.crescendoOption.seconds,
                 backupSound = alarm.backupSoundEnabled,
+                backupSoundUri = alarm.backupSoundUri,
                 timePressure = alarm.timeAnnouncementEnabled,
                 labelReminder = alarm.memoOption.ttsEnabled,
                 isSkipped = alarm.isSkipped,
@@ -221,6 +222,7 @@ object AlarmEntityMapper {
             crescendoOption =
                 CrescendoOption(enabled = info.isCrescendoEnable, seconds = info.crescendoDuration),
             backupSoundEnabled = info.backupSound,
+            backupSoundUri = info.backupSoundUri,
             timeAnnouncementEnabled = info.timePressure,
             wakeUpCheck = WakeUpCheck(info.wakeUpCheck),
             isSkipped = info.isSkipped,

@@ -53,6 +53,7 @@ class AlarmMapperTest {
             snoozeOption = SnoozeOption(enabled = true, minutes = 9, limit = 4),
             crescendoOption = CrescendoOption(enabled = true, seconds = 45),
             backupSoundEnabled = true,
+            backupSoundUri = "file:///loud.mp3",
             timeAnnouncementEnabled = true,
             wakeUpCheck = WakeUpCheck(5),
             isSkipped = skip,

@@ -2,6 +2,7 @@
 <resources>
     <string name="ringtone_title_alarm">Alarm sound</string>
     <string name="ringtone_title_default">Default sound</string>
+    <string name="ringtone_title_backup">Backup sound</string>
     <string name="ringtone_done">Done</string>
     <string name="ringtone_silent">Silent</string>
     <string name="ringtone_random">Shuffle my sounds</string>

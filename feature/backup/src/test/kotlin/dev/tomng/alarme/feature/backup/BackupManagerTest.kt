@@ -55,13 +55,14 @@ class BackupManagerTest {
             )
     }
 
-    private fun alarm(name: String, ringtoneUri: String? = null) =
+    private fun alarm(name: String, ringtoneUri: String? = null, backupSoundUri: String? = null) =
         Alarm(
             id = Alarm.NEW_ID,
             name = name,
             hour = 6,
             minute = 30,
             ringtoneUri = ringtoneUri,
+            backupSoundUri = backupSoundUri,
             createdAt = now,
             updatedAt = now,
         )
@@ -169,6 +170,26 @@ class BackupManagerTest {
         assertThat(File(Uri.parse(newUri).path!!).readBytes()).isEqualTo(byteArrayOf(9, 8, 7))
         assertThat(repository.restoredRingtones.single().uri).isEqualTo(newUri)
         assertThat(scheduler.rearmReasons).containsExactly(RescheduleReason.ADD_ALARM)
+    }
+
+    @Test
+    fun `import rewrites the backup sound reference too`() = runTest {
+        val (_, oldUri) = fileUri("siren.mp3")
+        repository.snapshotResult =
+            BackupSnapshot(
+                alarms = listOf(alarm("a", backupSoundUri = oldUri)),
+                ringtones = listOf(CatalogRingtone(1L, RingtoneKind.MUSIC, oldUri, "Siren", now)),
+            )
+        val target = exportFile()
+        manager.export(target)
+        repository.snapshotResult = BackupSnapshot()
+        File(context.filesDir, "ringtone/music/siren.mp3").writeBytes(byteArrayOf(1))
+
+        manager.import(target)
+
+        val restored = repository.restoredAlarms.single()
+        assertThat(restored.backupSoundUri).isNotEqualTo(oldUri)
+        assertThat(restored.backupSoundUri).isEqualTo(repository.restoredRingtones.single().uri)
     }
 
     @Test

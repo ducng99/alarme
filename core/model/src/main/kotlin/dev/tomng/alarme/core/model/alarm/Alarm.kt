@@ -28,6 +28,8 @@ data class Alarm(
     val snoozeOption: SnoozeOption = SnoozeOption(),
     val crescendoOption: CrescendoOption = CrescendoOption(),
     val backupSoundEnabled: Boolean = false,
+    /** The loud sound played when the user is unresponsive; null uses the system alarm sound. */
+    val backupSoundUri: String? = null,
     val timeAnnouncementEnabled: Boolean = false,
     val wakeUpCheck: WakeUpCheck = WakeUpCheck(),
     /** Skip-once: the next occurrence is dropped (repeating alarms only; reset after it passes). */

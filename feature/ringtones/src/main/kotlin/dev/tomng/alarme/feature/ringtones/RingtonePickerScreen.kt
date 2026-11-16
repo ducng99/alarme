@@ -53,6 +53,7 @@ import dev.tomng.alarme.core.model.ringtone.RingtoneUris
 enum class PickerMode {
     Alarm,
     Default,
+    Backup,
 }
 
 /** The picker's user intents; hosts persist the selection. */
@@ -128,8 +129,11 @@ fun RingtonePickerContent(
     AlarmeScaffold(
         title =
             stringResource(
-                if (mode == PickerMode.Default) R.string.ringtone_title_default
-                else R.string.ringtone_title_alarm,
+                when (mode) {
+                    PickerMode.Alarm -> R.string.ringtone_title_alarm
+                    PickerMode.Default -> R.string.ringtone_title_default
+                    PickerMode.Backup -> R.string.ringtone_title_backup
+                },
             ),
         modifier = modifier.testTag("ringtone:title"),
         onBack = callbacks.onDone,

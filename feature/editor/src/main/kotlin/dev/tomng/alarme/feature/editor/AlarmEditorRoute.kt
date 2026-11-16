@@ -18,6 +18,7 @@ fun AlarmEditorRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val soundTitle by viewModel.soundTitle.collectAsStateWithLifecycle()
+    val backupSoundTitle by viewModel.backupSoundTitle.collectAsStateWithLifecycle()
 
     LaunchedEffect(alarmId) { viewModel.load(alarmId) }
     LaunchedEffect(state.finished, state.notArmed) {
@@ -27,6 +28,7 @@ fun AlarmEditorRoute(
     AlarmEditorScreen(
         state = state,
         soundTitle = soundTitle,
+        backupSoundTitle = backupSoundTitle,
         onBack = onDone,
         callbacks =
             AlarmEditorCallbacks(
@@ -49,6 +51,7 @@ fun AlarmEditorRoute(
                 onMemo = viewModel::setMemo,
                 onTts = viewModel::setTtsEnabled,
                 onBackupSound = viewModel::setBackupSoundEnabled,
+                onBackupSoundUri = viewModel::setBackupSound,
                 onTimeAnnouncement = viewModel::setTimeAnnouncementEnabled,
                 onAddMission = viewModel::addMission,
                 onRemoveMission = viewModel::removeMission,

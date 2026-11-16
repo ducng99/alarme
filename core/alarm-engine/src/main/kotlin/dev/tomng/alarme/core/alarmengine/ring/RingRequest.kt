@@ -44,7 +44,7 @@ data class RingRequest(
  */
 object RingRequestBuilder {
 
-    /** System fallback when the alarm has no ringtone set (full resolver lands in M11). */
+    /** System fallback when the alarm has no ringtone or backup sound set. */
     const val DEFAULT_ALARM_URI: String = "content://settings/system/alarm_sound"
 
     fun build(alarm: Alarm, settings: AppSettings, hasExternalOutput: Boolean): RingRequest {
@@ -70,10 +70,10 @@ object RingRequestBuilder {
                 },
             backupSound =
                 if (alarm.backupSoundEnabled && volume > 0f) {
-                    // Default: bundled loud sound after 40 s (strings
-                    // "unresponsive
-                    // for 40 seconds")
-                    RingRequest.BackupSound(backupUri = DEFAULT_BACKUP_SOUND_URI, delaySeconds = 40)
+                    RingRequest.BackupSound(
+                        backupUri = alarm.backupSoundUri ?: DEFAULT_ALARM_URI,
+                        delaySeconds = BACKUP_SOUND_DELAY_SECONDS,
+                    )
                 } else {
                     null
                 },
@@ -92,9 +92,7 @@ object RingRequestBuilder {
         )
     }
 
-    /** Bundled "extra loud" sound (asset lands with the ringtone catalog, M11). */
-    const val DEFAULT_BACKUP_SOUND_URI: String =
-        "android.resource://dev.tomng.alarme/raw/alarme_backup_loud"
+    const val BACKUP_SOUND_DELAY_SECONDS: Int = 40
 
     /** Default: announcements repeat once a minute. */
     const val DEFAULT_TTS_REPEAT_MILLIS: Long = 60_000L

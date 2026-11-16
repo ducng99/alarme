@@ -80,8 +80,10 @@ class BackupManager(
             }
         val alarms =
             payload.alarms.map { alarm ->
-                val newUri = alarm.ringtoneUri?.let { remap[it] }
-                if (newUri == null) alarm else alarm.copy(ringtoneUri = newUri)
+                alarm.copy(
+                    ringtoneUri = alarm.ringtoneUri?.let { remap[it] ?: it },
+                    backupSoundUri = alarm.backupSoundUri?.let { remap[it] ?: it },
+                )
             }
         val result = repository.restore(alarms, ringtones)
         scheduler.rearm(RescheduleReason.ADD_ALARM)

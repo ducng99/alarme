@@ -38,6 +38,7 @@ data class AlarmDraft(
     val crescendoEnabled: Boolean = false,
     val crescendoSeconds: Int = CrescendoOption.DEFAULT_SECONDS,
     val backupSoundEnabled: Boolean = false,
+    val backupSoundUri: String? = null,
     val timeAnnouncementEnabled: Boolean = false,
     val wakeUpCheckMinutes: Int = 0,
     val isSkipped: Boolean = false,
@@ -84,6 +85,7 @@ data class AlarmDraft(
             crescendoOption =
                 CrescendoOption(enabled = crescendoEnabled, seconds = crescendoSeconds),
             backupSoundEnabled = backupSoundEnabled,
+            backupSoundUri = backupSoundUri,
             timeAnnouncementEnabled = timeAnnouncementEnabled,
             wakeUpCheck = WakeUpCheck(minutes = wakeUpCheckMinutes),
             isSkipped = isSkipped,
@@ -116,6 +118,7 @@ data class AlarmDraft(
                 crescendoEnabled = alarm.crescendoOption.enabled,
                 crescendoSeconds = alarm.crescendoOption.seconds,
                 backupSoundEnabled = alarm.backupSoundEnabled,
+                backupSoundUri = alarm.backupSoundUri,
                 timeAnnouncementEnabled = alarm.timeAnnouncementEnabled,
                 wakeUpCheckMinutes = alarm.wakeUpCheck.minutes,
                 isSkipped = alarm.isSkipped,

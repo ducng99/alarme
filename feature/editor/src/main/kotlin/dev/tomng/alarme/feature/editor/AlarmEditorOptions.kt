@@ -119,7 +119,12 @@ internal fun DetailsGroup(
 
 /** Volume, crescendo, backup sound and the time announcement. */
 @Composable
-internal fun SoundGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
+internal fun SoundGroup(
+    draft: AlarmDraft,
+    backupSoundTitle: String?,
+    callbacks: AlarmEditorCallbacks,
+    onOpenBackupSound: () -> Unit,
+) {
     GroupCard {
         VolumeRow(value = draft.volumeRatio, onValueChange = callbacks.onVolume)
         GroupDivider()
@@ -150,6 +155,23 @@ internal fun SoundGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
             icon = Icons.Outlined.SettingsBackupRestore,
             onCheckedChange = callbacks.onBackupSound,
         )
+        AnimatedVisibility(visible = draft.backupSoundEnabled) {
+            SettingRow(
+                title = stringResource(R.string.editor_backup_sound_pick),
+                supporting =
+                    backupSoundTitle ?: stringResource(R.string.editor_backup_sound_system),
+                leading = { LeadingIcon(Icons.Outlined.MusicNote) },
+                trailing = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                onClick = onOpenBackupSound,
+                modifier = Modifier.testTag("editor_backup_sound_pick"),
+            )
+        }
         GroupDivider()
         ToggleRow(
             title = stringResource(R.string.editor_time_announcement),
@@ -573,6 +595,7 @@ class AlarmEditorCallbacks(
     val onMemo: (String) -> Unit = {},
     val onTts: (Boolean) -> Unit = {},
     val onBackupSound: (Boolean) -> Unit = {},
+    val onBackupSoundUri: (String?) -> Unit = {},
     val onTimeAnnouncement: (Boolean) -> Unit = {},
     val onAddMission: (Mission) -> Unit = {},
     val onRemoveMission: (Int) -> Unit = {},

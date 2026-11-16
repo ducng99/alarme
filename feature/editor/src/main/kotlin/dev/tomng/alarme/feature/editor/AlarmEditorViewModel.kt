@@ -60,18 +60,17 @@ constructor(
     private val repository: AlarmRepository,
     private val scheduler: AlarmScheduler,
     private val clock: AppClock,
-    ringtones: RingtoneRepository,
+    private val ringtones: RingtoneRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AlarmEditorUiState())
     val state: StateFlow<AlarmEditorUiState> = _state.asStateFlow()
 
     /** The title of the sound the draft points at, or null for the app default. */
-    val soundTitle: StateFlow<String?> =
-        combine(_state.map { it.draft.ringtoneUri }, ringtones.observeAll()) { uri, rows ->
-                rows.firstOrNull { it.uri == uri }?.title
-            }
-            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val soundTitle: StateFlow<String?> = titleOf { it.ringtoneUri }
+
+    /** The title of the backup sound, or null for the system alarm sound. */
+    val backupSoundTitle: StateFlow<String?> = titleOf { it.backupSoundUri }
 
     private var loaded = false
 
@@ -139,6 +138,8 @@ constructor(
     }
 
     fun setBackupSoundEnabled(enabled: Boolean) = edit { it.copy(backupSoundEnabled = enabled) }
+
+    fun setBackupSound(uri: String?) = edit { it.copy(backupSoundUri = uri) }
 
     fun setTimeAnnouncementEnabled(enabled: Boolean) = edit {
         it.copy(timeAnnouncementEnabled = enabled)
@@ -219,6 +220,12 @@ constructor(
             clock.now(),
             clock.zone(),
         )
+
+    private fun titleOf(uriOf: (AlarmDraft) -> String?): StateFlow<String?> =
+        combine(_state.map { uriOf(it.draft) }, ringtones.observeAll()) { uri, rows ->
+                rows.firstOrNull { it.uri == uri }?.title
+            }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     companion object {
         const val MIN_SNOOZE = 1

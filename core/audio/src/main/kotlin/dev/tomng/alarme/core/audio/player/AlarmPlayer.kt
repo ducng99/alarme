@@ -1,11 +1,15 @@
 package dev.tomng.alarme.core.audio.player
 
 import android.content.Context
+import android.media.RingtoneManager
+import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import dev.tomng.alarme.core.audio.R
 
 /**
  * Thin playable-channel seam over ExoPlayer (repeat-one, alarm/media usage attributes, per-channel
@@ -27,10 +31,26 @@ fun interface AlarmPlayerFactory {
     fun create(): AlarmPlayer
 }
 
-/** Media3-backed player — one instance per logical channel (MAIN, BACKUP_SOUND). */
+/**
+ * Media3-backed player - one instance per logical channel (MAIN, BACKUP_SOUND). A sound that fails
+ * to open moves on to the next candidate so a ring is never silent.
+ */
 class Media3AlarmPlayer(private val context: Context) : AlarmPlayer {
 
     private val player: ExoPlayer = ExoPlayer.Builder(context).build()
+    private var candidates: List<String> = emptyList()
+    private var candidateIndex = 0
+
+    init {
+        player.addListener(
+            object : Player.Listener {
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.w(TAG, "Cannot play ${candidates.getOrNull(candidateIndex)}", error)
+                    playNextCandidate()
+                }
+            },
+        )
+    }
 
     override fun prepare(uri: String, usageAlarm: Boolean, repeatOne: Boolean) {
         player.setAudioAttributes(
@@ -41,7 +61,14 @@ class Media3AlarmPlayer(private val context: Context) : AlarmPlayer {
             /* handleAudioFocus = */ false,
         )
         player.repeatMode = if (repeatOne) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
-        player.setMediaItem(MediaItem.fromUri(uri))
+        candidates =
+            alarmSoundCandidates(
+                requested = uri,
+                systemDefault = systemDefaultAlarmUri(),
+                bundledFallback = bundledFallbackUri(),
+            )
+        candidateIndex = 0
+        player.setMediaItem(MediaItem.fromUri(candidates[candidateIndex]))
         player.prepare()
     }
 
@@ -55,5 +82,29 @@ class Media3AlarmPlayer(private val context: Context) : AlarmPlayer {
         player.stop()
         player.clearMediaItems()
         player.release()
+    }
+
+    private fun playNextCandidate() {
+        if (candidateIndex >= candidates.lastIndex) return
+        candidateIndex++
+        player.setMediaItem(MediaItem.fromUri(candidates[candidateIndex]))
+        player.prepare()
+    }
+
+    private fun systemDefaultAlarmUri(): String? = runCatching {
+        RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getActualDefaultRingtoneUri(
+                context,
+                RingtoneManager.TYPE_RINGTONE,
+            )
+    }
+        .getOrNull()
+        ?.toString()
+
+    private fun bundledFallbackUri(): String =
+        "android.resource://${context.packageName}/${R.raw.alarme_radar}"
+
+    private companion object {
+        const val TAG = "AlarmPlayer"
     }
 }
