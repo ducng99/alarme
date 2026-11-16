@@ -86,9 +86,12 @@ fun OnboardingScreen(
 
     LaunchedEffect(granted, pager.currentPage) {
         if (granted) {
+            val target = pager.currentPage + 1
             feedback.confirm()
             delay(AUTO_ADVANCE_MILLIS)
-            pager.animateScrollToPage(pager.currentPage + 1)
+            // currentPage flips halfway through the scroll and restarts this effect, so the scroll
+            // must outlive it.
+            scope.launch { pager.animateScrollToPage(target) }
         }
     }
     val next: () -> Unit = {

@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -89,6 +91,35 @@ class OnboardingScreenTest {
                 .isNotEmpty()
         }
         compose.onNodeWithTag("onboarding_step_EXACT_ALARM").assertIsDisplayed()
+    }
+
+    @Test
+    fun `a grant that arrives finishes the page transition`() {
+        var permissions by mutableStateOf(state())
+        compose.setContent {
+            OnboardingScreen(
+                permissions = permissions,
+                welcome = false,
+                onAllow = {},
+                onFinish = {},
+            )
+        }
+        val restingLeft =
+            compose.onNodeWithTag("onboarding_step_NOTIFICATIONS").getUnclippedBoundsInRoot().left
+
+        permissions = state(PermissionItem.NOTIFICATIONS)
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose
+                .onAllNodesWithTag("onboarding_step_EXACT_ALARM")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.mainClock.advanceTimeBy(5_000)
+        compose.waitForIdle()
+
+        compose
+            .onNodeWithTag("onboarding_step_EXACT_ALARM")
+            .assertLeftPositionInRootIsEqualTo(restingLeft)
     }
 
     @Test
