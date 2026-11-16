@@ -479,8 +479,6 @@ internal fun StepperRow(
     min: Int,
     max: Int,
 ) {
-    val decreaseLabel = stringResource(R.string.editor_decrease)
-    val increaseLabel = stringResource(R.string.editor_increase)
     Row(
         modifier =
             Modifier.fillMaxWidth().padding(start = 72.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
@@ -492,6 +490,23 @@ internal fun StepperRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
+        Stepper(value = value, tag = tag, onChange = onChange, step = step, min = min, max = max)
+    }
+}
+
+/** Minus, the animated value, plus. */
+@Composable
+internal fun Stepper(
+    value: Int,
+    tag: String,
+    onChange: (Int) -> Unit,
+    step: Int,
+    min: Int,
+    max: Int,
+) {
+    val decreaseLabel = stringResource(R.string.editor_decrease)
+    val increaseLabel = stringResource(R.string.editor_increase)
+    Row(verticalAlignment = Alignment.CenterVertically) {
         FilledTonalIconButton(
             onClick = { onChange((value - step).coerceAtLeast(min)) },
             enabled = value > min,

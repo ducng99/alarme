@@ -116,7 +116,7 @@ fun AlarmEditorScreen(
     }
     editingMission?.let { index ->
         draft.missions.getOrNull(index)?.let { mission ->
-            MissionConfigDialog(
+            MissionConfigSheet(
                 mission = mission,
                 onDismiss = { editingMission = null },
                 onConfirm = { updated ->
