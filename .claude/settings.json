@@ -1,6 +1,0 @@
-{
-  "permissions": {
-    "allow": ["mcp__rea__*", "Bash(/opt/android-sdk/emulator/emulator *)"],
-    "additionalDirectories": ["/dev/tty"]
-  }
-}

@@ -1,18 +1,15 @@
 # Alarme
 
-An Android alarm clock with Alarmy feature parity: reliable scheduling & ring
+An Android alarm clock: reliable scheduling & ring
 delivery, wake-up missions, snooze/wake-up-check, skip-once, quick alarms,
 ringtones, reliability screens (anti-defeat), local backup, and a next-alarm
 widget. All features free — no ads, no analytics, no paywall.
-
-See `.pi/plans/alarme-android-app.md` (repo root) for the full build plan, and
-`findings/01…06.md` for the behavioral specification this app implements.
 
 ## Requirements
 
 - JDK 17
 - Android SDK: platform 37, build-tools 36.0.0 (`android sdk install platforms/android-37.0 build-tools/36.0.0`), `ANDROID_HOME` set
-- For instrumented tests: an emulator (see plan §2) or a device
+- For instrumented tests: an emulator or a device
 
 ## Build & test
 
