@@ -233,6 +233,30 @@ class RingEffectExecutorTest {
     }
 
     @Test
+    fun `dismissing a snoozed mission alarm cancels the snooze and rings again`() {
+        val missionAlarm = alarm.copy(missions = listOf(Mission.Math(timeLimitSeconds = 30)))
+        executor.prime(
+            RingRequestBuilder.build(missionAlarm, defaultSettings(), hasExternalOutput = false),
+        )
+        store.submit(ringRequest(alarm = missionAlarm))
+        mainLooper.idle()
+        store.submit(RingEvent.OnSnoozeClick(clock.now))
+        mainLooper.idle()
+
+        store.submit(RingEvent.OnDismissClick(clock.now))
+        mainLooper.idle()
+
+        assertThat((store.state.value as RingState.Ringing).stage)
+            .isInstanceOf(
+                dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Mission::class.java,
+            )
+        assertThat(host.started).isEqualTo(2)
+        assertThat(snoozeStore.load()).isNull()
+        assertThat(scheduler.snoozesCancelled).isEqualTo(1)
+        assertThat(alarmRepository.disabled).isEmpty()
+    }
+
+    @Test
     fun `resetting the snooze counters clears the durable snooze`() {
         snoozeStore.save(dev.tomng.alarme.core.alarmengine.scheduling.SnoozeRecord(7L, 1L, 3))
 

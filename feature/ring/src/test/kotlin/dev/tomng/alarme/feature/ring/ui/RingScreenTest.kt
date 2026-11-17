@@ -341,6 +341,26 @@ class RingScreenTest {
     }
 
     @Test
+    fun `the snoozing stage of a mission alarm offers the missions instead of a plain dismiss`() {
+        val cb = mutSetOf()
+        compose.setContent {
+            RingScreen(
+                state =
+                    ringing(
+                        alarm = alarm(missions = listOf(Mission.Math())),
+                        stage = RingStage.Snoozing(now + 305.seconds),
+                    ),
+                callbacks = cb,
+            )
+        }
+
+        compose.onNodeWithText("Start missions").assertIsDisplayed()
+        compose.onNodeWithTag("ring:dismiss").performClick()
+
+        assertThat(cb.recorded).containsExactly("dismiss")
+    }
+
+    @Test
     fun `the emergency stage shows the countdown and the finish button`() {
         val cb = mutSetOf()
         val mission = Mission.Math(timeLimitSeconds = 30)

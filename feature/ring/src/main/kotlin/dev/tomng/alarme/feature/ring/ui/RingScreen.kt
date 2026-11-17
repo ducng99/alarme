@@ -67,7 +67,10 @@ fun RingScreen(
                         RingFrame { PrepareContent(stage, shown.alarm.missions.size, callbacks) }
                     is RingStage.Mission ->
                         MissionStageContent(stage, shown.alarm.missions.size, callbacks)
-                    is RingStage.Snoozing -> RingFrame { SnoozedContent(stage, callbacks) }
+                    is RingStage.Snoozing ->
+                        RingFrame {
+                            SnoozedContent(stage, shown.alarm.missions.isNotEmpty(), callbacks)
+                        }
                     is RingStage.Emergency ->
                         RingFrame { EmergencyContent(stage.remaining, callbacks) }
                 }

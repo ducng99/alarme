@@ -155,11 +155,19 @@ private fun MissionHeader(stage: RingStage.Mission, total: Int, callbacks: RingS
 }
 
 @Composable
-internal fun SnoozedContent(stage: RingStage.Snoozing, callbacks: RingScreenCallbacks) {
+internal fun SnoozedContent(
+    stage: RingStage.Snoozing,
+    hasMissions: Boolean,
+    callbacks: RingScreenCallbacks,
+) {
     StageCover(
         title = stringResource(R.string.ring_snoozed_until, clockText(stage.finishAt)),
-        supporting = stringResource(R.string.ring_snoozed_body),
-        actionLabel = stringResource(R.string.ring_dismiss),
+        supporting =
+            if (hasMissions) stringResource(R.string.ring_snoozed_body_missions)
+            else stringResource(R.string.ring_snoozed_body),
+        actionLabel =
+            if (hasMissions) stringResource(R.string.ring_snoozed_start_missions)
+            else stringResource(R.string.ring_dismiss),
         onAction = callbacks::onDismiss,
         actionTag = "ring:dismiss",
     )

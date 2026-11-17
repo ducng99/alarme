@@ -1,5 +1,6 @@
 package dev.tomng.alarme.core.alarmengine.statemachine
 
+import dev.tomng.alarme.core.model.mission.Mission
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -24,13 +25,32 @@ internal object DismissReducer {
                 }
             }
 
-            // Turning the alarm off from the snooze screen cancels the pending snooze.
-            is RingStage.Snoozing ->
-                complete(state, DismissReason.NORMAL, now, stopMissionTimer = false)
+            is RingStage.Snoozing -> {
+                val missions = state.alarm.missions
+                if (missions.isEmpty()) {
+                    complete(state, DismissReason.NORMAL, now, stopMissionTimer = false)
+                } else {
+                    resumeIntoMissions(state, missions)
+                }
+            }
 
             // Missions must be finished; the emergency branch ignores the dismiss button.
             else -> RingTransition(state)
         }
+
+    /** Dismissing a snooze never skips the missions: the alarm rings again and the chain starts. */
+    private fun resumeIntoMissions(
+        state: RingState.Ringing,
+        missions: List<Mission>,
+    ): RingTransition {
+        val entering = MissionChainReducer.enterMission(state, index = 0, mission = missions[0])
+        val effects = buildList {
+            add(RingEffect.ResumeFromSnooze(state.alarm))
+            state.autoDismiss?.let { add(RingEffect.StartAutoDismissTimer(it)) }
+            addAll(entering.effects)
+        }
+        return RingTransition(entering.state, effects)
+    }
 
     fun onAutoDismissTimeout(state: RingState.Ringing, now: Instant): RingTransition =
         if (state.stage is RingStage.Snoozing) {

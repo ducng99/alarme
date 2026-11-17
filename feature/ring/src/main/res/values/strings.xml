@@ -5,6 +5,8 @@
     <string name="ring_snooze_left">%1$d left</string>
     <string name="ring_slide_to_dismiss">Slide to dismiss</string>
     <string name="ring_snoozed_body">Your alarm rings again then. Dismiss now if you are already up.</string>
+    <string name="ring_snoozed_body_missions">Your alarm rings again then. Up already? Finish your missions now to turn it off.</string>
+    <string name="ring_snoozed_start_missions">Start missions</string>
     <string name="ring_emergency_body">Time ran out. Finish now or the alarm starts again.</string>
     <string name="ring_mission_add_time_short">+10 s</string>
     <string name="ring_mission_progress">Mission %1$d of %2$d</string>

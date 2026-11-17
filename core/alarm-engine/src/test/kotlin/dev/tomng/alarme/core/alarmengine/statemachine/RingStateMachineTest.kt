@@ -1,6 +1,7 @@
 package dev.tomng.alarme.core.alarmengine.statemachine
 
 import com.google.common.truth.Truth.assertThat
+import dev.tomng.alarme.core.model.mission.Mission
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Test
 
@@ -195,7 +196,51 @@ class RingStateMachineTest : RingReducerTestBase() {
     }
 
     @Test
-    fun `dismissing from the snooze stage cancels the snooze and ends the ring`() {
+    fun `dismissing from the snooze stage resumes the ring into the mission chain`() {
+        val missions = listOf(Mission.Math(timeLimitSeconds = 30))
+        val state =
+            ringing(
+                alarm = alarm(missions = missions),
+                stage = RingStage.Snoozing(now + 300.seconds),
+                snoozeCount = 1,
+            )
+
+        val t = reduce(state, RingEvent.OnDismissClick(now))
+
+        val ringing = t.state as RingState.Ringing
+        assertThat(ringing.stage).isEqualTo(missionStage(0, missions[0]))
+        assertThat(ringing.snooze.count).isEqualTo(1)
+        assertThat(t.effects)
+            .containsExactly(
+                RingEffect.ResumeFromSnooze(state.alarm),
+                RingEffect.StartMissionTimer(missions[0], 30.seconds),
+            )
+            .inOrder()
+    }
+
+    @Test
+    fun `resuming from snooze re-arms the auto dismiss timer`() {
+        val missions = listOf(Mission.Math(timeLimitSeconds = 30))
+        val state =
+            ringing(
+                alarm = alarm(missions = missions),
+                stage = RingStage.Snoozing(now + 300.seconds),
+                autoDismiss = 60.seconds,
+            )
+
+        val t = reduce(state, RingEvent.OnDismissClick(now))
+
+        assertThat(t.effects)
+            .containsExactly(
+                RingEffect.ResumeFromSnooze(state.alarm),
+                RingEffect.StartAutoDismissTimer(60.seconds),
+                RingEffect.StartMissionTimer(missions[0], 30.seconds),
+            )
+            .inOrder()
+    }
+
+    @Test
+    fun `dismissing a mission-less alarm from the snooze stage cancels the snooze and ends the ring`() {
         val state = ringing(stage = RingStage.Snoozing(now + 300.seconds), snoozeCount = 1)
 
         val t = reduce(state, RingEvent.OnDismissClick(now))

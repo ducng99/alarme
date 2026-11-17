@@ -22,7 +22,8 @@ data class RingTransition(
  * Rules summary:
  * * a second ring request while ringing is dropped (retry/redelivery dedupe);
  * * dismiss only completes the ring when the mission chain is finished — otherwise it *starts* the
- *   chain (Step/Squat via a prepare stage);
+ *   chain (Step/Squat via a prepare stage); dismissing from the snooze stage also starts the chain
+ *   (the alarm rings again), so snoozing is never a way around the missions;
  * * mission timeout escalates to the 40 s emergency; emergency expiry auto-dismisses;
  * * snooze is bounded by the alarm's limit (UNLIMITED = -1), forbidden during emergency/snooze, and
  *   possible from the wake-up-check with a fixed 180 s;

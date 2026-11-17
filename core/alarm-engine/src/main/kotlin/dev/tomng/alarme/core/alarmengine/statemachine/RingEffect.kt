@@ -35,6 +35,9 @@ sealed interface RingEffect {
 
     data object StopSnoozeTimer : RingEffect
 
+    /** Leave the snooze early: cancel the pending snooze PI and ring again. */
+    data class ResumeFromSnooze(val alarm: Alarm) : RingEffect
+
     /** ResetSnooze — zero the persisted snooze counters after a completed ring. */
     data object ResetSnooze : RingEffect
 

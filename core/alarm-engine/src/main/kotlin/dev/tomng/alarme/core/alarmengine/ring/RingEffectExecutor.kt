@@ -81,6 +81,8 @@ constructor(
 
             is RingEffect.Snooze -> startDurableSnooze(effect)
 
+            is RingEffect.ResumeFromSnooze -> resumeFromSnooze(effect.alarm)
+
             is RingEffect.StartMissionTimer ->
                 startCountdown(
                     duration = effect.duration,
@@ -191,6 +193,13 @@ constructor(
             ),
         )
         rearm(RescheduleReason.SNOOZE_ALARM)
+    }
+
+    private fun resumeFromSnooze(alarm: Alarm) {
+        scheduler.cancelSnooze()
+        snoozeStore.clear()
+        notifications.postRinging(notifications.ringingNotification(alarmName = alarm.name))
+        startPrimedHost()
     }
 
     private fun scheduleAutoDismiss(duration: Duration) {
