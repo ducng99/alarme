@@ -9,6 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 interface BarcodeScanner : AutoCloseable {
     /** The most recently scanned barcode value, or null before the first scan. */
     val scannedValue: StateFlow<String?>
+
+    /**
+     * Restricts scanning to a centered square of [boxSidePx] inside a preview of the given size.
+     */
+    fun setScanArea(viewWidthPx: Int, viewHeightPx: Int, boxSidePx: Int) = Unit
 }
 
 interface PhotoCapturer : AutoCloseable {

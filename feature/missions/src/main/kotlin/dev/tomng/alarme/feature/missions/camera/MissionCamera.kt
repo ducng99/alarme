@@ -61,12 +61,33 @@ class ZxingBarcodeScanner(
 
     private val decoder = ZxingBarcodeDecoder()
 
+    @Volatile private var scanArea: ScanArea? = null
+
+    private class ScanArea(val viewWidthPx: Int, val viewHeightPx: Int, val boxSidePx: Int)
+
+    override fun setScanArea(viewWidthPx: Int, viewHeightPx: Int, boxSidePx: Int) {
+        scanArea = ScanArea(viewWidthPx, viewHeightPx, boxSidePx)
+    }
+
     init {
         controller.setAnalyzer { imageProxy ->
             imageProxy.use { image ->
-                decoder.decode(image.toLuminanceFrame())?.let { _scannedValue.value = it }
+                val frame = image.toLuminanceFrame()
+                decoder.decode(frame, cropSideFor(frame))?.let { _scannedValue.value = it }
             }
         }
+    }
+
+    private fun cropSideFor(frame: LuminanceFrame): Int? {
+        val area = scanArea ?: return null
+        val sideways = frame.rotationDegrees == 90 || frame.rotationDegrees == 270
+        return ZxingBarcodeDecoder.boxSideInImagePx(
+            imageWidth = if (sideways) frame.height else frame.width,
+            imageHeight = if (sideways) frame.width else frame.height,
+            viewWidthPx = area.viewWidthPx,
+            viewHeightPx = area.viewHeightPx,
+            boxSidePx = area.boxSidePx,
+        )
     }
 
     override fun close() = Unit

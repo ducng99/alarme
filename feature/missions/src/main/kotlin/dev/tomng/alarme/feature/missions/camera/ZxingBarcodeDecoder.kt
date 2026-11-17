@@ -32,8 +32,10 @@ class ZxingBarcodeDecoder {
             )
         }
 
-    fun decode(frame: LuminanceFrame): String? {
-        val upright = upright(frame)
+    /** Decodes [frame]; when [cropSidePx] is set only a centered square of that size is scanned. */
+    fun decode(frame: LuminanceFrame, cropSidePx: Int? = null): String? {
+        val uprightFrame = upright(frame)
+        val upright = if (cropSidePx == null) uprightFrame else cropCenter(uprightFrame, cropSidePx)
         // 1D barcodes are read row by row, so a barcode held sideways needs a second, rotated pass.
         return decodeUpright(upright) ?: decodeUpright(rotateClockwise(upright))
     }
@@ -67,6 +69,17 @@ class ZxingBarcodeDecoder {
             270 -> rotateCounterClockwise(packed)
             else -> packed
         }
+    }
+
+    private fun cropCenter(frame: LuminanceFrame, sidePx: Int): LuminanceFrame {
+        val side = sidePx.coerceIn(1, minOf(frame.width, frame.height))
+        val left = (frame.width - side) / 2
+        val top = (frame.height - side) / 2
+        val out = ByteArray(side * side)
+        for (y in 0 until side) {
+            System.arraycopy(frame.luminance, (top + y) * frame.width + left, out, y * side, side)
+        }
+        return LuminanceFrame(out, side, side, rowStride = side)
     }
 
     private fun packed(frame: LuminanceFrame): LuminanceFrame {
@@ -109,6 +122,21 @@ class ZxingBarcodeDecoder {
     }
 
     companion object {
+        /**
+         * Size in image pixels of the preview's centered box, given the FILL_CENTER preview scale.
+         */
+        fun boxSideInImagePx(
+            imageWidth: Int,
+            imageHeight: Int,
+            viewWidthPx: Int,
+            viewHeightPx: Int,
+            boxSidePx: Int,
+        ): Int {
+            val scale =
+                maxOf(viewWidthPx.toFloat() / imageWidth, viewHeightPx.toFloat() / imageHeight)
+            return (boxSidePx / scale).toInt()
+        }
+
         val FORMATS: List<BarcodeFormat> =
             listOf(
                 BarcodeFormat.QR_CODE,
