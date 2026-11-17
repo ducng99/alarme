@@ -55,6 +55,7 @@ sealed interface RingState {
         val mute: MuteState,
         val snooze: SnoozeState,
         val stage: RingStage,
+        val muteDuringMission: Boolean = true,
     ) : RingState
 
     /** The 100 s confirmation is running. */
@@ -81,11 +82,11 @@ sealed interface RingStage {
         val mission: AlarmMission,
     ) : RingStage
 
-    /** Mission at [index] is being attempted; [timer] is null for untimed missions. */
+    /** Mission at [index] is being attempted; running out of [timer] fails back to [Ring]. */
     data class Mission(
         val index: Int,
         val mission: AlarmMission,
-        val timer: MissionTimer?,
+        val timer: MissionTimer,
     ) : RingStage
 
     /** Snoozed until [finishAt]; sound stopped, re-ring scheduled. */
@@ -93,11 +94,11 @@ sealed interface RingStage {
         val finishAt: Instant,
     ) : RingStage
 
-    /** Mission timed out, 40 s grace countdown. */
+    /** The way out for a mission the user cannot solve: [taps] toward the emergency tap goal. */
     data class Emergency(
         val index: Int,
         val mission: AlarmMission,
-        val remaining: Duration,
+        val taps: Int,
     ) : RingStage
 }
 

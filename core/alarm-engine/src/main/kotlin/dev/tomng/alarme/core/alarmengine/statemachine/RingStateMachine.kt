@@ -24,7 +24,11 @@ data class RingTransition(
  * * dismiss only completes the ring when the mission chain is finished — otherwise it *starts* the
  *   chain (Step/Squat via a prepare stage); dismissing from the snooze stage also starts the chain
  *   (the alarm rings again), so snoozing is never a way around the missions;
- * * mission timeout escalates to the 40 s emergency; emergency expiry auto-dismisses;
+ * * with mute-during-mission on, the sound is silenced while a mission is being solved and comes
+ *   back whenever the mission stage is left (prepare screen, emergency, failure);
+ * * every mission has an inactivity limit (its own, or 60 s); running out fails back to the ring
+ *   stage and the next dismiss restarts the chain from the first mission;
+ * * the emergency (100 taps, sound on) is always available from a mission and dismisses the ring;
  * * snooze is bounded by the alarm's limit (UNLIMITED = -1), forbidden during emergency/snooze, and
  *   possible from the wake-up-check with a fixed 180 s;
  * * every dismissal (normal/auto/emergency) arms the wake-up check when configured; a failed check
@@ -34,11 +38,11 @@ data class RingTransition(
  */
 object RingStateMachine {
 
-    /** The emergency grace countdown: 40 s fixed. */
-    val EMERGENCY_TIMEOUT: Duration = 40.seconds
+    /** Taps the emergency screen needs before it dismisses the ring. */
+    const val EMERGENCY_TAPS = 100
 
-    /** The +10 s mercy button. */
-    val ADD_MISSION_TIME: Duration = 10.seconds
+    /** The inactivity limit for missions without their own time limit. */
+    val DEFAULT_MISSION_TIME_LIMIT: Duration = 60.seconds
 
     /** The fixed snooze offered from the wake-up-check. */
     val WAKE_UP_CHECK_SNOOZE: Duration = 180.seconds
@@ -146,6 +150,7 @@ object RingStateMachine {
             mute = MuteState(count = 0, limit = DEFAULT_MUTE_LIMIT),
             snooze = SnoozeState(count = event.snoozeCount, limit = event.alarm.snoozeOption.limit),
             stage = RingStage.Ring,
+            muteDuringMission = event.muteDuringMission,
         )
 }
 

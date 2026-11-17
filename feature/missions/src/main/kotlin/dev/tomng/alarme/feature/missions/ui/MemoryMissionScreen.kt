@@ -126,6 +126,7 @@ fun MemoryMissionScreen(
                     )
                 Button(
                     onClick = {
+                        callbacks.onTimerReset()
                         val next = engine.tap(state, index)
                         val haptic =
                             when {

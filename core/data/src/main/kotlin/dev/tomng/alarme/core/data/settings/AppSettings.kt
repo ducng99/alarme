@@ -11,6 +11,7 @@ enum class AudioOutputPreference {
 data class AppSettings(
     val muteEnabled: Boolean = true,
     val muteLimit: Int = 3,
+    val muteDuringMission: Boolean = true,
     val autoDismiss: AutoDismissOption = AutoDismissOption.Off,
     val audioOutput: AudioOutputPreference = AudioOutputPreference.ALARM_STREAM,
     val preventPowerOff: Boolean = false,

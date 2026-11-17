@@ -15,15 +15,16 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,10 +69,11 @@ internal fun PrepareContent(
         supporting = missionLabel(stage.mission),
         actionLabel = stringResource(R.string.ring_prepare_start),
         onAction = callbacks::onMissionStart,
+        secondary = { EmergencyButton(callbacks) },
     )
 }
 
-/** The mission stage: a header with the countdown (+10 s) above the mission's own screen. */
+/** The mission stage: a header with the countdown and Emergency above the mission's own screen. */
 @Composable
 internal fun MissionStageContent(
     stage: RingStage.Mission,
@@ -108,7 +110,6 @@ internal fun MissionStageContent(
 @Composable
 private fun MissionHeader(stage: RingStage.Mission, total: Int, callbacks: RingScreenCallbacks) {
     val timer = stage.timer
-    val remaining = timer?.remaining
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.xl, vertical = Spacing.m),
     ) {
@@ -117,37 +118,39 @@ private fun MissionHeader(stage: RingStage.Mission, total: Int, callbacks: RingS
                 text = missionProgress(stage.index, total),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
             )
-            if (timer != null && remaining != null) {
-                Text(
-                    text = countdownText(remaining),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                )
-                Spacer(Modifier.size(Spacing.s))
-                val addLabel = stringResource(R.string.ring_mission_add_time)
-                FilledTonalButton(
-                    onClick = callbacks::onAddMissionTime,
-                    modifier =
-                        Modifier.heightIn(min = ButtonDefaults.MinHeight + Spacing.s)
-                            .testTag("ring:add_time")
-                            .semantics { contentDescription = addLabel },
-                ) {
-                    Text(stringResource(R.string.ring_mission_add_time_short))
-                }
-            }
-        }
-        if (timer != null && remaining != null) {
-            val fraction =
-                if (timer.total.isPositive()) (remaining / timer.total).toFloat().coerceIn(0f, 1f)
-                else 0f
-            LinearProgressIndicator(
-                progress = { fraction },
-                modifier = Modifier.fillMaxWidth().padding(top = Spacing.m),
-                drawStopIndicator = {},
+            Text(
+                text = countdownText(timer.remaining),
+                style = MaterialTheme.typography.titleLarge,
+                modifier =
+                    Modifier.padding(start = Spacing.m).weight(1f).semantics {
+                        liveRegion = LiveRegionMode.Polite
+                    },
             )
+            EmergencyButton(callbacks)
         }
+        val fraction =
+            if (timer.total.isPositive()) (timer.remaining / timer.total).toFloat().coerceIn(0f, 1f)
+            else 0f
+        LinearProgressIndicator(
+            progress = { fraction },
+            modifier = Modifier.fillMaxWidth().padding(top = Spacing.m),
+            drawStopIndicator = {},
+        )
+    }
+}
+
+/** The always-available way out of a mission the user cannot solve. */
+@Composable
+private fun EmergencyButton(callbacks: RingScreenCallbacks, modifier: Modifier = Modifier) {
+    TextButton(
+        onClick = callbacks::onEmergency,
+        colors =
+            ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+        modifier =
+            modifier.heightIn(min = ButtonDefaults.MinHeight + Spacing.s).testTag("ring:emergency"),
+    ) {
+        Text(stringResource(R.string.ring_emergency))
     }
 }
 
@@ -170,22 +173,56 @@ internal fun SnoozedContent(
     )
 }
 
+/** Tap the big target until the count reaches zero; the alarm keeps ringing meanwhile. */
 @Composable
-internal fun EmergencyContent(remaining: Duration, callbacks: RingScreenCallbacks) {
-    StageCover(
-        title = stringResource(R.string.ring_emergency_title),
-        supporting = stringResource(R.string.ring_emergency_body),
-        actionLabel = stringResource(R.string.ring_emergency_done),
-        onAction = callbacks::onEmergencyComplete,
-        urgent = true,
+internal fun EmergencyContent(taps: Int, callbacks: RingScreenCallbacks) {
+    val left = (RingStateMachine.EMERGENCY_TAPS - taps).coerceAtLeast(0)
+    val feedback = rememberFeedback()
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.xl, vertical = Spacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = countdownText(remaining),
-            style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.error,
-            modifier =
-                Modifier.padding(top = Spacing.l).semantics { liveRegion = LiveRegionMode.Polite },
+            text = stringResource(R.string.ring_emergency),
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
         )
+        Text(
+            text = stringResource(R.string.ring_emergency_body, RingStateMachine.EMERGENCY_TAPS),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Spacing.s),
+        )
+        Spacer(Modifier.weight(1f))
+        val tapLabel = stringResource(R.string.ring_emergency_tap, left)
+        Button(
+            onClick = {
+                feedback.threshold()
+                callbacks.onEmergencyTap()
+            },
+            shape = CircleShape,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
+            modifier =
+                Modifier.size(EMERGENCY_TARGET).testTag("ring:emergency_tap").semantics {
+                    contentDescription = tapLabel
+                },
+        ) {
+            Text(text = left.toString(), style = MaterialTheme.typography.displayLarge)
+        }
+        Spacer(Modifier.weight(1f))
+        TextButton(
+            onClick = callbacks::onEmergencyCancel,
+            modifier =
+                Modifier.heightIn(min = ButtonDefaults.MinHeight + Spacing.s)
+                    .testTag("ring:emergency_cancel"),
+        ) {
+            Text(stringResource(R.string.ring_emergency_back))
+        }
     }
 }
 
@@ -247,6 +284,7 @@ private fun StageCover(
     overline: String? = null,
     actionTag: String? = null,
     urgent: Boolean = false,
+    secondary: @Composable () -> Unit = {},
     middle: @Composable () -> Unit = {},
 ) {
     Column(
@@ -298,6 +336,7 @@ private fun StageCover(
         ) {
             Text(text = actionLabel, style = MaterialTheme.typography.titleLarge)
         }
+        secondary()
     }
 }
 
@@ -333,3 +372,4 @@ internal fun countdownText(remaining: Duration): String {
 private const val SECOND_MS = 1000L
 private val WUC_RING = 184.dp
 private val ACTION_MAX_WIDTH = 480.dp
+private val EMERGENCY_TARGET = 240.dp

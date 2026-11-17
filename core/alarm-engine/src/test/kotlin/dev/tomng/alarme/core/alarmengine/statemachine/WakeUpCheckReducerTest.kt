@@ -179,7 +179,7 @@ class WakeUpCheckReducerTest : RingReducerTestBase() {
     // ---------------------------------------------------------------- the full journey
 
     @Test
-    fun `the full journey - ring, chain, timeout, emergency, wuc fail, re-ring`() {
+    fun `the full journey - ring, chain, timeout, retry, emergency, wuc fail, re-ring`() {
         val missions =
             listOf(Mission.Shake(timeLimitSeconds = 30), Mission.Math(timeLimitSeconds = 30))
         val alarm = alarm(missions = missions, wucMinutes = 5)
@@ -202,13 +202,21 @@ class WakeUpCheckReducerTest : RingReducerTestBase() {
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.Mission(1, missions[1], MissionTimer(30.seconds, 30.seconds)))
 
-        // math times out -> emergency
+        // math times out -> back to the ring screen, the ring resumes
         t = reduce(t.state, RingEvent.OnMissionTimeout)
-        assertThat((t.state as RingState.Ringing).stage)
-            .isEqualTo(RingStage.Emergency(1, missions[1], 40.seconds))
+        assertThat((t.state as RingState.Ringing).stage).isEqualTo(RingStage.Ring)
+        assertThat(t.effects).contains(RingEffect.ResumeRing)
 
-        // emergency completed -> dismissed (EMERGENCY) + WUC pending
-        t = reduce(t.state, RingEvent.OnEmergencyComplete(now))
+        // dismiss again -> the chain restarts from the first mission
+        t = reduce(t.state, RingEvent.OnDismissClick(now))
+        assertThat((t.state as RingState.Ringing).stage)
+            .isEqualTo(RingStage.Mission(0, missions[0], MissionTimer(30.seconds, 30.seconds)))
+
+        // the user gives up -> emergency, 100 taps -> dismissed (EMERGENCY) + WUC pending
+        t = reduce(t.state, RingEvent.OnEmergencyClick)
+        repeat(RingStateMachine.EMERGENCY_TAPS) {
+            t = reduce(t.state, RingEvent.OnEmergencyTap(now))
+        }
         assertThat(t.state).isEqualTo(RingState.WakeUpCheckPending(alarm, now + 300.seconds))
         assertThat(t.effects).contains(RingEffect.Dismiss(alarm, DismissReason.EMERGENCY))
 

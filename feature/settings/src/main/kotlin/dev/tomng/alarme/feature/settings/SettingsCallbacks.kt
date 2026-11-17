@@ -13,5 +13,6 @@ data class SettingsCallbacks(
     val onOpenOptimize: () -> Unit = {},
     val onOpenBackup: () -> Unit = {},
     val onOpenDefaultSound: () -> Unit = {},
+    val onToggleMuteDuringMission: (Boolean) -> Unit = {},
     val onBack: () -> Unit = {},
 )

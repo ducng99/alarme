@@ -40,14 +40,13 @@ internal object RingingReducer {
             RingEvent.OnMissionTimeout -> MissionChainReducer.onMissionTimeout(state)
 
             is RingEvent.OnMissionTimerTick,
-            RingEvent.OnMissionTimerReset,
-            RingEvent.OnAddMissionTimeClick -> MissionChainReducer.onTimerEvent(state, event)
+            RingEvent.OnMissionTimerReset -> MissionChainReducer.onTimerEvent(state, event)
 
-            is RingEvent.OnEmergencyComplete -> EmergencyReducer.complete(state, event.now)
+            RingEvent.OnEmergencyClick -> EmergencyReducer.open(state)
+
+            is RingEvent.OnEmergencyTap -> EmergencyReducer.tap(state, event.now)
 
             RingEvent.OnEmergencyCancel -> EmergencyReducer.cancel(state)
-
-            is RingEvent.OnEmergencyTimerTick -> EmergencyReducer.tick(state, event)
 
             RingEvent.VolumeMuteRequested -> MuteReducer.onMuteRequested(state)
 

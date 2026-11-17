@@ -60,6 +60,7 @@ fun MathMissionScreen(
     val haptics = LocalHapticFeedback.current
 
     val answer: (Long?) -> Unit = { value ->
+        callbacks.onTimerReset()
         wrong = value == null || !engine.check(question, value)
         attempts++
         haptics.performHapticFeedback(
@@ -138,7 +139,10 @@ fun MathMissionScreen(
                 LaunchedEffect(Unit) { focusRequester.requestFocus() }
                 OutlinedTextField(
                     value = input,
-                    onValueChange = { value -> input = value.filter { it.isDigit() } },
+                    onValueChange = { value ->
+                        input = value.filter { it.isDigit() }
+                        callbacks.onTimerReset()
+                    },
                     label = { Text(stringResource(R.string.mission_math_answer_hint)) },
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium,

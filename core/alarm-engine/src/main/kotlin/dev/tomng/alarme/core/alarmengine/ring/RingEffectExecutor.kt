@@ -30,9 +30,10 @@ import kotlinx.coroutines.launch
 
 /**
  * Runs the reducer's commands on the main thread: audio start/stop against the request primed by
- * the ring service, service shutdown on dismiss, the ring-loop timers (auto-dismiss, snooze finish,
- * mission/emergency countdowns, the 100 s wake-up-check window) which feed their expiry back into
- * the session as events, and the wake-up-check arming (request code 100).
+ * the ring service (silenced while a mission is solved), service shutdown on dismiss, the ring-loop
+ * timers (auto-dismiss, snooze finish, mission countdown, the 100 s wake-up-check window) which
+ * feed their expiry back into the session as events, and the wake-up-check arming (request code
+ * 100).
  */
 @Singleton
 class RingEffectExecutor
@@ -83,36 +84,16 @@ constructor(
 
             is RingEffect.ResumeFromSnooze -> resumeFromSnooze(effect.alarm)
 
-            is RingEffect.StartMissionTimer ->
-                startCountdown(
-                    duration = effect.duration,
-                    onTick = { remaining -> store.submit(RingEvent.OnMissionTimerTick(remaining)) },
-                    onExpire = { store.submit(RingEvent.OnMissionTimeout) },
-                )
+            is RingEffect.StartMissionTimer,
+            RingEffect.StopMissionTimer,
+            is RingEffect.StartWakeUpCheckTimer,
+            RingEffect.StopWakeUpCheckTimer -> handleCountdown(effect)
 
-            is RingEffect.ExtendMissionTime -> countdown?.extendBy(effect.duration)
+            RingEffect.SilenceRing -> ringHost.stop()
 
-            RingEffect.StopMissionTimer -> cancelCountdown()
-
-            is RingEffect.StartEmergencyTimer ->
-                startCountdown(
-                    duration = effect.duration,
-                    onTick = { remaining ->
-                        store.submit(RingEvent.OnEmergencyTimerTick(remaining, clock.now()))
-                    },
-                    onExpire = {
-                        store.submit(RingEvent.OnEmergencyTimerTick(Duration.ZERO, clock.now()))
-                    },
-                )
-
-            is RingEffect.StartWakeUpCheckTimer ->
-                startCountdown(
-                    duration = effect.duration,
-                    onTick = {},
-                    onExpire = { store.submit(RingEvent.OnWakeUpCheckFailed) },
-                )
-
-            RingEffect.StopWakeUpCheckTimer -> cancelCountdown()
+            // A failed mission must wake the user again: no slow crescendo on the way back.
+            RingEffect.ResumeRing ->
+                primedRequest?.let { ringHost.start(it.copy(crescendo = null)) }
 
             is RingEffect.ScheduleWakeUpCheck ->
                 scheduler.armWakeUpCheck(effect.alarm.id, effect.at)
@@ -131,6 +112,29 @@ constructor(
             }
 
             // The ring itself re-arms the next occurrence only via dismiss/reschedule.
+            else -> Unit
+        }
+    }
+
+    private fun handleCountdown(effect: RingEffect) {
+        when (effect) {
+            is RingEffect.StartMissionTimer ->
+                startCountdown(
+                    duration = effect.duration,
+                    onTick = { remaining -> store.submit(RingEvent.OnMissionTimerTick(remaining)) },
+                    onExpire = { store.submit(RingEvent.OnMissionTimeout) },
+                )
+
+            is RingEffect.StartWakeUpCheckTimer ->
+                startCountdown(
+                    duration = effect.duration,
+                    onTick = {},
+                    onExpire = { store.submit(RingEvent.OnWakeUpCheckFailed) },
+                )
+
+            RingEffect.StopMissionTimer,
+            RingEffect.StopWakeUpCheckTimer -> cancelCountdown()
+
             else -> Unit
         }
     }
@@ -214,17 +218,15 @@ constructor(
         autoDismissRunnable = null
     }
 
-    /**
-     * A one-second countdown loop. The deadline is wall-clock based so [+10 s] extensions adjust
-     * the finish without restarting the tick chain; the [onExpire] callback fires at zero.
-     */
+    /** A one-second countdown loop against an uptime deadline; [onExpire] fires at zero. */
     private fun startCountdown(
         duration: Duration,
         onTick: (Duration) -> Unit,
         onExpire: () -> Unit,
     ) {
         cancelCountdown()
-        val loop = Countdown(handler, uptimeNow() + duration, onTick, onExpire)
+        val loop =
+            Countdown(handler, SystemClock.uptimeMillis().milliseconds + duration, onTick, onExpire)
         countdown = loop
         loop.start()
     }
@@ -233,14 +235,12 @@ constructor(
         countdown?.cancel()
         countdown = null
     }
-
-    private fun uptimeNow(): Duration = SystemClock.uptimeMillis().milliseconds
 }
 
-/** The ticking loop behind the mission and emergency countdowns. */
+/** The ticking loop behind the mission and wake-up-check countdowns. */
 private class Countdown(
     private val handler: Handler,
-    private var deadline: Duration,
+    private val deadline: Duration,
     private val onTick: (Duration) -> Unit,
     private val onExpire: () -> Unit,
 ) {
@@ -259,10 +259,6 @@ private class Countdown(
 
     fun start() {
         handler.postDelayed(tickRunnable, ONE_SECOND.inWholeMilliseconds)
-    }
-
-    fun extendBy(extra: Duration) {
-        deadline += extra
     }
 
     fun cancel() {

@@ -9,7 +9,9 @@ import dev.tomng.alarme.core.alarmengine.service.AlarmService
 import dev.tomng.alarme.core.alarmengine.statemachine.RingEffect
 import dev.tomng.alarme.core.alarmengine.statemachine.RingEvent
 import dev.tomng.alarme.core.alarmengine.statemachine.RingSessionStore
+import dev.tomng.alarme.core.alarmengine.statemachine.RingStage
 import dev.tomng.alarme.core.alarmengine.statemachine.RingState
+import dev.tomng.alarme.core.alarmengine.statemachine.RingStateMachine
 import dev.tomng.alarme.core.alarmengine.statemachine.RingTrigger
 import dev.tomng.alarme.core.common.time.FakeAppClock
 import dev.tomng.alarme.core.model.alarm.Alarm
@@ -298,7 +300,7 @@ class RingEffectExecutorTest {
         )
 
     @Test
-    fun `the mission timer ticks each second and escalates to emergency on timeout`() {
+    fun `the mission timer ticks each second and fails back to the ringing alarm on timeout`() {
         val mission = Mission.Math(timeLimitSeconds = 3, rounds = 1)
         val missionAlarm = alarm.copy(emoji = "", missions = listOf(mission))
         executor.prime(
@@ -312,24 +314,32 @@ class RingEffectExecutorTest {
         store.submit(RingEvent.OnDismissClick(clock.now)) // starts mission 0
         mainLooper.idle()
         val missionStage =
-            store.state.value.let { (it as RingState.Ringing).stage }
-                as dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Mission
-        assertThat(missionStage.timer?.remaining).isEqualTo(3.seconds)
+            store.state.value.let { (it as RingState.Ringing).stage } as RingStage.Mission
+        assertThat(missionStage.timer.remaining).isEqualTo(3.seconds)
+        assertThat(host.stopped).isEqualTo(1) // silenced while solving
 
         mainLooper.idleFor(java.time.Duration.ofSeconds(3))
 
-        val afterTimeout = store.state.value.let { (it as RingState.Ringing).stage }
-        assertThat(afterTimeout)
-            .isInstanceOf(
-                dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Emergency::class.java,
-            )
-        assertThat(
-                (afterTimeout as dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Emergency)
-                    .remaining,
-            )
-            .isEqualTo(
-                dev.tomng.alarme.core.alarmengine.statemachine.RingStateMachine.EMERGENCY_TIMEOUT,
-            )
+        assertThat(store.state.value.let { (it as RingState.Ringing).stage })
+            .isEqualTo(RingStage.Ring)
+        assertThat(host.started).isEqualTo(2) // the ring, then the resume after the failure
+        assertThat(host.lastRequest?.crescendo).isNull()
+    }
+
+    @Test
+    fun `missions keep the ring sounding when mute during mission is off`() {
+        val mission = Mission.Typing(timeLimitSeconds = 10, rounds = 1)
+        val missionAlarm = alarm.copy(emoji = "", missions = listOf(mission))
+        store.submit(
+            ringRequest().copy(alarm = missionAlarm, ringEventId = 16L, muteDuringMission = false),
+        )
+        mainLooper.idle()
+
+        store.submit(RingEvent.OnDismissClick(clock.now))
+        mainLooper.idle()
+
+        assertThat(host.started).isEqualTo(1)
+        assertThat(host.stopped).isEqualTo(0)
     }
 
     @Test
@@ -348,63 +358,37 @@ class RingEffectExecutorTest {
         mainLooper.idle()
 
         assertThat(store.state.value).isEqualTo(RingState.Idle)
-        assertThat(host.stopped).isEqualTo(1)
         // The mission countdown must be gone: idling past its 10 s limit must not fire anything.
         mainLooper.idleFor(java.time.Duration.ofSeconds(12))
         assertThat(store.state.value).isEqualTo(RingState.Idle)
+        assertThat(host.started).isEqualTo(1)
     }
 
     @Test
-    fun `the emergency timer expiry auto dismisses the ring`() {
-        val mission = Mission.Memory(timeLimitSeconds = 2, rounds = 1)
+    fun `the emergency resumes the ring and dismisses after the tap goal`() {
+        val mission = Mission.Memory(rounds = 1)
         val missionAlarm = alarm.copy(emoji = "", missions = listOf(mission))
-        executor.prime(
-            RingRequestBuilder.build(missionAlarm, defaultSettings(), hasExternalOutput = false),
-        )
         store.submit(ringRequest().copy(alarm = missionAlarm, ringEventId = 14L))
         mainLooper.idle()
-
         store.submit(RingEvent.OnDismissClick(clock.now))
-        mainLooper.idleFor(java.time.Duration.ofSeconds(2)) // mission timeout -> emergency
-        val emergency =
-            store.state.value.let { (it as RingState.Ringing).stage }
-                as dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Emergency
+        mainLooper.idle()
 
-        mainLooper.idleFor(java.time.Duration.ofMillis(emergency.remaining.inWholeMilliseconds))
+        store.submit(RingEvent.OnEmergencyClick)
+        mainLooper.idle()
+        assertThat(host.started).isEqualTo(2)
+
+        // No countdown runs during the emergency: idling long past the mission limit changes
+        // nothing.
+        mainLooper.idleFor(java.time.Duration.ofSeconds(120))
+        assertThat(store.state.value.let { (it as RingState.Ringing).stage })
+            .isInstanceOf(RingStage.Emergency::class.java)
+
+        repeat(RingStateMachine.EMERGENCY_TAPS) {
+            store.submit(RingEvent.OnEmergencyTap(clock.now))
+        }
+        mainLooper.idle()
 
         assertThat(store.state.value).isEqualTo(RingState.Idle)
-        assertThat(host.stopped).isEqualTo(1)
-    }
-
-    @Test
-    fun `extending the mission timer postpones the timeout`() {
-        val mission = Mission.Shake(timeLimitSeconds = 5, count = 10)
-        val missionAlarm = alarm.copy(emoji = "", missions = listOf(mission))
-        executor.prime(
-            RingRequestBuilder.build(missionAlarm, defaultSettings(), hasExternalOutput = false),
-        )
-        store.submit(ringRequest().copy(alarm = missionAlarm, ringEventId = 15L))
-        mainLooper.idle()
-
-        store.submit(RingEvent.OnDismissClick(clock.now))
-        mainLooper.idle()
-        store.submit(RingEvent.OnAddMissionTimeClick) // +10 s
-        mainLooper.idle()
-
-        // 5 s + a little more: without the extension the mission would already be timed out.
-        mainLooper.idleFor(java.time.Duration.ofSeconds(6))
-        assertThat(
-                store.state.value.let { (it as RingState.Ringing).stage },
-            )
-            .isInstanceOf(
-                dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Mission::class.java,
-            )
-
-        // The remaining time also reflects the +10 s in the store's stage.
-        val stage =
-            store.state.value.let { (it as RingState.Ringing).stage }
-                as dev.tomng.alarme.core.alarmengine.statemachine.RingStage.Mission
-        assertThat(stage.timer?.remaining?.inWholeSeconds).isAtLeast(8)
     }
 
     // ---------------------------------------------------------- wake-up check
@@ -477,9 +461,11 @@ class RingEffectExecutorTest {
     private class RecordingRingHost : RingHost {
         var started = 0
         var stopped = 0
+        var lastRequest: RingRequest? = null
 
         override fun start(request: RingRequest) {
             started++
+            lastRequest = request
         }
 
         override fun stop() {

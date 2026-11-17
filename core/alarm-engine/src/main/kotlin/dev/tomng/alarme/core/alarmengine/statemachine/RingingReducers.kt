@@ -4,9 +4,9 @@ import dev.tomng.alarme.core.model.mission.Mission
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-/** Stages that own a mission countdown (the emergency timer is the same timer, re-armed). */
+/** Stages that own a mission countdown. */
 internal val RingStage.usesMissionTimer: Boolean
-    get() = this is RingStage.Mission || this is RingStage.Emergency
+    get() = this is RingStage.Mission
 
 /**
  * The terminal path shared by every dismissal: stop the timers, dismiss, reset the snooze counters,
@@ -122,38 +122,42 @@ internal object SnoozeReducer {
     }
 }
 
-/** The 40 s emergency branch: complete dismisses, cancel retries the mission. */
+/**
+ * The emergency way out of a mission the user cannot solve: always reachable from the mission (and
+ * its prepare screen), it rings at full volume and dismisses after the emergency tap goal.
+ */
 internal object EmergencyReducer {
 
-    fun complete(state: RingState.Ringing, now: Instant): RingTransition =
-        if (state.stage is RingStage.Emergency) {
-            DismissReducer.complete(state, DismissReason.EMERGENCY, now, stopMissionTimer = true)
-        } else {
-            RingTransition(state)
+    fun open(state: RingState.Ringing): RingTransition =
+        when (val stage = state.stage) {
+            is RingStage.Mission ->
+                RingTransition(
+                    state.copy(stage = RingStage.Emergency(stage.index, stage.mission, taps = 0)),
+                    listOf(RingEffect.StopMissionTimer) +
+                        MissionChainReducer.resumeIfSilenced(state),
+                )
+
+            is RingStage.PrepareMission ->
+                RingTransition(
+                    state.copy(stage = RingStage.Emergency(stage.index, stage.mission, taps = 0)),
+                )
+
+            else -> RingTransition(state)
         }
+
+    fun tap(state: RingState.Ringing, now: Instant): RingTransition {
+        val stage = state.stage as? RingStage.Emergency ?: return RingTransition(state)
+        val taps = stage.taps + 1
+        return if (taps >= RingStateMachine.EMERGENCY_TAPS) {
+            DismissReducer.complete(state, DismissReason.EMERGENCY, now, stopMissionTimer = false)
+        } else {
+            RingTransition(state.copy(stage = stage.copy(taps = taps)))
+        }
+    }
 
     fun cancel(state: RingState.Ringing): RingTransition {
         val stage = state.stage as? RingStage.Emergency ?: return RingTransition(state)
-        val timer = MissionChainReducer.timerOf(stage.mission)
-        return RingTransition(
-            state.copy(stage = RingStage.Mission(stage.index, stage.mission, timer)),
-            timer?.let { listOf(RingEffect.StartMissionTimer(stage.mission, it.total)) }
-                ?: emptyList(),
-        )
-    }
-
-    fun tick(state: RingState.Ringing, event: RingEvent.OnEmergencyTimerTick): RingTransition {
-        val stage = state.stage as? RingStage.Emergency ?: return RingTransition(state)
-        return if (event.remaining <= kotlin.time.Duration.ZERO) {
-            DismissReducer.complete(
-                state,
-                DismissReason.EMERGENCY,
-                event.now,
-                stopMissionTimer = true,
-            )
-        } else {
-            RingTransition(state.copy(stage = stage.copy(remaining = event.remaining)))
-        }
+        return MissionChainReducer.enterMission(state, stage.index, stage.mission)
     }
 }
 

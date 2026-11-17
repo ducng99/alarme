@@ -47,6 +47,7 @@ abstract class RingReducerTestBase {
         trigger: RingTrigger = RingTrigger.SCHEDULED,
         autoDismiss: Duration? = null,
         snoozeCount: Int = 0,
+        muteDuringMission: Boolean = true,
     ): RingEvent.AlarmRingRequest =
         RingEvent.AlarmRingRequest(
             alarm = alarm,
@@ -56,6 +57,7 @@ abstract class RingReducerTestBase {
             startedAt = now,
             autoDismiss = autoDismiss,
             snoozeCount = snoozeCount,
+            muteDuringMission = muteDuringMission,
         )
 
     protected fun ringing(
@@ -63,6 +65,7 @@ abstract class RingReducerTestBase {
         stage: RingStage = RingStage.Ring,
         autoDismiss: Duration? = null,
         snoozeCount: Int = 0,
+        muteDuringMission: Boolean = true,
     ): RingState.Ringing =
         RingState.Ringing(
             alarm = alarm,
@@ -74,13 +77,16 @@ abstract class RingReducerTestBase {
             mute = MuteState(count = 0, limit = 3, enabled = true),
             snooze = SnoozeState(count = snoozeCount, limit = alarm.snoozeOption.limit),
             stage = stage,
+            muteDuringMission = muteDuringMission,
         )
 
     protected fun missionStage(index: Int, mission: Mission): RingStage.Mission =
         RingStage.Mission(index = index, mission = mission, timer = mission.timerOf())
 
-    protected fun Mission.timerOf(): MissionTimer? =
-        timeLimitSeconds.takeIf { it > 0 }?.let { MissionTimer(it.seconds, it.seconds) }
+    protected fun Mission.timerOf(): MissionTimer {
+        val limit = if (timeLimitSeconds > 0) timeLimitSeconds.seconds else 60.seconds
+        return MissionTimer(limit, limit)
+    }
 
     protected fun reduce(state: RingState, event: RingEvent): RingTransition =
         RingStateMachine.reduce(state, event)

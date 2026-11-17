@@ -58,10 +58,10 @@ sealed interface RingEffect {
 
     data object StopMissionTimer : RingEffect
 
-    /** The +10 s mercy extension. */
-    data class ExtendMissionTime(val duration: Duration) : RingEffect
+    /** Mute the ring sound while a mission is being solved; [ResumeRing] brings it back. */
+    data object SilenceRing : RingEffect
 
-    data class StartEmergencyTimer(val duration: Duration) : RingEffect
+    data object ResumeRing : RingEffect
 
     /** Volume-down honored — lower the forced volume (the audio layer ducks). */
     data object MuteAlarm : RingEffect

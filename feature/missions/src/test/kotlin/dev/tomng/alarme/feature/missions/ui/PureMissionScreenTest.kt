@@ -100,6 +100,23 @@ class MathMissionScreenTest {
     }
 
     @Test
+    fun `every answer and keystroke resets the mission timer`() {
+        val callbacks = RecordingCallbacks()
+        rule.setContent {
+            MathMissionScreen(
+                Mission.Math(rounds = 1, difficulty = 2),
+                callbacks,
+                MathMissionEngine(Random(11)),
+            )
+        }
+
+        rule.onNodeWithTag("mission:math:input").performTextInput("1")
+        rule.onNodeWithTag("mission:math:submit").performClick()
+
+        assertThat(callbacks.timerResets).isEqualTo(2)
+    }
+
+    @Test
     fun `the numeric answer field is focused when shown`() {
         rule.setContent {
             MathMissionScreen(
@@ -158,6 +175,24 @@ class MemoryMissionScreenTest {
         val before = rule.onAllNodesWithTag("mission:memory:tile").fetchSemanticsNodes().size
         assertThat(before).isEqualTo(9)
         assertThat(callbacks.completed).isEqualTo(0)
+    }
+
+    @Test
+    fun `every tile tap resets the mission timer`() {
+        val callbacks = RecordingCallbacks()
+        rule.setContent {
+            MemoryMissionScreen(
+                Mission.Memory(rounds = 1, difficulty = 3),
+                callbacks,
+                MemoryMissionEngine(Random(21)),
+            )
+        }
+        rule.mainClock.advanceTimeBy(2_000)
+        rule.waitForIdle()
+
+        rule.onAllNodesWithTag("mission:memory:tile")[0].performClick()
+
+        assertThat(callbacks.timerResets).isEqualTo(1)
     }
 }
 

@@ -45,6 +45,7 @@ fun SquatMissionScreen(
         onDispose { tracker.stop() }
     }
 
+    LaunchedEffect(progress.reps) { if (progress.reps > 0) callbacks.onTimerReset() }
     LaunchedEffect(progress.done) { if (progress.done) callbacks.onComplete() }
 
     MissionStageScaffold(

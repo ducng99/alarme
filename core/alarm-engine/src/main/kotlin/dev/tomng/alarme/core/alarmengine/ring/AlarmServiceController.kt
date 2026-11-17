@@ -169,6 +169,7 @@ constructor(
                 startedAt = clock.now(),
                 autoDismiss = settings.autoDismiss.toMillis()?.milliseconds,
                 snoozeCount = delivery.snoozeCount,
+                muteDuringMission = settings.muteDuringMission,
             ),
         )
     }

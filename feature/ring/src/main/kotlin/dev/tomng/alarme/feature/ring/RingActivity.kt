@@ -84,11 +84,13 @@ class RingActivity : ComponentActivity() {
 
             override fun onMissionTimerReset() = submit(RingEvent.OnMissionTimerReset)
 
-            override fun onAddMissionTime() = submit(RingEvent.OnAddMissionTimeClick)
-
             override fun onWakeUpCheckComplete() = submit(RingEvent.OnWakeUpCheckComplete)
 
-            override fun onEmergencyComplete() = submit(RingEvent.OnEmergencyComplete(clock.now()))
+            override fun onEmergency() = submit(RingEvent.OnEmergencyClick)
+
+            override fun onEmergencyTap() = submit(RingEvent.OnEmergencyTap(clock.now()))
+
+            override fun onEmergencyCancel() = submit(RingEvent.OnEmergencyCancel)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -103,6 +103,8 @@ private class RingtoneSettingsFake : dev.tomng.alarme.core.data.repository.Setti
 
     override suspend fun setMute(enabled: Boolean, limit: Int) = Unit
 
+    override suspend fun setMuteDuringMission(enabled: Boolean) = Unit
+
     override suspend fun setAutoDismiss(
         option: dev.tomng.alarme.core.model.alarm.AutoDismissOption,
     ) = Unit

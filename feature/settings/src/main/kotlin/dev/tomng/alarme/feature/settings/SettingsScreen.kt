@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.BatterySaver
@@ -41,6 +42,7 @@ import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.reliability.ReliabilityState
+import dev.tomng.alarme.feature.settings.sound.SoundSettingsState
 
 @Composable
 fun SettingsScreen(
@@ -48,6 +50,7 @@ fun SettingsScreen(
     reliability: ReliabilityState,
     callbacks: SettingsCallbacks,
     modifier: Modifier = Modifier,
+    sound: SoundSettingsState = SoundSettingsState(),
 ) {
     AlarmeScaffold(
         title = stringResource(R.string.settings_title),
@@ -101,6 +104,17 @@ fun SettingsScreen(
                             icon = Icons.Outlined.MusicNote,
                             onClick = callbacks.onOpenDefaultSound,
                             modifier = Modifier.testTag("settings_default_sound"),
+                        )
+                    }
+                    row { shapes ->
+                        SwitchRow(
+                            shapes = shapes,
+                            title = stringResource(R.string.settings_mute_during_mission),
+                            supporting = stringResource(R.string.settings_mute_during_mission_body),
+                            icon = Icons.AutoMirrored.Outlined.VolumeOff,
+                            checked = sound.muteDuringMission,
+                            onCheckedChange = callbacks.onToggleMuteDuringMission,
+                            modifier = Modifier.testTag("toggle_mute_during_mission"),
                         )
                     }
                 }

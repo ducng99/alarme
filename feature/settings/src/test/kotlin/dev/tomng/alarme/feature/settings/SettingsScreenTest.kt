@@ -15,6 +15,7 @@ import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.permissions.PermissionRow
 import dev.tomng.alarme.feature.settings.reliability.ReliabilityState
+import dev.tomng.alarme.feature.settings.sound.SoundSettingsState
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -52,6 +53,27 @@ class SettingsScreenTest {
         compose.onNodeWithTag("settings_fix").performClick()
 
         assertThat(fixed).isTrue()
+    }
+
+    @Test
+    fun `the alarm sound section toggles mute during mission`() {
+        var toggled: Boolean? = null
+        compose.setContent {
+            SettingsScreen(
+                permissions,
+                ReliabilityState(),
+                SettingsCallbacks(onToggleMuteDuringMission = { toggled = it }),
+                sound = SoundSettingsState(muteDuringMission = true),
+            )
+        }
+
+        compose
+            .onNodeWithTag("settings_screen")
+            .performScrollToNode(hasTestTag("toggle_mute_during_mission"))
+        compose.onNodeWithText("Mute during mission").assertIsDisplayed()
+        compose.onNodeWithTag("toggle_mute_during_mission").performClick()
+
+        assertThat(toggled).isFalse()
     }
 
     @Test

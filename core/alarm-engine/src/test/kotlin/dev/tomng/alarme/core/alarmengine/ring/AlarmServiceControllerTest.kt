@@ -144,6 +144,18 @@ class AlarmServiceControllerTest {
         }
 
     @Test
+    fun `the mute during mission setting reaches the session`() = runTest {
+        settingsRepo.settings.value = settingsRepo.settings.value.copy(muteDuringMission = false)
+        val controller = newController()
+
+        controller.onStartCommand(service, ringIntent(), 0, 1)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+
+        assertThat((store.state.value as RingState.Ringing).muteDuringMission).isFalse()
+        controller.onDestroy()
+    }
+
+    @Test
     fun `a ring asks for the ring screen directly`() = runTest {
         val controller = newController()
 
@@ -192,6 +204,7 @@ class AlarmServiceControllerTest {
         assertThat(ringing.alarm.id).isEqualTo(2L)
         assertThat(ringing.stage).isEqualTo(RingStage.Ring)
         assertThat(ringing.autoDismiss).isNull()
+        assertThat(ringing.muteDuringMission).isTrue()
 
         store.submit(
             dev.tomng.alarme.core.alarmengine.statemachine.RingEvent.OnDismissClick(clock.now),

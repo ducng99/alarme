@@ -66,6 +66,7 @@ fun WordBeatMissionScreen(
         if (current is SpeechEvent.Idle) return@LaunchedEffect
         feedback = current
         if (current is SpeechEvent.Unavailable) return@LaunchedEffect
+        callbacks.onTimerReset()
         if (current is SpeechEvent.Recognized) {
             val target = rounds.getOrNull(round) ?: return@LaunchedEffect
             val passes = WordBeatMatcher.passes(target, current.text, mission.language.tokenMode)
@@ -148,7 +149,10 @@ fun WordBeatMissionScreen(
                 }
                 MissionPrimaryButton(
                     text = stringResource(R.string.mission_wordbeat_listening),
-                    onClick = { source.startListening(locale) },
+                    onClick = {
+                        callbacks.onTimerReset()
+                        source.startListening(locale)
+                    },
                     modifier = Modifier.testTag("mission:wordbeat:listen"),
                 )
             }

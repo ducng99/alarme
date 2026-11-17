@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,9 +43,11 @@ fun ShakeMissionScreen(
         onDispose { tracker.stop() }
     }
 
+    LaunchedEffect(count) { if (count > 0) callbacks.onTimerReset() }
+
     if (count >= goal) {
         // Fire once from composition: the counter is monotonic until reset.
-        androidx.compose.runtime.LaunchedEffect(tracker) { callbacks.onComplete() }
+        LaunchedEffect(tracker) { callbacks.onComplete() }
     }
 
     MissionStageScaffold(

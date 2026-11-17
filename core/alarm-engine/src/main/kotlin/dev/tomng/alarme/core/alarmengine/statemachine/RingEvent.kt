@@ -20,6 +20,7 @@ sealed interface RingEvent {
         val startedAt: Instant
         val autoDismiss: Duration?
         val snoozeCount: Int
+        val muteDuringMission: Boolean
     }
 
     /** A validated ring delivery; [snoozeCount] restores persisted counters. */
@@ -31,6 +32,7 @@ sealed interface RingEvent {
         override val startedAt: Instant,
         override val autoDismiss: Duration? = null,
         override val snoozeCount: Int = 0,
+        override val muteDuringMission: Boolean = true,
     ) : RingEvent, RingSessionEvent
 
     /** The service came back (reboot/redelivery) and is restoring a live ring. */
@@ -42,6 +44,7 @@ sealed interface RingEvent {
         override val startedAt: Instant,
         override val autoDismiss: Duration? = null,
         override val snoozeCount: Int = 0,
+        override val muteDuringMission: Boolean = true,
     ) : RingEvent, RingSessionEvent
 
     data class OnDismissClick(val now: Instant) : RingEvent
@@ -61,20 +64,16 @@ sealed interface RingEvent {
 
     data class OnMissionTimerTick(val remaining: Duration) : RingEvent
 
-    /** User activity (keystroke, confirming match): don't time out mid-attempt. */
+    /** User activity (keystroke, tap, sensor progress): don't time out mid-attempt. */
     data object OnMissionTimerReset : RingEvent
 
-    /** The +10 s mercy button. */
-    data object OnAddMissionTimeClick : RingEvent
+    /** The user gives up on the mission and opens the tap-to-dismiss emergency. */
+    data object OnEmergencyClick : RingEvent
 
-    data class OnEmergencyComplete(val now: Instant) : RingEvent
+    data class OnEmergencyTap(val now: Instant) : RingEvent
 
+    /** Back from the emergency to the mission it was opened from. */
     data object OnEmergencyCancel : RingEvent
-
-    data class OnEmergencyTimerTick(
-        val remaining: Duration,
-        val now: Instant,
-    ) : RingEvent
 
     data class AutoDismissTimeout(val now: Instant) : RingEvent
 

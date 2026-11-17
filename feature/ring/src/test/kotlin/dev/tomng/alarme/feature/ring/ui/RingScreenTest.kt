@@ -97,8 +97,9 @@ class RingScreenTest {
             missionStartAction = { recorded += "missionStart" },
             missionCompleteAction = { recorded += "missionComplete" },
             missionTimerResetAction = { recorded += "missionTimerReset" },
-            addTimeAction = { recorded += "addTime" },
-            emergencyCompleteAction = { recorded += "emergencyComplete" },
+            emergencyAction = { recorded += "emergency" },
+            emergencyTapAction = { recorded += "emergencyTap" },
+            emergencyCancelAction = { recorded += "emergencyCancel" },
             wakeUpCheckCompleteAction = { recorded += "wakeUpCheckComplete" },
         )
     }
@@ -258,19 +259,17 @@ class RingScreenTest {
         compose.onNodeWithText("Mission 1 of 1").assertIsDisplayed()
         compose.onNodeWithTag("mission:typing").assertExists()
 
-        compose.onNodeWithTag("ring:add_time").performClick()
+        compose.onNodeWithTag("ring:add_time").assertDoesNotExist()
         compose.onNodeWithTag("mission:typing:input").performTextInput("abc")
         compose.onNodeWithTag("mission:typing:submit").performClick()
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
 
-        assertThat(cb.recorded)
-            .containsExactly("addTime", "missionTimerReset", "missionComplete")
-            .inOrder()
+        assertThat(cb.recorded).containsExactly("missionTimerReset", "missionComplete").inOrder()
     }
 
     @Test
-    fun `an untimed mission has no countdown and no time extension`() {
+    fun `the mission stage offers the emergency way out`() {
         val cb = mutSetOf()
         val mission = Mission.Typing()
         compose.setContent {
@@ -278,14 +277,36 @@ class RingScreenTest {
                 state =
                     ringing(
                         alarm = alarm(missions = listOf(mission)),
-                        stage = RingStage.Mission(0, mission, null),
+                        stage = RingStage.Mission(0, mission, MissionTimer(60.seconds, 60.seconds)),
                     ),
                 callbacks = cb,
             )
         }
 
-        compose.onNodeWithText("Type the sentence exactly").assertIsDisplayed()
-        compose.onNodeWithTag("ring:add_time").assertDoesNotExist()
+        compose.onNodeWithText("1:00").assertIsDisplayed()
+        compose.onNodeWithTag("ring:emergency").performClick()
+
+        assertThat(cb.recorded).containsExactly("emergency")
+    }
+
+    @Test
+    fun `the prepare stage offers the emergency way out`() {
+        val cb = mutSetOf()
+        val mission = Mission.Squat(count = 10)
+        compose.setContent {
+            RingScreen(
+                state =
+                    ringing(
+                        alarm = alarm(missions = listOf(mission)),
+                        stage = RingStage.PrepareMission(0, mission),
+                    ),
+                callbacks = cb,
+            )
+        }
+
+        compose.onNodeWithTag("ring:emergency").performClick()
+
+        assertThat(cb.recorded).containsExactly("emergency")
     }
 
     @Test
@@ -360,7 +381,7 @@ class RingScreenTest {
     }
 
     @Test
-    fun `the emergency stage shows the countdown and the finish button`() {
+    fun `the emergency stage counts the remaining taps and records each tap`() {
         val cb = mutSetOf()
         val mission = Mission.Math(timeLimitSeconds = 30)
         compose.setContent {
@@ -368,17 +389,21 @@ class RingScreenTest {
                 state =
                     ringing(
                         alarm = alarm(missions = listOf(mission)),
-                        stage = RingStage.Emergency(0, mission, 12.seconds),
+                        stage = RingStage.Emergency(0, mission, taps = 58),
                     ),
                 callbacks = cb,
             )
         }
 
-        compose.onNodeWithText("Last chance").assertIsDisplayed()
-        compose.onNodeWithText("0:12").assertIsDisplayed()
-        compose.onNodeWithText("I'm done").performClick()
+        compose.onNodeWithText("Emergency").assertIsDisplayed()
+        compose.onNodeWithText("42").assertIsDisplayed()
+        compose.onNodeWithTag("ring:emergency_tap").performClick()
+        compose.onNodeWithTag("ring:emergency_tap").performClick()
+        compose.onNodeWithTag("ring:emergency_cancel").performClick()
 
-        assertThat(cb.recorded).containsExactly("emergencyComplete")
+        assertThat(cb.recorded)
+            .containsExactly("emergencyTap", "emergencyTap", "emergencyCancel")
+            .inOrder()
     }
 
     @Test
@@ -396,8 +421,9 @@ private class RecordingCallbacks(
     private val missionStartAction: () -> Unit,
     private val missionCompleteAction: () -> Unit,
     private val missionTimerResetAction: () -> Unit,
-    private val addTimeAction: () -> Unit,
-    private val emergencyCompleteAction: () -> Unit,
+    private val emergencyAction: () -> Unit,
+    private val emergencyTapAction: () -> Unit,
+    private val emergencyCancelAction: () -> Unit,
     private val wakeUpCheckCompleteAction: () -> Unit,
 ) : RingScreenCallbacks {
     override fun onDismiss() = dismissAction()
@@ -410,9 +436,11 @@ private class RecordingCallbacks(
 
     override fun onMissionTimerReset() = missionTimerResetAction()
 
-    override fun onAddMissionTime() = addTimeAction()
+    override fun onEmergency() = emergencyAction()
 
-    override fun onEmergencyComplete() = emergencyCompleteAction()
+    override fun onEmergencyTap() = emergencyTapAction()
+
+    override fun onEmergencyCancel() = emergencyCancelAction()
 
     override fun onWakeUpCheckComplete() = wakeUpCheckCompleteAction()
 }

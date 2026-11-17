@@ -42,6 +42,7 @@ fun StepMissionScreen(
         onDispose { tracker.stop() }
     }
 
+    LaunchedEffect(progress.count) { if (progress.count > 0) callbacks.onTimerReset() }
     LaunchedEffect(progress.done) { if (progress.done) callbacks.onComplete() }
 
     MissionStageScaffold(

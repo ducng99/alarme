@@ -30,21 +30,21 @@
     <string name="mission_squat_instruction">Cover the sensor, then lift — that\'s one. %1$d to go.</string>
     <string name="mission_squat_covered">Covered…</string>
     <string name="mission_squat_cheat">Too fast to be real — that one doesn\'t count</string>
-    <string name="mission_squat_no_sensor">This device has no light or proximity sensor, so squats can\'t be counted. Wait for the emergency dismiss or use +10 seconds.</string>
+    <string name="mission_squat_no_sensor">This device has no light or proximity sensor, so squats can\'t be counted. Use Emergency to turn off the alarm.</string>
     <string name="mission_step_instruction">Walk %1$d steps</string>
     <string name="mission_step_progress">%1$d / %2$d</string>
-    <string name="mission_step_no_sensor">This device has no step counter. Wait for the emergency dismiss or use +10 seconds.</string>
+    <string name="mission_step_no_sensor">This device has no step counter. Use Emergency to turn off the alarm.</string>
     <string name="mission_barcode_instruction">Scan the barcode you registered</string>
     <string name="mission_barcode_mismatch">Not the registered barcode</string>
-    <string name="mission_barcode_none_registered">No barcode was registered for this alarm. Wait for the emergency dismiss.</string>
+    <string name="mission_barcode_none_registered">No barcode was registered for this alarm. Use Emergency to turn off the alarm.</string>
     <string name="mission_photo_reference">Your reference photo</string>
     <string name="mission_photo_capture">Take the photo</string>
     <string name="mission_photo_no_reference">No reference photo was registered. Any photo completes the mission.</string>
     <string name="mission_wordbeat_instruction">Read this out loud</string>
     <string name="mission_wordbeat_listening">Listening…</string>
     <string name="mission_wordbeat_try_again">Say it again — a bit more of it this time</string>
-    <string name="mission_wordbeat_unavailable">Speech recognition is unavailable on this device. Wait for the emergency dismiss or use +10 seconds.</string>
+    <string name="mission_wordbeat_unavailable">Speech recognition is unavailable on this device. Use Emergency to turn off the alarm.</string>
     <string name="mission_wordbeat_round">Round %1$d of %2$d</string>
-    <string name="mission_camera_permission_needed">Camera permission is needed for this mission. Wait for the emergency dismiss, or grant the permission in Settings.</string>
-    <string name="mission_mic_permission_needed">Microphone permission is needed for this mission. Wait for the emergency dismiss, or grant the permission in Settings.</string>
+    <string name="mission_camera_permission_needed">Camera permission is needed for this mission. Grant the permission in Settings, or use Emergency to turn off the alarm.</string>
+    <string name="mission_mic_permission_needed">Microphone permission is needed for this mission. Grant the permission in Settings, or use Emergency to turn off the alarm.</string>
 </resources>

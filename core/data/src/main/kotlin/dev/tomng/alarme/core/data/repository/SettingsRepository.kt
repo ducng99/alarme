@@ -24,6 +24,8 @@ interface SettingsRepository {
 
     suspend fun setMute(enabled: Boolean, limit: Int)
 
+    suspend fun setMuteDuringMission(enabled: Boolean)
+
     suspend fun setAutoDismiss(option: AutoDismissOption)
 
     suspend fun setAudioOutput(output: AudioOutputPreference)
@@ -58,6 +60,10 @@ constructor(
             prefs[MUTE_ENABLED] = enabled
             prefs[MUTE_LIMIT] = limit
         }
+    }
+
+    override suspend fun setMuteDuringMission(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[MUTE_DURING_MISSION] = enabled }
     }
 
     override suspend fun setAutoDismiss(option: AutoDismissOption) {
@@ -106,6 +112,7 @@ constructor(
         AppSettings(
             muteEnabled = this[MUTE_ENABLED] ?: true,
             muteLimit = this[MUTE_LIMIT] ?: 3,
+            muteDuringMission = this[MUTE_DURING_MISSION] ?: true,
             autoDismiss =
                 when (val minutes = this[AUTO_DISMISS_MINUTES]) {
                     null,
@@ -143,6 +150,7 @@ constructor(
 
         val MUTE_ENABLED = booleanPreferencesKey("mute_enabled")
         val MUTE_LIMIT = intPreferencesKey("mute_limit")
+        val MUTE_DURING_MISSION = booleanPreferencesKey("mute_during_mission")
         val AUTO_DISMISS_MINUTES = intPreferencesKey("auto_dismiss_minutes")
         val AUDIO_OUTPUT = stringPreferencesKey("audio_output")
         val PREVENT_POWER_OFF = booleanPreferencesKey("prevent_power_off")

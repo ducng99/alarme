@@ -115,6 +115,10 @@ private class FakeSettings : SettingsRepository {
 
     override suspend fun setMute(enabled: Boolean, limit: Int) = Unit
 
+    override suspend fun setMuteDuringMission(enabled: Boolean) {
+        state.value = state.value.copy(muteDuringMission = enabled)
+    }
+
     override suspend fun setAutoDismiss(option: AutoDismissOption) = Unit
 
     override suspend fun setAudioOutput(

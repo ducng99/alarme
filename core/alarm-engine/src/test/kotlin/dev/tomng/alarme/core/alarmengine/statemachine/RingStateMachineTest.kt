@@ -20,7 +20,15 @@ class RingStateMachineTest : RingReducerTestBase() {
         assertThat(ringing.startedAt).isEqualTo(now)
         assertThat(ringing.mute).isEqualTo(MuteState(count = 0, limit = 3, enabled = true))
         assertThat(ringing.snooze).isEqualTo(SnoozeState(count = 0, limit = 3))
+        assertThat(ringing.muteDuringMission).isTrue()
         assertThat(t.effects).containsExactly(RingEffect.Ring(ringing.alarm))
+    }
+
+    @Test
+    fun `a ring request carries the mute during mission setting into the session`() {
+        val t = reduce(RingState.Idle, request(muteDuringMission = false))
+
+        assertThat((t.state as RingState.Ringing).muteDuringMission).isFalse()
     }
 
     @Test
@@ -176,7 +184,7 @@ class RingStateMachineTest : RingReducerTestBase() {
                     RingStage.Emergency(
                         0,
                         dev.tomng.alarme.core.model.mission.Mission.Shake(),
-                        40.seconds,
+                        taps = 0,
                     ),
             )
 
@@ -214,6 +222,7 @@ class RingStateMachineTest : RingReducerTestBase() {
             .containsExactly(
                 RingEffect.ResumeFromSnooze(state.alarm),
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
+                RingEffect.SilenceRing,
             )
             .inOrder()
     }
@@ -235,6 +244,7 @@ class RingStateMachineTest : RingReducerTestBase() {
                 RingEffect.ResumeFromSnooze(state.alarm),
                 RingEffect.StartAutoDismissTimer(60.seconds),
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
+                RingEffect.SilenceRing,
             )
             .inOrder()
     }
@@ -328,8 +338,8 @@ class RingStateMachineTest : RingReducerTestBase() {
                 RingState.Idle to RingEvent.AutoDismissTimeout(now),
                 RingState.Idle to RingEvent.VolumeMuteRequested,
                 RingState.Idle to RingEvent.OnWakeUpCheckComplete,
-                RingState.Idle to RingEvent.OnEmergencyComplete(now),
-                RingState.Idle to RingEvent.OnAddMissionTimeClick,
+                RingState.Idle to RingEvent.OnEmergencyClick,
+                RingState.Idle to RingEvent.OnEmergencyTap(now),
             )
 
         for ((state, event) in cases) {

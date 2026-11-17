@@ -1,6 +1,7 @@
 package dev.tomng.alarme.feature.missions.ui
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.google.common.truth.Truth.assertThat
@@ -29,12 +30,11 @@ import org.robolectric.annotation.Config
 
 private const val SQUAT_NO_SENSOR_TEXT =
     "This device has no light or proximity sensor, so squats can't be counted. " +
-        "Wait for the emergency dismiss or use +10 seconds."
+        "Use Emergency to turn off the alarm."
 private const val STEP_NO_SENSOR_TEXT =
-    "This device has no step counter. Wait for the emergency dismiss or use +10 seconds."
+    "This device has no step counter. Use Emergency to turn off the alarm."
 private const val SPEECH_UNAVAILABLE_TEXT =
-    "Speech recognition is unavailable on this device. " +
-        "Wait for the emergency dismiss or use +10 seconds."
+    "Speech recognition is unavailable on this device. " + "Use Emergency to turn off the alarm."
 
 private class Callbacks : MissionStageCallbacks {
     var completed = 0
@@ -134,6 +134,23 @@ class SensorMissionScreenTest {
     }
 
     @Test
+    fun `each counted shake resets the mission timer`() {
+        val callbacks = Callbacks()
+        val source = FakeSource()
+        val tracker = ShakeSensorTracker(source)
+        rule.setContent { ShakeMissionScreen(Mission.Shake(count = 5), callbacks, { tracker }) }
+
+        val g = 9.80665f
+        rule.runOnIdle {
+            source.emit(0f, 0f, 3f * g, timestampNanos = 1_000_000_000)
+            source.emit(0f, 0f, 3f * g, timestampNanos = 1_500_000_000)
+        }
+        rule.waitForIdle()
+
+        assertThat(callbacks.resets).isAtLeast(1)
+    }
+
+    @Test
     fun `squat reps to the goal complete the squat mission`() {
         val callbacks = Callbacks()
         val proximity = FakeSource()
@@ -147,6 +164,7 @@ class SensorMissionScreenTest {
         rule.waitForIdle()
 
         assertThat(callbacks.completed).isEqualTo(1)
+        assertThat(callbacks.resets).isAtLeast(1)
     }
 
     @Test
@@ -173,6 +191,22 @@ class SensorMissionScreenTest {
         rule.waitForIdle()
 
         assertThat(callbacks.completed).isEqualTo(1)
+    }
+
+    @Test
+    fun `each new step resets the mission timer`() {
+        val callbacks = Callbacks()
+        val source = FakeSource()
+        val tracker = StepSensorTracker.forTest(source, stepCounterAvailable = true, goal = 10)
+        rule.setContent { StepMissionScreen(Mission.Step(count = 10), callbacks, { tracker }) }
+
+        rule.runOnIdle {
+            source.emit(1_000f, timestampNanos = 1_000_000_000)
+            source.emit(1_002f, timestampNanos = 2_000_000_000)
+        }
+        rule.waitForIdle()
+
+        assertThat(callbacks.resets).isAtLeast(1)
     }
 
     @Test
@@ -299,6 +333,19 @@ class WordBeatMissionScreenTest {
         rule.waitForIdle()
 
         assertThat(callbacks.completed).isEqualTo(0)
+    }
+
+    @Test
+    fun `each listen attempt resets the mission timer`() {
+        val callbacks = Callbacks()
+        val speech = FakeSpeech(available = true)
+        rule.setContent { WordBeatMissionScreen(mission, callbacks, { speech }) }
+
+        rule.onNodeWithTag("mission:wordbeat:listen").performClick()
+        rule.runOnIdle { speech.hear("zzz") }
+        rule.waitForIdle()
+
+        assertThat(callbacks.resets).isEqualTo(2)
     }
 
     @Test

@@ -63,6 +63,7 @@ import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
 import dev.tomng.alarme.feature.settings.permissions.PermissionCenterViewModel
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.reliability.ReliabilityViewModel
+import dev.tomng.alarme.feature.settings.sound.SoundSettingsViewModel
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -338,6 +339,8 @@ private fun SettingsRoute(deps: AppDeps) {
     val nav = deps.nav
     val reliability: ReliabilityViewModel = hiltViewModel()
     val reliabilityState by reliability.state.collectAsStateWithLifecycle()
+    val sound: SoundSettingsViewModel = hiltViewModel()
+    val soundState by sound.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { reliability.refresh() }
@@ -345,6 +348,7 @@ private fun SettingsRoute(deps: AppDeps) {
     SettingsScreen(
         permissions = deps.permissions,
         reliability = reliabilityState,
+        sound = soundState,
         callbacks =
             SettingsCallbacks(
                 onOpenPermission = deps.openPermission,
@@ -376,6 +380,7 @@ private fun SettingsRoute(deps: AppDeps) {
                 onOpenOptimize = { nav.push(Screen.Optimize) },
                 onOpenBackup = { nav.push(Screen.Backup) },
                 onOpenDefaultSound = { nav.push(Screen.Picker(PickerTarget.Default)) },
+                onToggleMuteDuringMission = sound::setMuteDuringMission,
                 onBack = { nav.pop() },
             ),
     )

@@ -50,6 +50,7 @@ class SettingsRepositoryTest {
         val settings = newRepository().settings.first()
         assertEquals(true, settings.muteEnabled)
         assertEquals(3, settings.muteLimit)
+        assertEquals(true, settings.muteDuringMission)
         assertEquals(AutoDismissOption.Off, settings.autoDismiss)
         assertEquals(AudioOutputPreference.ALARM_STREAM, settings.audioOutput)
         assertEquals(false, settings.preventPowerOff)
@@ -69,6 +70,7 @@ class SettingsRepositoryTest {
     fun writesRoundTrip() = runTest {
         val repo = newRepository()
         repo.setMute(enabled = false, limit = 1)
+        repo.setMuteDuringMission(false)
         repo.setAutoDismiss(AutoDismissOption.After(10))
         repo.setAudioOutput(AudioOutputPreference.EXTERNAL)
         repo.setPreventPowerOff(true)
@@ -78,6 +80,7 @@ class SettingsRepositoryTest {
         val settings = repo.settings.first()
         assertEquals(false, settings.muteEnabled)
         assertEquals(1, settings.muteLimit)
+        assertEquals(false, settings.muteDuringMission)
         assertEquals(AutoDismissOption.After(10), settings.autoDismiss)
         assertEquals(AudioOutputPreference.EXTERNAL, settings.audioOutput)
         assertEquals(true, settings.preventPowerOff)

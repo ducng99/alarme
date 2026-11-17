@@ -6,6 +6,8 @@ interface MissionStageCallbacks {
     /** The mission finished — advance the chain or dismiss. */
     fun onComplete()
 
-    /** User activity (a keystroke, frames being analysed): restart the countdown. */
+    /**
+     * User activity (a keystroke, a tap, sensor progress, a listen attempt): restart the countdown.
+     */
     fun onTimerReset()
 }
