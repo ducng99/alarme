@@ -34,6 +34,34 @@ Unit tests are JVM tests:
 
 Instrumented tests only exist in `app/src/androidTest`; they launch the real activity with the real Hilt graph and run Android accessibility checks, so hierarchy violations fail the build.
 
+## Showcase site and demo captures
+
+The GitHub Pages site lives in `docs/` (Astro + Tailwind 4, bun) and deploys via `.github/workflows/pages.yml` on pushes to `main` that touch `docs/**`. Run `bun run build` / `bunx astro dev` inside `docs/`. Screenshots go in `docs/src/assets/screens/` (720px wide PNG, referenced from `docs/src/data/screens.ts`); the hero clip is `docs/public/media/ring-flow.{mp4,webm}` plus `ring-flow-poster.webp`.
+
+Capture helpers are in `scripts/demo/` and target the `alarme37` AVD (API 37, 1080x2400) with the debug app installed. Working files go to `$WORK` (default `/tmp/alarme-demo`).
+
+```bash
+scripts/demo/start-emulator.sh               # headless, -gpu host, adb root; prints the GLES renderer
+scripts/demo/ui.sh                           # list UI nodes with tap centers (about 3 s per call)
+scripts/demo/capture.sh <name>               # screenshot to $WORK/shots/<name>.png
+scripts/demo/status-bar.sh enter|exit        # clean demo-mode status bar
+scripts/demo/record-ring-flow.sh             # full ring -> math -> shake take to $WORK/flow.webm
+scripts/demo/contact-sheet.sh <video> <out.jpg> [fps] [cols]
+scripts/demo/encode-clip.sh <video> 6.4:9.0 9.65:11.5 ...   # keep segments, writes docs/public/media
+scripts/demo/restore.sh                      # undo clock, rotation, demo mode and adb root
+```
+
+- The emulator must render on the host GPU. Without `DISPLAY` (use `:1`, the Xwayland display) it silently falls back to SwiftShader and recordings drop to about 5 fps. `SurfaceFlinger` should report the host GPU, not `SwiftShader`. A windowed emulator fails with a missing Qt xcb plugin, so keep `-no-window`.
+- Record with the emulator recorder (`adb emu screenrecord`, steady 30 fps on the host), not the device `screenrecord`.
+- Run the whole recording in a single command. Gaps between separate tool calls end up in the video.
+- Keep the app in the foreground when the alarm fires; from the launcher the ring only shows as a heads-up notification.
+- Tap targets come from UI-tree bounds (`ui.sh` / `node_center`), because the alarm list re-sorts after toggles. Toggles sit at x=927; swipe-to-dismiss is `input swipe 120 2222 1000 2222 400`.
+- `record-ring-flow.sh` expects demo alarms at 6:30 AM (math x3 + shake) and 7:15 AM. Demo data is edited directly in `/data/data/dev.tomng.alarme.debug/databases/alarme.db` (`AlarmInfo`, `MissionInfo`; the shake count is `MissionInfo.numOfRounds`) with the app force-stopped. Change demo data only, never app code, for recording tweaks.
+- After recording, find idle stretches with `ffmpeg -i <video> -vf "freezedetect=n=-75dB:d=0.4" -map 0:v -f null - 2>&1 | grep freeze_`. The blinking text cursor hides typing pauses from freezedetect, so check those with a cropped contact sheet. Cut with `trim` + `setpts` + `fps=30` per segment and `concat` (what `encode-clip.sh` does); `select` + `setpts=N/30/TB` distorts timing on this VFR source.
+- Bump `mediaVersion` in `docs/src/pages/index.astro` after replacing the clip, otherwise browsers keep showing the cached one.
+- For site screenshots use headless chromium (`chromium --headless=new --disable-gpu --hide-scrollbars --window-size=W,H --virtual-time-budget=4000 --screenshot=...`, add `--force-dark-mode --blink-settings=preferredColorScheme=0` for dark), not the Chrome MCP.
+- Available tools: ffmpeg, vips, python3. Not installed: `bc`, ImageMagick, PIL, cwebp.
+
 ## Architecture
 
 Gradle modules (actual list from `settings.gradle.kts`; `README.md` omits `feature/missions` and `feature/widget`):
