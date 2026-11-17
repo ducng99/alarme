@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.AlarmOn
 import androidx.compose.material.icons.outlined.BatterySaver
+import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material.icons.outlined.WbSunny
@@ -289,6 +290,7 @@ private fun PermissionItem.onboardingIcon(): ImageVector =
         PermissionItem.NOTIFICATIONS -> Icons.Outlined.Notifications
         PermissionItem.EXACT_ALARM -> Icons.Outlined.Alarm
         PermissionItem.FULL_SCREEN_INTENT -> Icons.Outlined.OpenInFull
+        PermissionItem.OVERLAY -> Icons.Outlined.Layers
         else -> Icons.Outlined.BatterySaver
     }
 
@@ -297,6 +299,7 @@ private fun PermissionItem.onboardingTitle(): Int =
         PermissionItem.NOTIFICATIONS -> R.string.onboarding_notifications_title
         PermissionItem.EXACT_ALARM -> R.string.onboarding_exact_alarm_title
         PermissionItem.FULL_SCREEN_INTENT -> R.string.onboarding_full_screen_title
+        PermissionItem.OVERLAY -> R.string.onboarding_overlay_title
         else -> R.string.onboarding_battery_title
     }
 
@@ -305,6 +308,7 @@ private fun PermissionItem.onboardingBody(): Int =
         PermissionItem.NOTIFICATIONS -> R.string.onboarding_notifications_body
         PermissionItem.EXACT_ALARM -> R.string.onboarding_exact_alarm_body
         PermissionItem.FULL_SCREEN_INTENT -> R.string.onboarding_full_screen_body
+        PermissionItem.OVERLAY -> R.string.onboarding_overlay_body
         else -> R.string.onboarding_battery_body
     }
 

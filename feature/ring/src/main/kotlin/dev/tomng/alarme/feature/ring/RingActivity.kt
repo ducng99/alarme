@@ -3,7 +3,6 @@ package dev.tomng.alarme.feature.ring
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
@@ -15,7 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import dagger.hilt.android.AndroidEntryPoint
 import dev.tomng.alarme.core.alarmengine.poweroff.PowerOffBlockerController
-import dev.tomng.alarme.core.alarmengine.ring.RingScreenStarter
+import dev.tomng.alarme.core.alarmengine.ring.RingScreenKeeper
 import dev.tomng.alarme.core.alarmengine.statemachine.RingEvent
 import dev.tomng.alarme.core.alarmengine.statemachine.RingSessionStore
 import dev.tomng.alarme.core.alarmengine.statemachine.RingStage
@@ -23,12 +22,10 @@ import dev.tomng.alarme.core.alarmengine.statemachine.RingState
 import dev.tomng.alarme.core.common.time.AppClock
 import dev.tomng.alarme.core.designsystem.theme.AlarmeTheme
 import dev.tomng.alarme.core.model.mission.Mission
-import dev.tomng.alarme.feature.ring.takeover.DisplayUsabilityProbe
 import dev.tomng.alarme.feature.ring.takeover.InsetsSystemBarsHider
 import dev.tomng.alarme.feature.ring.takeover.KeyVerdict
 import dev.tomng.alarme.feature.ring.takeover.RingKeyPolicy
 import dev.tomng.alarme.feature.ring.takeover.RingTakeoverController
-import dev.tomng.alarme.feature.ring.takeover.ScreenWatchdog
 import dev.tomng.alarme.feature.ring.takeover.SystemDialogCloser
 import dev.tomng.alarme.feature.ring.ui.RingScreen
 import dev.tomng.alarme.feature.ring.ui.RingScreenCallbacks
@@ -55,18 +52,24 @@ class RingActivity : ComponentActivity() {
 
     @Inject lateinit var blocker: PowerOffBlockerController
 
-    @Inject lateinit var ringScreenStarter: RingScreenStarter
+    @Inject lateinit var screenKeeper: RingScreenKeeper
 
     private val focusScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    // The system permission dialog pauses this activity; it must not count as leaving the ring.
+    private var awaitingPermission = false
+
     private val cameraPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            awaitingPermission = false
+        }
 
     private val micPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            awaitingPermission = false
+        }
 
     private lateinit var takeover: RingTakeoverController
-    private lateinit var watchdog: ScreenWatchdog
     private lateinit var dialogCloser: SystemDialogCloser
 
     private val callbacks =
@@ -96,13 +99,6 @@ class RingActivity : ComponentActivity() {
         // Belt and braces: the key policy already swallows back in dispatchKeyEvent.
         onBackPressedDispatcher.addCallback(this) { /* swallowed */ }
 
-        watchdog =
-            ScreenWatchdog(
-                clock = SystemClock::elapsedRealtime,
-                isRinging = { sessionStore.state.value is RingState.Ringing },
-                displaysUsable = DisplayUsabilityProbe(this),
-                relaunch = { ringScreenStarter.start() },
-            )
         dialogCloser = SystemDialogCloser(this)
 
         setContent {
@@ -156,11 +152,15 @@ class RingActivity : ComponentActivity() {
         LaunchedEffect(mission) {
             when {
                 mission == null -> Unit
-                mission.needsCamera() && !hasPermission(Manifest.permission.CAMERA) ->
+                mission.needsCamera() && !hasPermission(Manifest.permission.CAMERA) -> {
+                    awaitingPermission = true
                     cameraPermission.launch(Manifest.permission.CAMERA)
+                }
 
-                mission is Mission.WordBeat && !hasPermission(Manifest.permission.RECORD_AUDIO) ->
+                mission is Mission.WordBeat && !hasPermission(Manifest.permission.RECORD_AUDIO) -> {
+                    awaitingPermission = true
                     micPermission.launch(Manifest.permission.RECORD_AUDIO)
+                }
             }
         }
     }
@@ -173,14 +173,13 @@ class RingActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         takeover.keepImmersive()
-        watchdog.onActivityShown()
-        watchdog.start()
+        screenKeeper.onScreenShown()
         dialogCloser.start()
     }
 
     override fun onPause() {
         dialogCloser.stop()
-        watchdog.onActivityHidden()
+        if (!awaitingPermission) screenKeeper.onScreenHidden()
         super.onPause()
     }
 
@@ -192,18 +191,17 @@ class RingActivity : ComponentActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) return
-        watchdog.onCheatDetected()
         focusScope.launch {
             blocker.onFocusLost(
                 dismissed = sessionStore.state.value !is RingState.Ringing,
-                screenKeeperPaused = !watchdog.isRunning,
+                screenKeeperPaused = !screenKeeper.isRunning,
             )
         }
     }
 
     override fun onDestroy() {
         focusScope.cancel()
-        watchdog.stop()
+        screenKeeper.onScreenHidden()
         dialogCloser.stop()
         takeover.release(this)
         super.onDestroy()

@@ -70,6 +70,11 @@ internal abstract class SchedulingModule {
         impl: dev.tomng.alarme.core.alarmengine.ring.ContextRingScreenStarter,
     ): dev.tomng.alarme.core.alarmengine.ring.RingScreenStarter
 
+    @Binds
+    abstract fun bindDisplayProbe(
+        impl: dev.tomng.alarme.core.alarmengine.ring.AndroidDisplayProbe,
+    ): dev.tomng.alarme.core.alarmengine.ring.DisplayProbe
+
     @Binds @Singleton abstract fun bindPrepareActions(impl: ReminderActions): PrepareActions
 
     @Binds

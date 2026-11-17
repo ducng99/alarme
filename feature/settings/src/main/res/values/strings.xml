@@ -18,7 +18,7 @@
     <string name="settings_permission_full_screen_intent">Full-screen alarms</string>
     <string name="settings_permission_full_screen_intent_body">Lets the ring screen open over the lock screen.</string>
     <string name="settings_permission_overlay">Display over other apps</string>
-    <string name="settings_permission_overlay_body">Needed to bring the ring screen to the front and to block the power menu.</string>
+    <string name="settings_permission_overlay_body">Required. Brings the ring screen back if you leave it before finishing the mission, and blocks the power menu.</string>
     <string name="settings_permission_dnd">Do Not Disturb access</string>
     <string name="settings_permission_dnd_body">Lets the alarm sound even when Do Not Disturb is on.</string>
     <string name="settings_permission_battery">Battery optimization</string>
@@ -118,6 +118,8 @@
     <string name="onboarding_exact_alarm_body">Exact alarms let Alarme ring at 7:00, not somewhere around it.</string>
     <string name="onboarding_full_screen_title">Wake the screen</string>
     <string name="onboarding_full_screen_body">Opens the ring screen over the lock screen so you can dismiss the alarm right away.</string>
+    <string name="onboarding_overlay_title">Finish the mission</string>
+    <string name="onboarding_overlay_body">Brings the ring screen back if you switch away, so the alarm only stops once the mission is done.</string>
     <string name="onboarding_battery_title">Stay awake overnight</string>
     <string name="onboarding_battery_body">Unrestricted battery use stops Android from delaying alarms while the phone sleeps.</string>
 </resources>

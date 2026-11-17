@@ -96,7 +96,11 @@ class PermissionCenterStateTest {
         val state = state(PermissionItem.NOTIFICATIONS, PermissionItem.CAMERA)
 
         assertThat(state.criticalMissing)
-            .containsExactly(PermissionItem.EXACT_ALARM, PermissionItem.FULL_SCREEN_INTENT)
+            .containsExactly(
+                PermissionItem.EXACT_ALARM,
+                PermissionItem.FULL_SCREEN_INTENT,
+                PermissionItem.OVERLAY,
+            )
             .inOrder()
     }
 
@@ -108,6 +112,7 @@ class PermissionCenterStateTest {
             .containsExactly(
                 PermissionItem.NOTIFICATIONS,
                 PermissionItem.FULL_SCREEN_INTENT,
+                PermissionItem.OVERLAY,
                 PermissionItem.BATTERY,
             )
             .inOrder()

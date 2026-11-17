@@ -19,13 +19,18 @@ enum class PermissionItem {
     CAMERA,
     MICROPHONE;
 
-    /** Without these an alarm can ring late, silently, or not at all. */
+    /**
+     * Without these an alarm can ring late, silently, or not at all, or its mission can be skipped:
+     * the overlay grant is what lets the ring screen come back after the user leaves it.
+     */
     val critical: Boolean
-        get() = this == NOTIFICATIONS || this == EXACT_ALARM || this == FULL_SCREEN_INTENT
+        get() = this in CRITICAL
 
     companion object {
         /** What first-run setup walks through, in order. */
-        val onboarding = listOf(NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN_INTENT, BATTERY)
+        val onboarding = listOf(NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN_INTENT, OVERLAY, BATTERY)
+
+        private val CRITICAL = setOf(NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN_INTENT, OVERLAY)
     }
 }
 

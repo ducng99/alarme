@@ -2,6 +2,7 @@ package dev.tomng.alarme
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import dev.tomng.alarme.core.alarmengine.ring.RingScreenKeeper
 import dev.tomng.alarme.core.common.di.ApplicationScope
 import dev.tomng.alarme.core.data.repository.AlarmRepository
 import dev.tomng.alarme.feature.widget.WidgetRefreshKey
@@ -19,8 +20,11 @@ class AlarmeApplication : Application() {
 
     @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
+    @Inject lateinit var ringScreenKeeper: RingScreenKeeper
+
     override fun onCreate() {
         super.onCreate()
+        ringScreenKeeper.watch()
         // The widget shows the next alarm, so it follows the same source the list does.
         scope.launch {
             alarmRepository

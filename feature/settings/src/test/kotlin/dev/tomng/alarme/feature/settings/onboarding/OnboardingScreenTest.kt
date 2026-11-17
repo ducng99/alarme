@@ -45,6 +45,7 @@ class OnboardingScreenTest {
                 OnboardingPage.Welcome,
                 OnboardingPage.Grant(PermissionItem.EXACT_ALARM),
                 OnboardingPage.Grant(PermissionItem.FULL_SCREEN_INTENT),
+                OnboardingPage.Grant(PermissionItem.OVERLAY),
                 OnboardingPage.Ready,
             )
             .inOrder()
@@ -132,6 +133,7 @@ class OnboardingScreenTest {
                         PermissionItem.NOTIFICATIONS,
                         PermissionItem.EXACT_ALARM,
                         PermissionItem.FULL_SCREEN_INTENT,
+                        PermissionItem.OVERLAY,
                     ),
                 welcome = false,
                 onAllow = {},
