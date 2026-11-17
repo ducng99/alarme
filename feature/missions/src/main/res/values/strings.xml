@@ -7,6 +7,9 @@
     <string name="mission_shake_title">Shake mission</string>
     <string name="mission_squat_title">Squat mission</string>
     <string name="mission_step_title">Step mission</string>
+    <string name="barcode_register_instruction">Point the camera at the barcode to register</string>
+    <string name="barcode_register_permission">Camera permission is needed to scan a barcode</string>
+    <string name="barcode_register_cancel">Cancel</string>
     <string name="mission_barcode_title">Barcode mission</string>
     <string name="mission_photo_title">Photo mission</string>
     <string name="mission_image_title">Find the object</string>

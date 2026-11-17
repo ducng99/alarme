@@ -119,7 +119,8 @@
     <string name="config_volume">Volume</string>
     <string name="config_objects">Objects to find</string>
     <string name="config_barcode">Barcode value</string>
-    <string name="config_barcode_hint">Type the number under the barcode</string>
+    <string name="config_barcode_hint">Scan the barcode with the camera, or type the number under it</string>
+    <string name="config_barcode_scan">Scan with camera</string>
     <string name="config_photo">Photo path</string>
     <string name="config_sentences">Sentences</string>
     <string name="config_custom_sentences">Your sentences (one per line)</string>

@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:alarm-engine"))
     implementation(project(":feature:ringtones"))
+    implementation(project(":feature:missions"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

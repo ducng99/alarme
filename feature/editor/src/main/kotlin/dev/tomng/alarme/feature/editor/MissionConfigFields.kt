@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -27,6 +28,7 @@ import dev.tomng.alarme.core.model.mission.TypingSentence
 import dev.tomng.alarme.core.model.mission.TypingSentenceType
 import dev.tomng.alarme.core.model.mission.WordBeatLanguage
 import dev.tomng.alarme.core.model.mission.WordBeatVolumeLevel
+import dev.tomng.alarme.feature.missions.ui.BarcodeRegistrationDialog
 import kotlin.math.roundToInt
 
 @Composable
@@ -65,6 +67,22 @@ internal fun MissionFields(mission: Mission, onChange: (Mission) -> Unit) {
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("mission_config_barcode"),
                 )
+                var scanning by remember { mutableStateOf(false) }
+                Button(
+                    onClick = { scanning = true },
+                    modifier = Modifier.testTag("mission_config_barcode_scan"),
+                ) {
+                    Text(stringResource(R.string.config_barcode_scan))
+                }
+                if (scanning) {
+                    BarcodeRegistrationDialog(
+                        onScanned = {
+                            scanning = false
+                            onChange(mission.copy(barcodeValue = it))
+                        },
+                        onDismiss = { scanning = false },
+                    )
+                }
             }
         is Mission.Photo ->
             ConfigSection(
