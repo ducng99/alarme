@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: light-dark(#475b9c, #b8c4ff);
+  --color-on-primary: light-dark(#ffffff, #13275f);
+  --color-primary-container: light-dark(#dbe1ff, #2f4383);
+  --color-on-primary-container: light-dark(#00164f, #dbe1ff);
+  --color-secondary-container: light-dark(#dfe1f9, #424559);
+  --color-on-secondary-container: light-dark(#171b2c, #dfe1f9);
+  --color-tertiary: light-dark(#76546e, #e5bad9);
+  --color-tertiary-container: light-dark(#ffd7f2, #5c3c55);
+  --color-on-tertiary-container: light-dark(#2c1228, #ffd7f2);
+  --color-surface: light-dark(#fbf8ff, #131318);
+  --color-on-surface: light-dark(#1b1b21, #e4e1e9);
+  --color-on-surface-variant: light-dark(#46464f, #c7c5d0);
+  --color-surface-container-low: light-dark(#f5f2fa, #1b1b21);
+  --color-surface-container: light-dark(#efedf5, #1f1f25);
+  --color-surface-container-high: light-dark(#e9e7ef, #2a292f);
+  --color-outline-variant: light-dark(#c7c5d0, #46464f);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-surface text-on-surface font-sans antialiased;
+}

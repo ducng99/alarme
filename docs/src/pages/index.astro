@@ -1,0 +1,219 @@
+---
+import { Icon } from 'astro-icon/components';
+import Layout from '../layouts/Layout.astro';
+import PhoneFrame from '../components/PhoneFrame.astro';
+import Screen from '../components/Screen.astro';
+import FeatureCard from '../components/FeatureCard.astro';
+import { antiCheat, features, missions, privacy, releasesUrl, repoUrl } from '../data/content';
+import { gallery, screens } from '../data/screens';
+
+const base = import.meta.env.BASE_URL;
+const mediaVersion = '3';
+
+const steps = [
+  { title: 'Download the APK', body: 'Grab the latest signed release from GitHub.' },
+  { title: 'Install it', body: 'Open the file on your phone and allow installing from your browser or file manager.' },
+  { title: 'Allow permissions', body: 'A short setup walks you through what Android needs for alarms to ring on time.' },
+];
+---
+
+<Layout title="Alarme - the alarm clock that actually gets you up" description="A free, private Android alarm clock with wake-up missions, a wake-up check and anti-cheat protection. No ads, no analytics, no network access.">
+  <header class="sticky top-0 z-50 border-b border-outline-variant/50 bg-surface/80 backdrop-blur-lg">
+    <nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+      <a href="#top" class="flex items-center gap-2 font-display text-xl font-semibold">
+        <span class="flex size-8 items-center justify-center rounded-xl bg-primary-container text-on-primary-container">
+          <Icon name="alarme" class="size-5" />
+        </span>
+        Alarme
+      </a>
+      <div class="hidden items-center gap-8 text-sm font-medium text-on-surface-variant md:flex">
+        <a href="#missions" class="hover:text-on-surface">Missions</a>
+        <a href="#features" class="hover:text-on-surface">Features</a>
+        <a href="#screens" class="hover:text-on-surface">Screens</a>
+        <a href="#privacy" class="hover:text-on-surface">Privacy</a>
+      </div>
+      <a href={repoUrl} class="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium hover:bg-surface-container">
+        <Icon name="material-symbols:code-rounded" class="size-5" />
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="relative overflow-hidden">
+      <div class="absolute -top-40 -right-40 -z-10 size-[36rem] rounded-full bg-tertiary-container/60 blur-3xl"></div>
+      <div class="absolute top-40 -left-40 -z-10 size-[28rem] rounded-full bg-primary-container/70 blur-3xl"></div>
+      <div class="mx-auto grid max-w-6xl items-center gap-16 px-6 pt-16 pb-24 lg:grid-cols-[1.3fr_1fr] lg:pt-24">
+        <div>
+          <span class="inline-flex items-center gap-2 rounded-full bg-secondary-container px-4 py-1.5 text-sm font-medium text-on-secondary-container">
+            <Icon name="material-symbols:android" class="size-4" />
+            Free & open source for Android
+          </span>
+          <h1 class="mt-6 font-display text-5xl leading-[1.05] font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+            The alarm clock that <span class="bg-gradient-to-r from-primary to-tertiary bg-clip-text text-transparent">actually gets you up.</span>
+          </h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-on-surface-variant">
+            Alarme makes you prove you're awake. Solve math, scan the barcode in your bathroom or walk a few steps before it goes quiet. Built to ring reliably, with no ads, no tracking and no internet access.
+          </p>
+          <div class="mt-10 flex flex-wrap gap-3">
+            <a href={releasesUrl} class="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 font-semibold text-on-primary shadow-lg shadow-primary/30 transition hover:shadow-xl hover:shadow-primary/40">
+              <Icon name="material-symbols:download-rounded" class="size-5" />
+              Download APK
+            </a>
+            <a href="#missions" class="inline-flex items-center gap-2 rounded-full border border-outline-variant px-7 py-4 font-semibold transition hover:bg-surface-container">
+              See the missions
+              <Icon name="material-symbols:arrow-downward-rounded" class="size-5" />
+            </a>
+          </div>
+          <p class="mt-6 text-sm text-on-surface-variant">Requires Android 15 or newer.</p>
+        </div>
+        <figure class="relative mx-auto w-64 sm:w-72">
+          <div class="absolute inset-0 -z-10 m-auto size-64 rounded-full bg-primary/30 blur-3xl"></div>
+          <PhoneFrame>
+            <video autoplay muted loop playsinline preload="metadata" width="540" height="1200" poster={`${base}/media/ring-flow-poster.webp?v=${mediaVersion}`} aria-label="Screen recording: the 6:30 alarm rings, a math mission is solved, then a shake mission, and the alarm is dismissed">
+              <source src={`${base}/media/ring-flow.webm?v=${mediaVersion}`} type="video/webm" />
+              <source src={`${base}/media/ring-flow.mp4?v=${mediaVersion}`} type="video/mp4" />
+            </video>
+          </PhoneFrame>
+          <figcaption class="mt-4 text-center text-sm text-on-surface-variant">Real recording: math, then shake, then you're free.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="missions" class="scroll-mt-20 bg-surface-container-low py-24">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="grid items-center gap-12 lg:grid-cols-[1.4fr_1fr]">
+          <div>
+            <p class="font-semibold text-primary">Wake-up missions</p>
+            <h2 class="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">No more snoozing on autopilot.</h2>
+            <p class="mt-4 text-lg text-on-surface-variant">Chain up to five missions per alarm. The alarm keeps ringing until every one is done.</p>
+            <div class="mt-10 grid gap-3 sm:grid-cols-2 sm:gap-4">
+              {missions.map((mission) => (
+                <article class="flex gap-3 rounded-3xl bg-surface p-4">
+                  <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
+                    <Icon name={mission.icon} class="size-5" />
+                  </div>
+                  <div>
+                    <h3 class="font-display font-semibold">{mission.title}</h3>
+                    <p class="mt-0.5 text-sm leading-snug text-on-surface-variant">{mission.body}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+          <div class="relative mx-auto flex w-full max-w-md justify-center lg:sticky lg:top-28 lg:self-start">
+            <Screen src={screens.missionPicker} alt="The Add a mission sheet listing all ten mission types" class="w-56 sm:w-64" />
+            <Screen src={screens.missionMath} alt="The math mission asking 42 + 18" class="absolute top-24 -right-2 hidden w-44 rotate-6 sm:block lg:-right-10" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="scroll-mt-20 py-24">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="grid items-center gap-12 lg:grid-cols-[1fr_1.4fr]">
+          <div class="relative order-last mx-auto flex w-full max-w-md justify-center lg:sticky lg:top-28 lg:order-first lg:self-start">
+            <Screen src={screens.editorSound} alt="Alarm editor showing crescendo, backup sound and announce the time options" class="w-56 sm:w-64" />
+            <Screen src={screens.editorMissions} alt="Alarm editor with a math and a shake mission configured" class="absolute top-24 -left-2 hidden w-44 -rotate-6 sm:block lg:-left-10" />
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Everything an alarm should do</p>
+            <h2 class="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Reliable first. Thoughtful everywhere.</h2>
+            <div class="mt-10 grid gap-4 sm:grid-cols-2">
+              {features.map((item) => <FeatureCard item={item} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-8">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#2f4383] to-[#5c3c55] p-8 text-white sm:p-14">
+          <div class="grid items-center gap-12 lg:grid-cols-[1.5fr_1fr]">
+            <div>
+              <p class="font-semibold text-[#ffd7f2]">Cheat prevention</p>
+              <h2 class="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Your sleepy self won't outsmart it.</h2>
+              <p class="mt-4 text-lg text-white/75">Turning off the phone, leaving the ring screen or uninstalling the app at 6 AM are all covered.</p>
+              <div class="mt-10 grid gap-4 sm:grid-cols-2">
+                {antiCheat.map((item) => (
+                  <article class="rounded-3xl bg-white/10 p-6 backdrop-blur">
+                    <Icon name={item.icon} class="size-7 text-[#ffd7f2]" />
+                    <h3 class="mt-4 font-display text-lg font-semibold">{item.title}</h3>
+                    <p class="mt-1 text-sm leading-relaxed text-white/75">{item.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+            <div class="relative mx-auto flex w-full max-w-sm justify-center">
+              <Screen src={screens.settings} alt="Settings with prevent phone turn-off and prevent app uninstall switches" class="w-56 border-white/20 sm:w-64" />
+              <Screen src={screens.diagnostics} alt="Diagnostics screen listing battery optimisation and other device health checks" class="absolute top-28 -right-2 hidden w-44 rotate-6 border-white/20 sm:block lg:-right-8" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screens" class="scroll-mt-20 py-24">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="max-w-2xl">
+          <p class="font-semibold text-primary">Take a look</p>
+          <h2 class="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Clean Material You design.</h2>
+          <p class="mt-4 text-lg text-on-surface-variant">Follows your wallpaper colours and system theme, light or dark.</p>
+        </div>
+      </div>
+      <div class="mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-8 [scrollbar-width:thin] lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))]">
+        {gallery.map((shot) => (
+          <figure class="w-56 shrink-0 snap-center sm:w-64">
+            <Screen src={shot.src} alt={shot.caption} class="shadow-xl" />
+            <figcaption class="mt-4 text-center text-sm font-medium text-on-surface-variant">{shot.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+
+    <section id="privacy" class="scroll-mt-20 bg-surface-container-low py-24">
+      <div class="mx-auto grid max-w-6xl items-start gap-12 px-6 lg:grid-cols-[1fr_1.4fr]">
+        <div>
+          <p class="font-semibold text-tertiary">Private by design</p>
+          <h2 class="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Your mornings are nobody's business.</h2>
+          <p class="mt-4 text-lg text-on-surface-variant">Alarme doesn't ask for the internet permission, so nothing ever leaves your phone. Backups are plain files that you control.</p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          {privacy.map((item) => <FeatureCard item={item} tone="tertiary" />)}
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="scroll-mt-20 py-24">
+      <div class="mx-auto max-w-6xl px-6 text-center">
+        <h2 class="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Get Alarme</h2>
+        <p class="mx-auto mt-4 max-w-xl text-lg text-on-surface-variant">Alarme isn't on any app store. Install the signed APK straight from GitHub releases.</p>
+        <ol class="mx-auto mt-12 grid max-w-4xl gap-4 text-left sm:grid-cols-3">
+          {steps.map((step, index) => (
+            <li class="rounded-3xl bg-surface-container-low p-6">
+              <span class="flex size-10 items-center justify-center rounded-full bg-primary font-display font-semibold text-on-primary">{index + 1}</span>
+              <h3 class="mt-4 font-display text-lg font-semibold">{step.title}</h3>
+              <p class="mt-1 text-sm leading-relaxed text-on-surface-variant">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+        <a href={releasesUrl} class="mt-12 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-semibold text-on-primary shadow-lg shadow-primary/30 transition hover:shadow-xl hover:shadow-primary/40">
+          <Icon name="material-symbols:download-rounded" class="size-5" />
+          Download the latest release
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-outline-variant/50 py-10">
+    <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 text-sm text-on-surface-variant sm:flex-row">
+      <p>Alarme · No ads, no analytics, no network.</p>
+      <div class="flex gap-6">
+        <a href={repoUrl} class="hover:text-on-surface">Source code</a>
+        <a href={`${repoUrl}/issues`} class="hover:text-on-surface">Report an issue</a>
+        <a href={`${repoUrl}/blob/main/LICENSE`} class="hover:text-on-surface">License</a>
+      </div>
+    </div>
+  </footer>
+</Layout>
