@@ -6,7 +6,6 @@ import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -30,7 +29,6 @@ internal fun missionTypeLabel(mission: Mission): String =
             is Mission.Typing -> MissionType.TYPING
             is Mission.Barcode -> MissionType.BARCODE
             is Mission.Photo -> MissionType.PHOTO
-            is Mission.ImageRecognition -> MissionType.IMAGE_RECOGNITION
             is Mission.WordBeat -> MissionType.WORD_BEAT
         },
     )
@@ -47,7 +45,6 @@ internal fun missionTypeLabel(type: MissionType): String =
             MissionType.TYPING -> R.string.mission_typing
             MissionType.BARCODE -> R.string.mission_barcode
             MissionType.PHOTO -> R.string.mission_photo
-            MissionType.IMAGE_RECOGNITION -> R.string.mission_image_recognition
             MissionType.WORD_BEAT -> R.string.mission_word_beat
         },
     )
@@ -63,7 +60,6 @@ internal fun missionIcon(mission: Mission): ImageVector =
             is Mission.Typing -> MissionType.TYPING
             is Mission.Barcode -> MissionType.BARCODE
             is Mission.Photo -> MissionType.PHOTO
-            is Mission.ImageRecognition -> MissionType.IMAGE_RECOGNITION
             is Mission.WordBeat -> MissionType.WORD_BEAT
         },
     )
@@ -78,7 +74,6 @@ internal fun missionIcon(type: MissionType): ImageVector =
         MissionType.TYPING -> Icons.Outlined.Keyboard
         MissionType.BARCODE -> Icons.Outlined.QrCodeScanner
         MissionType.PHOTO -> Icons.Outlined.CameraAlt
-        MissionType.IMAGE_RECOGNITION -> Icons.Outlined.Image
         MissionType.WORD_BEAT -> Icons.Outlined.RecordVoiceOver
     }
 
@@ -93,7 +88,6 @@ internal fun Mission.isComplete(): Boolean =
         is Mission.Typing -> typingSentences.isNotEmpty()
         is Mission.Barcode -> barcodeValue.isNotBlank()
         is Mission.Photo -> photoPath.isNotBlank()
-        is Mission.ImageRecognition -> objects.isNotEmpty()
         is Mission.WordBeat -> selectedRoundSetIds.isNotEmpty()
     }
 
@@ -128,12 +122,6 @@ internal fun missionSummary(mission: Mission): String =
             )
         is Mission.Barcode -> stringResource(R.string.summary_barcode)
         is Mission.Photo -> stringResource(R.string.summary_photo)
-        is Mission.ImageRecognition ->
-            pluralStringResource(
-                R.plurals.summary_objects,
-                mission.objects.size,
-                mission.objects.size,
-            )
         is Mission.WordBeat ->
             pluralStringResource(
                 R.plurals.summary_word_beat,

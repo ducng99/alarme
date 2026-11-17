@@ -57,15 +57,6 @@ internal object MissionChainReducer {
                 )
             }
 
-            // A match is being confirmed: pause the countdown.
-            RingEvent.OnMissionTimerStop -> {
-                if (stage.timer == null) return RingTransition(state)
-                RingTransition(
-                    state.copy(stage = stage.copy(timer = null)),
-                    listOf(RingEffect.StopMissionTimer),
-                )
-            }
-
             RingEvent.OnAddMissionTimeClick -> {
                 val timer = stage.timer ?: return RingTransition(state)
                 val extension = RingStateMachine.ADD_MISSION_TIME

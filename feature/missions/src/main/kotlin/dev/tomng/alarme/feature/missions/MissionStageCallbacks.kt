@@ -8,7 +8,4 @@ interface MissionStageCallbacks {
 
     /** User activity (a keystroke, frames being analysed): restart the countdown. */
     fun onTimerReset()
-
-    /** A match is being confirmed: pause the countdown. */
-    fun onTimerStop()
 }

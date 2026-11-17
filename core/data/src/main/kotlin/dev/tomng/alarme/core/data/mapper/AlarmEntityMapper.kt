@@ -11,7 +11,6 @@ import dev.tomng.alarme.core.model.alarm.DaysOfWeek
 import dev.tomng.alarme.core.model.alarm.MemoOption
 import dev.tomng.alarme.core.model.alarm.SnoozeOption
 import dev.tomng.alarme.core.model.alarm.WakeUpCheck
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.MissionType
 import dev.tomng.alarme.core.model.mission.TypingSentence
@@ -170,12 +169,6 @@ object AlarmEntityMapper {
                 is Mission.Barcode ->
                     row = row.copy(barcodeId = mission.barcodeId, barcodeQR = mission.barcodeValue)
                 is Mission.Photo -> row = row.copy(photoPath = mission.photoPath)
-                is Mission.ImageRecognition ->
-                    row =
-                        row.copy(
-                            imageRecognitionObjectIds =
-                                mission.objects.joinToString(",") { it.name },
-                        )
                 is Mission.WordBeat -> {
                     roundSetIds[index] = mission.selectedRoundSetIds
                     volumes[index] = mission.volumeLevel.name
@@ -275,15 +268,6 @@ object AlarmEntityMapper {
                 )
             MissionType.PHOTO ->
                 Mission.Photo(timeLimitSeconds = row.timeLimitSeconds, photoPath = row.photoPath)
-            MissionType.IMAGE_RECOGNITION ->
-                Mission.ImageRecognition(
-                    timeLimitSeconds = row.timeLimitSeconds,
-                    objects =
-                        row.imageRecognitionObjectIds
-                            .split(",")
-                            .filter { it.isNotBlank() }
-                            .mapNotNull { name -> enumOrNull<ImageRecognitionObject>(name) },
-                )
             MissionType.WORD_BEAT ->
                 Mission.WordBeat(
                     timeLimitSeconds = row.timeLimitSeconds,
@@ -310,7 +294,6 @@ object AlarmEntityMapper {
             is Mission.Typing -> MissionType.TYPING
             is Mission.Barcode -> MissionType.BARCODE
             is Mission.Photo -> MissionType.PHOTO
-            is Mission.ImageRecognition -> MissionType.IMAGE_RECOGNITION
             is Mission.WordBeat -> MissionType.WORD_BEAT
         }
 }

@@ -13,19 +13,7 @@ data class BarcodeMissionUi(
     companion object {
         fun default(context: Context): BarcodeMissionUi =
             MissionCameraController(context).let { controller ->
-                BarcodeMissionUi(MlKitBarcodeScanner(controller), controller)
-            }
-    }
-}
-
-data class LabelMissionUi(
-    val scanner: LabelScanner,
-    val controller: MissionCameraController?,
-) {
-    companion object {
-        fun default(context: Context): LabelMissionUi =
-            MissionCameraController(context).let { controller ->
-                LabelMissionUi(MlKitLabelScanner(controller), controller)
+                BarcodeMissionUi(ZxingBarcodeScanner(controller), controller)
             }
     }
 }

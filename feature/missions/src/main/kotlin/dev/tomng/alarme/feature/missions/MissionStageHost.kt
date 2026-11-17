@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.feature.missions.ui.BarcodeMissionScreen
-import dev.tomng.alarme.feature.missions.ui.ImageRecognitionMissionScreen
 import dev.tomng.alarme.feature.missions.ui.MathMissionScreen
 import dev.tomng.alarme.feature.missions.ui.MemoryMissionScreen
 import dev.tomng.alarme.feature.missions.ui.PhotoMissionScreen
@@ -37,7 +36,6 @@ fun MissionStageHost(
             is Mission.Step -> StepMissionScreen(mission, callbacks)
             is Mission.Barcode -> BarcodeMissionScreen(mission, callbacks)
             is Mission.Photo -> PhotoMissionScreen(mission, callbacks)
-            is Mission.ImageRecognition -> ImageRecognitionMissionScreen(mission, callbacks)
             is Mission.WordBeat -> WordBeatMissionScreen(mission, callbacks)
         }
     }

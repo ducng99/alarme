@@ -48,13 +48,12 @@ release APK, and publishes it to a GitHub release. The tag supplies `versionName
 
 A hand-written baseline profile (`app/src/main/baseline-prof.txt`) covers startup and the ring
 path; AGP compiles it into `assets/dexopt/baseline.prof` and `androidx.profileinstaller` installs it
-on first run. The release APK is ~74 MB, dominated by ML Kit (barcode + image labelling) and CameraX.
+on first run. Barcode scanning uses ZXing; there are no Google Play Services or ML Kit dependencies.
 
 ## Distribution
 
 There is no store presence and no signing service: sideload the release APK
-(`adb install -r app-release.apk`, or share the file). Everything works offline; the only network
-use is ML Kit's bundled models. Users who move to a new device export a backup file and restore it
+(`adb install -r app-release.apk`, or share the file). Everything works offline. Users who move to a new device export a backup file and restore it
 there (`Settings → Backup & restore`), which also carries imported/recorded ringtones.
 
 ## Modules

@@ -134,18 +134,6 @@ class MissionValidatorTest {
     }
 
     @Test
-    fun `image recognition needs at least one target object`() {
-        val cat = ImageRecognitionObject.CAT
-        assertTrue(
-            MissionValidator.validate(listOf(Mission.ImageRecognition(60, listOf(cat)))).isEmpty(),
-        )
-        assertTrue(
-            MissionValidator.validate(listOf(Mission.ImageRecognition(60, emptyList())))
-                .contains(MissionError.InvalidPayload),
-        )
-    }
-
-    @Test
     fun `word beat needs at least one round set`() {
         val mission =
             Mission.WordBeat(

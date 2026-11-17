@@ -97,7 +97,6 @@ class RingScreenTest {
             missionStartAction = { recorded += "missionStart" },
             missionCompleteAction = { recorded += "missionComplete" },
             missionTimerResetAction = { recorded += "missionTimerReset" },
-            missionTimerStopAction = { recorded += "missionTimerStop" },
             addTimeAction = { recorded += "addTime" },
             emergencyCompleteAction = { recorded += "emergencyComplete" },
             wakeUpCheckCompleteAction = { recorded += "wakeUpCheckComplete" },
@@ -266,7 +265,7 @@ class RingScreenTest {
         compose.waitForIdle()
 
         assertThat(cb.recorded)
-            .containsExactly("addTime", "missionTimerReset", "missionTimerStop", "missionComplete")
+            .containsExactly("addTime", "missionTimerReset", "missionComplete")
             .inOrder()
     }
 
@@ -397,7 +396,6 @@ private class RecordingCallbacks(
     private val missionStartAction: () -> Unit,
     private val missionCompleteAction: () -> Unit,
     private val missionTimerResetAction: () -> Unit,
-    private val missionTimerStopAction: () -> Unit,
     private val addTimeAction: () -> Unit,
     private val emergencyCompleteAction: () -> Unit,
     private val wakeUpCheckCompleteAction: () -> Unit,
@@ -411,8 +409,6 @@ private class RecordingCallbacks(
     override fun onMissionComplete() = missionCompleteAction()
 
     override fun onMissionTimerReset() = missionTimerResetAction()
-
-    override fun onMissionTimerStop() = missionTimerStopAction()
 
     override fun onAddMissionTime() = addTimeAction()
 

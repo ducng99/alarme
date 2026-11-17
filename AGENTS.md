@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Alarme is an Android alarm clock built with Kotlin, Compose Material 3, Hilt, Room, DataStore, Media3, CameraX, ML Kit, and Glance. All features are free; the app has no network permission and no analytics.
+Alarme is an Android alarm clock built with Kotlin, Compose Material 3, Hilt, Room, DataStore, Media3, CameraX, ZXing, and Glance. All features are free; the app has no network permission and no analytics.
 
 ## Environment
 

@@ -81,8 +81,6 @@ class RingActivity : ComponentActivity() {
 
             override fun onMissionTimerReset() = submit(RingEvent.OnMissionTimerReset)
 
-            override fun onMissionTimerStop() = submit(RingEvent.OnMissionTimerStop)
-
             override fun onAddMissionTime() = submit(RingEvent.OnAddMissionTimeClick)
 
             override fun onWakeUpCheckComplete() = submit(RingEvent.OnWakeUpCheckComplete)
@@ -167,8 +165,7 @@ class RingActivity : ComponentActivity() {
         }
     }
 
-    private fun Mission.needsCamera(): Boolean =
-        this is Mission.Barcode || this is Mission.Photo || this is Mission.ImageRecognition
+    private fun Mission.needsCamera(): Boolean = this is Mission.Barcode || this is Mission.Photo
 
     private fun hasPermission(permission: String): Boolean =
         checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED

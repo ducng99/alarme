@@ -220,19 +220,6 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects).containsExactly(RingEffect.StartMissionTimer(mission, 30.seconds))
     }
 
-    @Test
-    fun `a confirmed match pauses the mission timer`() {
-        val mission = Mission.Math(timeLimitSeconds = 30)
-        val state =
-            ringing(alarm = alarm(missions = listOf(mission)), stage = missionStage(0, mission))
-
-        val t = reduce(state, RingEvent.OnMissionTimerStop)
-
-        assertThat((t.state as RingState.Ringing).stage)
-            .isEqualTo(RingStage.Mission(0, mission, null))
-        assertThat(t.effects).containsExactly(RingEffect.StopMissionTimer)
-    }
-
     // ---------------------------------------------------------------- emergency
 
     @Test

@@ -338,7 +338,6 @@ private fun missionDescription(mission: Mission): Int =
         is Mission.Typing -> R.string.config_desc_typing
         is Mission.Barcode -> R.string.config_desc_barcode
         is Mission.Photo -> R.string.config_desc_photo
-        is Mission.ImageRecognition -> R.string.config_desc_image
         is Mission.WordBeat -> R.string.config_desc_word_beat
     }
 
@@ -352,7 +351,6 @@ private fun Mission.withTimeLimit(seconds: Int): Mission =
         is Mission.Typing -> copy(timeLimitSeconds = seconds)
         is Mission.Barcode -> copy(timeLimitSeconds = seconds)
         is Mission.Photo -> copy(timeLimitSeconds = seconds)
-        is Mission.ImageRecognition -> copy(timeLimitSeconds = seconds)
         is Mission.WordBeat -> copy(timeLimitSeconds = seconds)
     }
 

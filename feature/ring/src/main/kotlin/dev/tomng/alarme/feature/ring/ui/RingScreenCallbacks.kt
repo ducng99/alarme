@@ -13,9 +13,6 @@ interface RingScreenCallbacks {
     /** User activity inside the mission (a keystroke, frames analysed): restart the countdown. */
     fun onMissionTimerReset()
 
-    /** A match is being confirmed: pause the countdown. */
-    fun onMissionTimerStop()
-
     fun onAddMissionTime()
 
     fun onEmergencyComplete()

@@ -25,7 +25,6 @@ import org.robolectric.annotation.Config
 private class RecordingCallbacks : MissionStageCallbacks {
     var completed = 0
     var timerResets = 0
-    var timerStops = 0
 
     override fun onComplete() {
         completed++
@@ -33,10 +32,6 @@ private class RecordingCallbacks : MissionStageCallbacks {
 
     override fun onTimerReset() {
         timerResets++
-    }
-
-    override fun onTimerStop() {
-        timerStops++
     }
 }
 

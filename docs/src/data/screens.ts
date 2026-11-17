@@ -27,7 +27,7 @@ export const screens = {
 export const gallery = [
   { src: list, caption: 'Your alarms at a glance' },
   { src: editor, caption: 'Set the time and repeat days' },
-  { src: missionPicker, caption: 'Ten wake-up missions' },
+  { src: missionPicker, caption: 'Nine wake-up missions' },
   { src: ring, caption: 'The ring screen' },
   { src: missionMath, caption: 'Solve to dismiss' },
   { src: quickAlarm, caption: 'Quick alarms for naps' },

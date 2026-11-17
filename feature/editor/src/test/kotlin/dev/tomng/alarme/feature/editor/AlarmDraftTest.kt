@@ -144,10 +144,7 @@ class AlarmDraftTest {
         MissionType.entries.forEach { type ->
             val mission = MissionDefaults.of(type)
             val draft = AlarmDraft(missions = listOf(mission))
-            val needsInput =
-                mission is Mission.Barcode ||
-                    mission is Mission.Photo ||
-                    mission is Mission.ImageRecognition
+            val needsInput = mission is Mission.Barcode || mission is Mission.Photo
 
             assertThat(draft.errors().isEmpty()).isEqualTo(!needsInput)
         }

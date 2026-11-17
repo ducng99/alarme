@@ -41,7 +41,6 @@ internal object RingingReducer {
 
             is RingEvent.OnMissionTimerTick,
             RingEvent.OnMissionTimerReset,
-            RingEvent.OnMissionTimerStop,
             RingEvent.OnAddMissionTimeClick -> MissionChainReducer.onTimerEvent(state, event)
 
             is RingEvent.OnEmergencyComplete -> EmergencyReducer.complete(state, event.now)

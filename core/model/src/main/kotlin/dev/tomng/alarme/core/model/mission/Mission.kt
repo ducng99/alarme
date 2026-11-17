@@ -122,15 +122,6 @@ sealed class Mission {
         override fun duplicatedWithDefaults(): Photo = Photo()
     }
 
-    /** On-device ML Kit labelling must recognise one of [objects] with confidence >= 0.7. */
-    @Serializable
-    data class ImageRecognition(
-        override val timeLimitSeconds: Int = 0,
-        val objects: List<ImageRecognitionObject> = emptyList(),
-    ) : Mission() {
-        override fun duplicatedWithDefaults(): ImageRecognition = ImageRecognition()
-    }
-
     /** Read the shown words aloud; on-device speech recognition checks >= 25 % token overlap. */
     @Serializable
     data class WordBeat(
@@ -170,85 +161,6 @@ enum class TypingSentenceType {
     @SerialName("study") STUDY,
     @SerialName("difficult") DIFFICULT,
     @SerialName("custom") CUSTOM,
-}
-
-/**
- * Curated image targets. [mlKitLabel] is the on-device labeller's label string (matched
- * case-insensitively — label indices shift between model versions, names do not).
- */
-@Serializable
-enum class ImageRecognitionObject(val mlKitLabel: String) {
-    SINK("sink"),
-    BEARD("beard"),
-    CUSHION("cushion"),
-    SUNGLASSES("sunglasses"),
-    BICYCLE("bicycle"),
-    SMILE("smile"),
-    BUS("bus"),
-    SKY("sky"),
-    TOE("toe"),
-    TOILET("toilet"),
-    STAIRS("stairs"),
-    CHAIR("chair"),
-    POSTER("poster"),
-    CABINETRY("cabinetry"),
-    CLOCK("clock"),
-    DESK("desk"),
-    CAT("cat"),
-    JUICE("juice"),
-    STUFFED_TOY("stuffed toy"),
-    TILE("tile"),
-    NAIL("nail"),
-    COLA("cola"),
-    CUTLERY("cutlery"),
-    DANCE("dance"),
-    MOUTH("mouth"),
-    FIRE("fire"),
-    BEDROOM("bedroom"),
-    COUCH("couch"),
-    HAT("hat"),
-    COFFEE("coffee"),
-    FOOD("food"),
-    STANDING("standing"),
-    FOOT("foot"),
-    PILLOW("pillow"),
-    EAR("ear"),
-    EYELASH("eyelash"),
-    HAIR("hair"),
-    CURTAIN("curtain"),
-    HEART("heart"),
-    MUSCLE("muscle"),
-    MUSICAL_INSTRUMENT("musical instrument"),
-    MOBILE_PHONE("mobile phone"),
-    PIANO("piano"),
-    PLANT("plant"),
-    PAPER("paper"),
-    PET("pet"),
-    LIPSTICK("lipstick"),
-    SHOE("shoe"),
-    TATTOO("tattoo"),
-    CUP("cup"),
-    HANDBAG("handbag"),
-    BREAD("bread"),
-    WALL("wall"),
-    COUNTERTOP("countertop"),
-    DOG("dog"),
-    FLOWER("flower"),
-    KITCHEN("kitchen"),
-    VEGETABLE("vegetable"),
-    JEANS("jeans"),
-    FLOWERPOT("flowerpot"),
-    DRAWER("drawer"),
-    SHELF("shelf"),
-    BANGS("bangs"),
-    DENIM("denim"),
-    UMBRELLA("umbrella"),
-    BABY("baby"),
-    GLASSES("glasses"),
-    CAR("car"),
-    HAND("hand"),
-    MEAL("meal"),
-    BAG("bag"),
 }
 
 /** WordBeat speech language with its STT locale and tokenisation mode. */

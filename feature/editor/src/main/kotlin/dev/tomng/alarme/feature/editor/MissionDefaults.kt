@@ -70,7 +70,6 @@ object MissionDefaults {
                 )
             MissionType.BARCODE -> Mission.Barcode()
             MissionType.PHOTO -> Mission.Photo()
-            MissionType.IMAGE_RECOGNITION -> Mission.ImageRecognition()
             MissionType.WORD_BEAT ->
                 Mission.WordBeat(
                     language = WordBeatLanguage.ENGLISH,

@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.tomng.alarme.core.designsystem.theme.Spacing
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.TypingSentence
 import dev.tomng.alarme.core.model.mission.TypingSentenceType
@@ -96,7 +95,6 @@ internal fun MissionFields(mission: Mission, onChange: (Mission) -> Unit) {
                     modifier = Modifier.fillMaxWidth().testTag("mission_config_photo"),
                 )
             }
-        is Mission.ImageRecognition -> ObjectsSection(mission, onChange)
         is Mission.WordBeat -> WordBeatFields(mission, onChange)
     }
 }
@@ -266,35 +264,6 @@ private fun SentencePreview(sentences: List<TypingSentence>) {
 }
 
 @Composable
-private fun ObjectsSection(
-    mission: Mission.ImageRecognition,
-    onChange: (Mission.ImageRecognition) -> Unit,
-) {
-    ConfigSection(
-        title = stringResource(R.string.config_objects),
-        trailing = {
-            Text(
-                text = stringResource(R.string.config_selected, mission.objects.size),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        },
-    ) {
-        ChoiceChips(
-            options = ImageRecognitionObject.entries,
-            isSelected = { it in mission.objects },
-            label = { it.displayName() },
-            tag = { "mission_config_object:${it.name}" },
-            onSelect = { obj ->
-                val objects =
-                    if (obj in mission.objects) mission.objects - obj else mission.objects + obj
-                onChange(mission.copy(objects = objects))
-            },
-        )
-    }
-}
-
-@Composable
 private fun WordBeatFields(mission: Mission.WordBeat, onChange: (Mission.WordBeat) -> Unit) {
     ConfigSection(title = stringResource(R.string.config_language)) {
         SegmentedChoice(
@@ -348,10 +317,6 @@ internal fun WordBeatVolumeLevel.labelRes(): Int =
         WordBeatVolumeLevel.MEDIUM -> R.string.volume_medium
         WordBeatVolumeLevel.HIGH -> R.string.volume_high
     }
-
-/** Human-readable object name derived from the enum name (no per-object strings to translate). */
-internal fun ImageRecognitionObject.displayName(): String =
-    name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
 
 private val MATH_EXAMPLES =
     listOf("3+5", "7+8", "34+58", "12+47+85", "(23×7)+45", "(23×45)+678", "(234×56)+7890")

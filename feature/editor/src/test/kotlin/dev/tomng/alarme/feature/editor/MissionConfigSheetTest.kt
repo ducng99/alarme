@@ -11,7 +11,6 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import com.google.common.truth.Truth.assertThat
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.WordBeatLanguage
 import org.junit.Rule
@@ -113,18 +112,6 @@ class MissionConfigSheetTest {
         clickButton("mission_config_ok")
 
         assertThat((confirmed as Mission.Step).count).isEqualTo(55)
-    }
-
-    @Test
-    fun `image objects toggle and show the selection count`() {
-        setSheet(Mission.ImageRecognition(objects = listOf(ImageRecognitionObject.SINK)))
-
-        click("mission_config_object:CAT")
-        compose.onNodeWithText("2 selected").assertExists()
-        clickButton("mission_config_ok")
-
-        assertThat((confirmed as Mission.ImageRecognition).objects)
-            .containsExactly(ImageRecognitionObject.SINK, ImageRecognitionObject.CAT)
     }
 
     @Test

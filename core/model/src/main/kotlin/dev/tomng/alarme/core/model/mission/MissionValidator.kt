@@ -31,7 +31,6 @@ object MissionValidator {
                         typingSentences.all { it.sentence.isNotBlank() }
                 is Mission.Barcode -> barcodeValue.isNotBlank()
                 is Mission.Photo -> photoPath.isNotBlank()
-                is Mission.ImageRecognition -> objects.isNotEmpty()
                 is Mission.WordBeat -> selectedRoundSetIds.isNotEmpty()
             }
 }

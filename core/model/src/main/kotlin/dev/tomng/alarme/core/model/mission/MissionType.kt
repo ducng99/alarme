@@ -13,6 +13,5 @@ enum class MissionType {
     TYPING,
     BARCODE,
     PHOTO,
-    IMAGE_RECOGNITION,
     WORD_BEAT,
 }

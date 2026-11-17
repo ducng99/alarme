@@ -16,7 +16,6 @@ export const missions: Item[] = [
   { icon: 'material-symbols:keyboard-outline-rounded', title: 'Typing', body: 'Type motivational, study or your own sentences exactly.' },
   { icon: 'material-symbols:barcode-scanner-rounded', title: 'Barcode', body: 'Scan a barcode somewhere far from your bed, like the toothpaste in the bathroom.' },
   { icon: 'material-symbols:photo-camera-outline-rounded', title: 'Photo', body: 'Take a photo of a place away from your bed.' },
-  { icon: 'material-symbols:image-search-rounded', title: 'Find an object', body: 'Find and photograph a chosen object, recognised on-device by ML Kit.' },
   { icon: 'material-symbols:record-voice-over-outline-rounded', title: 'Read aloud', body: 'Say the shown words out loud, checked by on-device speech recognition.' },
 ];
 
@@ -46,5 +45,5 @@ export const privacy: Item[] = [
   { icon: 'material-symbols:wifi-off-rounded', title: 'No network permission', body: 'The app cannot talk to the internet at all.' },
   { icon: 'material-symbols:visibility-off-outline-rounded', title: 'No analytics', body: 'No tracking, no telemetry, no crash reporting services.' },
   { icon: 'material-symbols:money-off-rounded', title: 'No ads, no paywall', body: 'Every feature is free. No subscriptions, no premium tier.' },
-  { icon: 'material-symbols:memory-outline-rounded', title: 'On-device ML', body: 'Barcode, object and speech recognition all run locally.' },
+  { icon: 'material-symbols:memory-outline-rounded', title: 'On-device recognition', body: 'Barcode scanning and speech recognition run locally.' },
 ];

@@ -8,7 +8,6 @@ import dev.tomng.alarme.core.model.alarm.DaysOfWeek
 import dev.tomng.alarme.core.model.alarm.MemoOption
 import dev.tomng.alarme.core.model.alarm.SnoozeOption
 import dev.tomng.alarme.core.model.alarm.WakeUpCheck
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.TypingSentence
 import dev.tomng.alarme.core.model.mission.TypingSentenceType
@@ -85,9 +84,6 @@ class BackupPayloadSerializationTest {
                                     ),
                                     Mission.Barcode(barcodeId = 7L, barcodeValue = "123456"),
                                     Mission.Photo(photoPath = "/tmp/x.jpg"),
-                                    Mission.ImageRecognition(
-                                        objects = listOf(ImageRecognitionObject.SINK),
-                                    ),
                                     Mission.WordBeat(
                                         rounds = 2,
                                         language = WordBeatLanguage.JAPANESE,

@@ -29,6 +29,5 @@
     <string name="mission_label_typing">Type the text</string>
     <string name="mission_label_barcode">Scan the barcode</string>
     <string name="mission_label_photo">Take a photo</string>
-    <string name="mission_label_image">Match the object</string>
     <string name="mission_label_wordbeat">Say the words</string>
 </resources>

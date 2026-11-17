@@ -88,13 +88,10 @@ internal fun MissionStageContent(
                     if (completed) return
                     completed = true
                     feedback.confirm()
-                    callbacks.onMissionTimerStop()
                     callbacks.onMissionComplete()
                 }
 
                 override fun onTimerReset() = callbacks.onMissionTimerReset()
-
-                override fun onTimerStop() = callbacks.onMissionTimerStop()
             }
         }
 
@@ -319,7 +316,6 @@ private fun missionLabel(mission: Mission): String =
         is Mission.Typing -> stringResource(R.string.mission_label_typing)
         is Mission.Barcode -> stringResource(R.string.mission_label_barcode)
         is Mission.Photo -> stringResource(R.string.mission_label_photo)
-        is Mission.ImageRecognition -> stringResource(R.string.mission_label_image)
         is Mission.WordBeat -> stringResource(R.string.mission_label_wordbeat)
     }
 

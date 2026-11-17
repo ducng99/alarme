@@ -12,7 +12,6 @@
     <string name="barcode_register_cancel">Cancel</string>
     <string name="mission_barcode_title">Barcode mission</string>
     <string name="mission_photo_title">Photo mission</string>
-    <string name="mission_image_title">Find the object</string>
     <string name="mission_wordbeat_title">Say the sentence</string>
     <string name="mission_math_answer_hint">Your answer</string>
     <string name="mission_math_submit">Check</string>
@@ -41,9 +40,6 @@
     <string name="mission_photo_reference">Your reference photo</string>
     <string name="mission_photo_capture">Take the photo</string>
     <string name="mission_photo_no_reference">No reference photo was registered. Any photo completes the mission.</string>
-    <string name="mission_image_instruction">Point the camera at: %1$s</string>
-    <string name="mission_image_hold_it">Hold it steady…</string>
-    <string name="mission_image_no_targets">No objects were configured for this alarm. Wait for the emergency dismiss.</string>
     <string name="mission_wordbeat_instruction">Read this out loud</string>
     <string name="mission_wordbeat_listening">Listening…</string>
     <string name="mission_wordbeat_try_again">Say it again — a bit more of it this time</string>

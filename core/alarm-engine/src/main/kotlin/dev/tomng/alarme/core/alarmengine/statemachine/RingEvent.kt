@@ -64,9 +64,6 @@ sealed interface RingEvent {
     /** User activity (keystroke, confirming match): don't time out mid-attempt. */
     data object OnMissionTimerReset : RingEvent
 
-    /** A match is being confirmed (ImageRecognition): pause the timer. */
-    data object OnMissionTimerStop : RingEvent
-
     /** The +10 s mercy button. */
     data object OnAddMissionTimeClick : RingEvent
 

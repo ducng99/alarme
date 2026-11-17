@@ -4,7 +4,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.google.common.truth.Truth.assertThat
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.TokenMode
 import dev.tomng.alarme.core.model.mission.WordBeatLanguage
@@ -16,11 +15,8 @@ import dev.tomng.alarme.core.sensors.step.StepSensorTracker
 import dev.tomng.alarme.feature.missions.MissionStageCallbacks
 import dev.tomng.alarme.feature.missions.camera.BarcodeMissionUi
 import dev.tomng.alarme.feature.missions.camera.BarcodeScanner
-import dev.tomng.alarme.feature.missions.camera.LabelMissionUi
-import dev.tomng.alarme.feature.missions.camera.LabelScanner
 import dev.tomng.alarme.feature.missions.camera.PhotoCapturer
 import dev.tomng.alarme.feature.missions.camera.PhotoMissionUi
-import dev.tomng.alarme.feature.missions.engine.ImageRecognitionVerifier
 import dev.tomng.alarme.feature.missions.speech.SpeechEvent
 import dev.tomng.alarme.feature.missions.speech.SpeechSource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +39,6 @@ private const val SPEECH_UNAVAILABLE_TEXT =
 private class Callbacks : MissionStageCallbacks {
     var completed = 0
     var resets = 0
-    var stops = 0
 
     override fun onComplete() {
         completed++
@@ -51,10 +46,6 @@ private class Callbacks : MissionStageCallbacks {
 
     override fun onTimerReset() {
         resets++
-    }
-
-    override fun onTimerStop() {
-        stops++
     }
 }
 
@@ -80,17 +71,6 @@ private class FakeBarcodeScanner : BarcodeScanner {
 
     fun scan(value: String) {
         flow.value = value
-    }
-
-    override fun close() = Unit
-}
-
-private class FakeLabelScanner : LabelScanner {
-    private val flow = MutableStateFlow<List<ImageRecognitionVerifier.RecognizedLabel>>(emptyList())
-    override val labels: StateFlow<List<ImageRecognitionVerifier.RecognizedLabel>> = flow
-
-    fun recognise(vararg labels: ImageRecognitionVerifier.RecognizedLabel) {
-        flow.value = labels.toList()
     }
 
     override fun close() = Unit
@@ -245,30 +225,6 @@ class CameraMissionScreenTest {
 
         assertThat(callbacks.completed).isEqualTo(0)
         rule.onNodeWithText("Not the registered barcode").assertExists()
-    }
-
-    @Test
-    fun `recognising the target object pauses the timer then completes`() {
-        val callbacks = Callbacks()
-        val scanner = FakeLabelScanner()
-        rule.setContent {
-            ImageRecognitionMissionScreen(
-                Mission.ImageRecognition(objects = listOf(ImageRecognitionObject.CAT)),
-                callbacks,
-                { LabelMissionUi(scanner, controller = null) },
-            )
-        }
-
-        rule.runOnIdle {
-            scanner.recognise(
-                ImageRecognitionVerifier.RecognizedLabel("Cat", 0.9f),
-            )
-        }
-        rule.mainClock.advanceTimeBy(1_000)
-        rule.waitForIdle()
-
-        assertThat(callbacks.stops).isEqualTo(1)
-        assertThat(callbacks.completed).isEqualTo(1)
     }
 
     @Test

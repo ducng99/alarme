@@ -42,8 +42,7 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
-    implementation(libs.mlkit.barcode)
-    implementation(libs.mlkit.label)
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

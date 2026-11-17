@@ -7,7 +7,6 @@ import dev.tomng.alarme.core.model.alarm.DaysOfWeek
 import dev.tomng.alarme.core.model.alarm.MemoOption
 import dev.tomng.alarme.core.model.alarm.SnoozeOption
 import dev.tomng.alarme.core.model.alarm.WakeUpCheck
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.TypingSentence
 import dev.tomng.alarme.core.model.mission.TypingSentenceType
@@ -89,10 +88,6 @@ class AlarmMapperTest {
                 ),
                 Mission.Barcode(timeLimitSeconds = 60, barcodeId = 3L, barcodeValue = "EAN-4001"),
                 Mission.Photo(timeLimitSeconds = 60, photoPath = "content://shot"),
-                Mission.ImageRecognition(
-                    timeLimitSeconds = 90,
-                    objects = listOf(ImageRecognitionObject.CAT, ImageRecognitionObject.CLOCK),
-                ),
                 Mission.WordBeat(
                     timeLimitSeconds = 120,
                     rounds = 4,

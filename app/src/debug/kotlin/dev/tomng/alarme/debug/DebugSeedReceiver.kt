@@ -10,7 +10,6 @@ import dev.tomng.alarme.core.alarmengine.scheduling.RescheduleReason
 import dev.tomng.alarme.core.common.di.ApplicationScope
 import dev.tomng.alarme.core.data.repository.AlarmRepository
 import dev.tomng.alarme.core.model.alarm.Alarm
-import dev.tomng.alarme.core.model.mission.ImageRecognitionObject
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.TypingSentence
 import dev.tomng.alarme.core.model.mission.TypingSentenceType
@@ -96,12 +95,6 @@ class DebugSeedReceiver : BroadcastReceiver() {
 
             "barcode" -> Mission.Barcode(timeLimitSeconds = 120, barcodeValue = "12345")
             "photo" -> Mission.Photo(timeLimitSeconds = 120, photoPath = "")
-            "image" ->
-                Mission.ImageRecognition(
-                    timeLimitSeconds = 120,
-                    objects = listOf(ImageRecognitionObject.CHAIR),
-                )
-
             "wordbeat" -> Mission.WordBeat(timeLimitSeconds = 120, rounds = 1)
             else -> null
         }

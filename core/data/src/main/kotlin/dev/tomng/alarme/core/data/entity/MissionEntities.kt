@@ -35,7 +35,6 @@ data class MissionInfoEntity(
     val barcodeQR: String = "",
     val photoPath: String = "",
     val typingType: String = "",
-    val imageRecognitionObjectIds: String = "",
     val language: String = "",
     val timeLimitSeconds: Int = 0,
 )
