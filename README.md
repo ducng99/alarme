@@ -30,8 +30,6 @@ No ads, no analytics, no network permission, no paywall.
 
 Alarme makes you prove you are awake. Solve math, scan the barcode in your bathroom, do squats or walk a few steps before it goes quiet. It is built to ring reliably, even through Do Not Disturb, a reboot or a locked screen.
 
----
-
 ## Features
 
 <div align="center">
@@ -61,12 +59,6 @@ Alarme makes you prove you are awake. Solve math, scan the barcode in your bathr
 
 Chain up to five missions per alarm. The alarm keeps ringing until every one is done.
 
-<div align="center">
-<img src="docs/src/assets/screens/mission-picker.png" alt="Add a mission sheet" width="200">
-<img src="docs/src/assets/screens/editor-missions.png" alt="Alarm editor with a math and a shake mission" width="200">
-<img src="docs/src/assets/screens/mission-math.png" alt="Math mission asking 42 + 18" width="200">
-</div>
-
 | Mission | What it asks of you |
 |---|---|
 | **Math** | Solve arithmetic, from multiple choice up to six keypad difficulty levels |
@@ -78,25 +70,6 @@ Chain up to five missions per alarm. The alarm keeps ringing until every one is 
 | **Barcode** | Scan a barcode somewhere far from your bed, like the toothpaste in the bathroom |
 | **Photo** | Take a photo of a place away from your bed |
 | **Read aloud** | Say the shown words out loud, checked by on-device speech recognition |
-
-### Your sleepy self will not outsmart it
-
-<div align="center">
-<img src="docs/src/assets/screens/settings.png" alt="Settings with prevent turn-off and uninstall switches" width="200">
-<img src="docs/src/assets/screens/diagnostics.png" alt="Diagnostics screen" width="200">
-</div>
-
-- **Prevent phone turn-off.** Pulls the alarm back when you try to power off or leave the ring screen.
-- **Prevent uninstall.** While enabled, Alarme cannot be uninstalled at 6 AM.
-- **Last-chance timer.** Missions have a time limit. Run out and the alarm starts ringing again.
-- **Diagnostics.** Checks battery optimisation, standby buckets and vendor autostart so nothing delays your alarm.
-
-### Private by design
-
-- **No network permission.** The app cannot talk to the internet at all.
-- **No analytics.** No tracking, no telemetry, no crash reporting services.
-- **No ads, no paywall.** Every feature is free. No subscriptions, no premium tier.
-- **Nothing to phone home.** Barcode decoding runs on the device and backups are plain files you control.
 
 ## Install
 
