@@ -56,11 +56,13 @@ fun AlarmeScaffold(
     backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     actions: @Composable RowScope.() -> Unit = {},
     snackbarHostState: SnackbarHostState? = null,
+    collapsible: Boolean = true,
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val scrollBehavior =
+    val collapsingBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = if (collapsible) collapsingBehavior else null
     val density = LocalDensity.current
     var width by remember { mutableStateOf(0.dp) }
     val gutter = ((width - Spacing.maxContentWidth) / 2).coerceAtLeast(0.dp)
@@ -69,7 +71,13 @@ fun AlarmeScaffold(
             modifier
                 .fillMaxSize()
                 .onSizeChanged { width = with(density) { it.width.toDp() } }
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                .then(
+                    if (scrollBehavior != null) {
+                        Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                    } else {
+                        Modifier
+                    },
+                ),
         containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = { if (snackbarHostState != null) SnackbarHost(snackbarHostState) },
         floatingActionButton = floatingActionButton,

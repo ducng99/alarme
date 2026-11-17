@@ -196,7 +196,8 @@ fun AlarmListContent(
     }
 
     AlarmeScaffold(
-        title = stringResource(R.string.alarmlist_title),
+        title = "Alarme",
+        collapsible = false,
         subtitle = nextSubtitle(nextAlarm, alarms, now),
         modifier = modifier,
         snackbarHostState = snackbarHostState,

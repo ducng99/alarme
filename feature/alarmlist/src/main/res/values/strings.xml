@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="alarmlist_title">Alarms</string>
     <string name="alarmlist_next_in">Next alarm in %1$s</string>
     <string name="alarmlist_next_at">Next alarm at %1$s</string>
     <string name="alarmlist_no_alarms">No alarms yet</string>
