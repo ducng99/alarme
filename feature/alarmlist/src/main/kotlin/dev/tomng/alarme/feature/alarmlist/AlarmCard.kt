@@ -13,12 +13,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.outlined.Accessibility
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.EventBusy
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -53,13 +61,13 @@ import androidx.compose.ui.unit.dp
 import dev.tomng.alarme.core.designsystem.component.AlarmeSwitch
 import dev.tomng.alarme.core.designsystem.component.ClockTime
 import dev.tomng.alarme.core.designsystem.component.alarmContainerKey
-import dev.tomng.alarme.core.designsystem.component.durationText
 import dev.tomng.alarme.core.designsystem.component.rememberFeedback
 import dev.tomng.alarme.core.designsystem.component.sharedContainer
 import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.alarm.Alarm
 import dev.tomng.alarme.core.model.alarm.AlarmType
 import dev.tomng.alarme.core.model.alarm.DaysOfWeek
+import dev.tomng.alarme.core.model.mission.Mission
 import java.util.Locale
 import kotlin.time.Instant
 import kotlinx.coroutines.launch
@@ -263,6 +271,15 @@ private fun AlarmCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                 ) {
+                    if (alarm.showsDayStrip()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        ) {
+                            DayStrip(alarm.daysOfWeek, alarm.enabled, repeatText(alarm, now))
+                            MissionIcons(alarm, withDot = true)
+                        }
+                    }
                     ClockTime(
                         hour = alarm.hour,
                         minute = alarm.minute,
@@ -302,75 +319,86 @@ private fun LabelLine(alarm: Alarm) {
     )
 }
 
-/** The repeat days as a row of letters (active ones highlighted), then when it rings next. */
 @Composable
-private fun ScheduleLine(alarm: Alarm, now: Instant) {
-    val days = alarm.daysOfWeek
-    val description = scheduleText(alarm, now)
+private fun MissionIcons(alarm: Alarm, withDot: Boolean) {
+    if (alarm.missions.isEmpty()) return
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        if (withDot) {
+            Text(
+                text = "·",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        alarm.missions.forEach { mission ->
+            Icon(
+                imageVector = missionIcon(mission),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(MISSION_ICON),
+            )
+        }
+    }
+}
+
+private fun missionIcon(mission: Mission): ImageVector =
+    when (mission) {
+        is Mission.Math -> Icons.Outlined.Calculate
+        is Mission.Memory -> Icons.Outlined.Psychology
+        is Mission.Shake -> Icons.Outlined.Accessibility
+        is Mission.Step -> Icons.AutoMirrored.Outlined.DirectionsWalk
+        is Mission.Squat -> Icons.Outlined.FitnessCenter
+        is Mission.Typing -> Icons.Outlined.Keyboard
+        is Mission.Barcode -> Icons.Outlined.QrCodeScanner
+        is Mission.Photo -> Icons.Outlined.CameraAlt
+        is Mission.WordBeat -> Icons.Outlined.RecordVoiceOver
+    }
+
+private fun Alarm.showsDayStrip(): Boolean =
+    daysOfWeek.isRepeating && daysOfWeek != DaysOfWeek.EVERY_DAY
+
+@Composable
+private fun ScheduleLine(alarm: Alarm, now: Instant) {
+    if (alarm.showsDayStrip()) return
+    val text = repeatText(alarm, now)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.clearAndSetSemantics { contentDescription = text },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        MissionIcons(alarm, withDot = true)
+    }
+}
+
+@Composable
+private fun DayStrip(days: DaysOfWeek, enabled: Boolean, description: String) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         modifier = Modifier.clearAndSetSemantics { contentDescription = description },
     ) {
-        if (days.isRepeating && days != DaysOfWeek.EVERY_DAY) {
-            DayStrip(days, alarm.enabled)
-        } else {
-            Text(
-                text = repeatText(alarm, now),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        val at = alarm.nextOccurrence
-        if (at != null && !alarm.isSkipped) {
-            Text(
-                text = "·  " + stringResource(R.string.alarmlist_in, durationText(now, at)),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun DayStrip(days: DaysOfWeek, enabled: Boolean) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         DayOfWeek.entries.forEach { day ->
             val active = day in days
-            Box(
-                modifier =
-                    Modifier.size(DAY_DOT)
-                        .clip(CircleShape)
-                        .background(
-                            when {
-                                active && enabled -> MaterialTheme.colorScheme.primary
-                                active -> MaterialTheme.colorScheme.outline
-                                else -> Color.Transparent
-                            },
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = day.narrowName(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color =
-                        when {
-                            active && enabled -> MaterialTheme.colorScheme.onPrimary
-                            active -> MaterialTheme.colorScheme.surface
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                )
-            }
+            Text(
+                text = day.narrowName(),
+                style = MaterialTheme.typography.labelLarge,
+                color =
+                    when {
+                        active && enabled -> colors.onSurface
+                        active -> colors.onSurface.copy(alpha = DISABLED_ALPHA)
+                        else -> colors.onSurfaceVariant.copy(alpha = DIM_DAY_ALPHA)
+                    },
+            )
         }
     }
-}
-
-@Composable
-private fun scheduleText(alarm: Alarm, now: Instant): String {
-    val repeat = repeatText(alarm, now)
-    val at = alarm.nextOccurrence ?: return repeat
-    if (alarm.isSkipped) return repeat
-    return "$repeat · " + stringResource(R.string.alarmlist_in, durationText(now, at))
 }
 
 @Composable
@@ -522,6 +550,7 @@ private val WEEKDAYS =
     )
 private val WEEKENDS = DaysOfWeek.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
 
-private val DAY_DOT = 20.dp
+private val MISSION_ICON = 18.dp
+private const val DIM_DAY_ALPHA = 0.4f
 private const val DISABLED_ALPHA = 0.6f
 private const val ARMED_SCALE = 1.3f
