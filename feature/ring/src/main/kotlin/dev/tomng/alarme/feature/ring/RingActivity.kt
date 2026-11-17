@@ -58,6 +58,7 @@ class RingActivity : ComponentActivity() {
 
     // The system permission dialog pauses this activity; it must not count as leaving the ring.
     private var awaitingPermission = false
+    private var hasShownSession = false
 
     private val cameraPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -122,10 +123,16 @@ class RingActivity : ComponentActivity() {
     @Composable
     private fun FinishWhenSessionEnds(state: RingState) {
         LaunchedEffect(state) {
-            if (!state.keepsRingScreenAlive()) {
-                delay(GHOST_FINISH_GRACE_MILLIS)
-                if (!sessionStore.state.value.keepsRingScreenAlive() && !ringServiceRunning()) {
-                    finish()
+            val alive = state.keepsRingScreenAlive()
+            if (alive) hasShownSession = true
+            when (RingFinishPolicy.decide(alive, hasShownSession)) {
+                FinishDecision.STAY -> Unit
+                FinishDecision.IMMEDIATE -> finish()
+                FinishDecision.AFTER_GRACE -> {
+                    delay(GHOST_FINISH_GRACE_MILLIS)
+                    if (!sessionStore.state.value.keepsRingScreenAlive() && !ringServiceRunning()) {
+                        finish()
+                    }
                 }
             }
         }
@@ -141,7 +148,7 @@ class RingActivity : ComponentActivity() {
 
     /** The screen lives while the alarm rings and through the 100 s check confirmation. */
     private fun RingState.keepsRingScreenAlive(): Boolean =
-        this is RingState.Ringing || this is RingState.WakeUpCheck
+        RingFinishPolicy.keepsRingScreenAlive(this)
 
     /**
      * Camera and microphone missions prompt in place as they start: the ring is already full-screen
