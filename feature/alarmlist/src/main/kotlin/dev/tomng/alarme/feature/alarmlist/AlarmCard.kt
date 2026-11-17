@@ -271,15 +271,7 @@ private fun AlarmCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                 ) {
-                    if (alarm.showsDayStrip()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                        ) {
-                            DayStrip(alarm.daysOfWeek, alarm.enabled, repeatText(alarm, now))
-                            MissionIcons(alarm, withDot = true)
-                        }
-                    }
+                    ScheduleLine(alarm, now)
                     ClockTime(
                         hour = alarm.hour,
                         minute = alarm.minute,
@@ -287,7 +279,6 @@ private fun AlarmCard(
                         color = timeColor,
                     )
                     LabelLine(alarm)
-                    ScheduleLine(alarm, now)
                     AlarmBadges(alarm)
                 }
                 AlarmeSwitch(
@@ -362,18 +353,21 @@ private fun Alarm.showsDayStrip(): Boolean =
 
 @Composable
 private fun ScheduleLine(alarm: Alarm, now: Instant) {
-    if (alarm.showsDayStrip()) return
     val text = repeatText(alarm, now)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
-        Text(
-            text = text,
-            modifier = Modifier.clearAndSetSemantics { contentDescription = text },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (alarm.showsDayStrip()) {
+            DayStrip(alarm.daysOfWeek, alarm.enabled, text)
+        } else {
+            Text(
+                text = text,
+                modifier = Modifier.clearAndSetSemantics { contentDescription = text },
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         MissionIcons(alarm, withDot = true)
     }
 }
