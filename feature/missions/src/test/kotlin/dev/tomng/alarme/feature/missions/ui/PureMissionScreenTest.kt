@@ -1,5 +1,6 @@
 package dev.tomng.alarme.feature.missions.ui
 
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -102,6 +103,19 @@ class MathMissionScreenTest {
 
         assertThat(callbacks.completed).isEqualTo(1)
     }
+
+    @Test
+    fun `the numeric answer field is focused when shown`() {
+        rule.setContent {
+            MathMissionScreen(
+                Mission.Math(rounds = 1, difficulty = 2),
+                RecordingCallbacks(),
+                MathMissionEngine(Random(11)),
+            )
+        }
+
+        rule.onNodeWithTag("mission:math:input").assertIsFocused()
+    }
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -174,6 +188,13 @@ class TypingMissionScreenTest {
         rule.onNodeWithTag("mission:typing:submit").performClick()
 
         assertThat(callbacks.completed).isEqualTo(1)
+    }
+
+    @Test
+    fun `the input field is focused when shown`() {
+        rule.setContent { TypingMissionScreen(mission(), RecordingCallbacks()) }
+
+        rule.onNodeWithTag("mission:typing:input").assertIsFocused()
     }
 
     @Test

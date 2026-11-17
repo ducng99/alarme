@@ -19,6 +19,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -69,6 +71,8 @@ fun TypingMissionScreen(
     }
 
     val answer = { if (roundComplete) advance() }
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
     MissionStageScaffold(
         title = stringResource(R.string.mission_typing_title),
@@ -113,7 +117,10 @@ fun TypingMissionScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { answer() }),
                 shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.fillMaxWidth().testTag("mission:typing:input"),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .testTag("mission:typing:input"),
             )
         }
         MissionPrimaryButton(

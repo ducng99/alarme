@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +26,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -131,6 +134,8 @@ fun MathMissionScreen(
                     }
                 }
             } else {
+                val focusRequester = remember { FocusRequester() }
+                LaunchedEffect(Unit) { focusRequester.requestFocus() }
                 OutlinedTextField(
                     value = input,
                     onValueChange = { value -> input = value.filter { it.isDigit() } },
@@ -139,7 +144,10 @@ fun MathMissionScreen(
                     shape = MaterialTheme.shapes.medium,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     textStyle = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.fillMaxWidth().testTag("mission:math:input"),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .focusRequester(focusRequester)
+                            .testTag("mission:math:input"),
                 )
                 Spacer(Modifier.height(Spacing.xs))
             }
