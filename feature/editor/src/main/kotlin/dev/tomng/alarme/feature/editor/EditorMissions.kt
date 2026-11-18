@@ -111,6 +111,7 @@ private fun EmojiPickerSheet(onPick: (String) -> Unit, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         sheetGesturesEnabled = false,
+        dragHandle = null,
         modifier = Modifier.testTag("editor_emoji_picker"),
     ) {
         val pickerHeight =
