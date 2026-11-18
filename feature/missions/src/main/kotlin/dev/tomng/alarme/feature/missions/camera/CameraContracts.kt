@@ -1,5 +1,6 @@
 package dev.tomng.alarme.feature.missions.camera
 
+import androidx.compose.ui.graphics.ImageBitmap
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -17,6 +18,14 @@ interface BarcodeScanner : AutoCloseable {
 }
 
 interface PhotoCapturer : AutoCloseable {
-    /** Captures one frame to internal storage; true on success. */
-    suspend fun capture(): Boolean
+    /** Captures one frame and returns its dHash, or null when the capture failed. */
+    suspend fun capture(): Long?
+}
+
+/** A registered reference photo, decoded for display and hashed for comparison. */
+class ReferencePhoto(val image: ImageBitmap, val hash: Long)
+
+fun interface ReferencePhotoSource {
+    /** Null when the file is missing or unreadable. */
+    suspend fun load(path: String): ReferencePhoto?
 }

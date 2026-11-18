@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -202,6 +203,7 @@ internal fun MissionCameraChrome(
     message: String,
     modifier: Modifier = Modifier,
     messageIsError: Boolean = false,
+    headerTrailing: (@Composable () -> Unit)? = null,
     action: @Composable () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -222,14 +224,18 @@ internal fun MissionCameraChrome(
             modifier = Modifier.fillMaxSize().padding(Spacing.xl),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-            ) {
-                MissionHeader(
-                    title = title,
-                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m),
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    MissionHeader(
+                        title = title,
+                        modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m),
+                    )
+                }
+                headerTrailing?.invoke()
             }
             Surface(
                 shape = MaterialTheme.shapes.extraLarge,

@@ -113,7 +113,7 @@ sealed class Mission {
         }
     }
 
-    /** Take a photo (honor-system capture, no content verification). */
+    /** Retake the reference photo at [photoPath]; the capture must match it by dHash. */
     @Serializable
     data class Photo(
         override val timeLimitSeconds: Int = 0,

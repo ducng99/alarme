@@ -1,12 +1,15 @@
 package dev.tomng.alarme.feature.missions.ui
 
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.google.common.truth.Truth.assertThat
 import dev.tomng.alarme.core.model.mission.Mission
-import dev.tomng.alarme.core.model.mission.TokenMode
 import dev.tomng.alarme.core.model.mission.WordBeatLanguage
 import dev.tomng.alarme.core.sensors.shake.ShakeSensorTracker
 import dev.tomng.alarme.core.sensors.source.SensorSampleSink
@@ -18,6 +21,8 @@ import dev.tomng.alarme.feature.missions.camera.BarcodeMissionUi
 import dev.tomng.alarme.feature.missions.camera.BarcodeScanner
 import dev.tomng.alarme.feature.missions.camera.PhotoCapturer
 import dev.tomng.alarme.feature.missions.camera.PhotoMissionUi
+import dev.tomng.alarme.feature.missions.camera.ReferencePhoto
+import dev.tomng.alarme.feature.missions.camera.ReferencePhotoSource
 import dev.tomng.alarme.feature.missions.speech.SpeechEvent
 import dev.tomng.alarme.feature.missions.speech.SpeechSource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,12 +32,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 private const val SQUAT_NO_SENSOR_TEXT =
     "This device has no light or proximity sensor, so squats can't be counted. " +
         "Use Emergency to turn off the alarm."
 private const val STEP_NO_SENSOR_TEXT =
     "This device has no step counter. Use Emergency to turn off the alarm."
+private const val PHOTO_MISSING_TEXT =
+    "The reference photo can't be found. Use Emergency to turn off the alarm."
 private const val SPEECH_UNAVAILABLE_TEXT =
     "Speech recognition is unavailable on this device. " + "Use Emergency to turn off the alarm."
 
@@ -76,16 +84,22 @@ private class FakeBarcodeScanner : BarcodeScanner {
     override fun close() = Unit
 }
 
-private class FakeCapturer(private val success: Boolean = true) : PhotoCapturer {
+private class FakeCapturer(private val hash: Long?) : PhotoCapturer {
     var captures = 0
         private set
 
-    override suspend fun capture(): Boolean {
+    override suspend fun capture(): Long? {
         captures++
-        return success
+        return hash
     }
 
     override fun close() = Unit
+}
+
+private class FakeReferences(private val hash: Long?) : ReferencePhotoSource {
+    override suspend fun load(path: String): ReferencePhoto? = hash?.let {
+        ReferencePhoto(ImageBitmap(4, 4), it)
+    }
 }
 
 private class FakeSpeech(available: Boolean = true) : SpeechSource {
@@ -221,6 +235,7 @@ class SensorMissionScreenTest {
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class CameraMissionScreenTest {
 
     @get:Rule val rule = createComposeRule()
@@ -261,23 +276,77 @@ class CameraMissionScreenTest {
         rule.onNodeWithText("Not the registered barcode").assertExists()
     }
 
-    @Test
-    fun `taking the photo completes the honour-system photo mission`() {
-        val callbacks = Callbacks()
-        val capturer = FakeCapturer(success = true)
+    private fun setPhotoScreen(
+        callbacks: Callbacks,
+        capturer: FakeCapturer,
+        referenceHash: Long? = 0L,
+    ) {
         rule.setContent {
             PhotoMissionScreen(
-                Mission.Photo(photoPath = "/nonexistent.jpg"),
+                Mission.Photo(photoPath = "/reference.jpg"),
                 callbacks,
-                { PhotoMissionUi(capturer, controller = null) },
+                { PhotoMissionUi(capturer, FakeReferences(referenceHash), controller = null) },
             )
         }
+    }
+
+    @Test
+    fun `a photo matching the reference completes the photo mission`() {
+        val callbacks = Callbacks()
+        val capturer = FakeCapturer(hash = 0b111L)
+        setPhotoScreen(callbacks, capturer)
 
         rule.onNodeWithText("Take the photo").performClick()
         rule.waitForIdle()
 
         assertThat(capturer.captures).isEqualTo(1)
         assertThat(callbacks.completed).isEqualTo(1)
+    }
+
+    @Test
+    fun `a photo that differs from the reference does not complete and says so`() {
+        val callbacks = Callbacks()
+        val capturer = FakeCapturer(hash = -1L)
+        setPhotoScreen(callbacks, capturer)
+
+        rule.onNodeWithText("Take the photo").performClick()
+        rule.waitForIdle()
+
+        assertThat(callbacks.completed).isEqualTo(0)
+        rule.onNodeWithText("That doesn't match your reference photo. Try again.").assertExists()
+        rule.onNodeWithText("Take the photo").assertIsEnabled()
+    }
+
+    @Test
+    fun `a failed capture does not complete`() {
+        val callbacks = Callbacks()
+        setPhotoScreen(callbacks, FakeCapturer(hash = null))
+
+        rule.onNodeWithText("Take the photo").performClick()
+        rule.waitForIdle()
+
+        assertThat(callbacks.completed).isEqualTo(0)
+        rule.onNodeWithText("Couldn't take the photo. Try again.").assertExists()
+    }
+
+    @Test
+    fun `the reference photo is shown on the ring screen`() {
+        setPhotoScreen(Callbacks(), FakeCapturer(hash = 0L))
+
+        rule.onNodeWithTag("mission:photo:reference").assertExists()
+        rule.onNodeWithContentDescription("Your reference photo").assertExists()
+    }
+
+    @Test
+    fun `a missing reference photo blocks capture and points at Emergency`() {
+        val callbacks = Callbacks()
+        val capturer = FakeCapturer(hash = 0L)
+        setPhotoScreen(callbacks, capturer, referenceHash = null)
+
+        rule.onNodeWithText(PHOTO_MISSING_TEXT).assertExists()
+        rule.onNodeWithTag("mission:photo:reference").assertDoesNotExist()
+        rule.onNodeWithText("Take the photo").assertIsNotEnabled()
+        assertThat(callbacks.completed).isEqualTo(0)
     }
 }
 
@@ -346,10 +415,5 @@ class WordBeatMissionScreenTest {
         rule.waitForIdle()
 
         assertThat(callbacks.resets).isEqualTo(2)
-    }
-
-    @Test
-    fun `character languages match by characters`() {
-        assertThat(TokenMode.CHARACTER).isNotNull()
     }
 }

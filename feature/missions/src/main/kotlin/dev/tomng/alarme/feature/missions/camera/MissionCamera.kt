@@ -1,16 +1,21 @@
 package dev.tomng.alarme.feature.missions.camera
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 /**
  * The production camera controller: one [LifecycleCameraController] shared by the preview and the
@@ -30,17 +35,18 @@ class MissionCameraController(context: Context) : AutoCloseable {
         controller.setImageAnalysisAnalyzer(executor, analyzer)
     }
 
-    suspend fun capturePhoto(): Boolean = suspendCancellableCoroutine { continuation ->
+    /** Captures one upright frame on the camera executor; null when the capture failed. */
+    suspend fun captureBitmap(): Bitmap? = suspendCancellableCoroutine { continuation ->
         controller.takePicture(
             executor,
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    image.close()
-                    if (continuation.isActive) continuation.resume(true)
+                    val bitmap = image.use { runCatching { it.toUprightBitmap() }.getOrNull() }
+                    if (continuation.isActive) continuation.resume(bitmap)
                 }
 
-                override fun onError(exception: androidx.camera.core.ImageCaptureException) {
-                    if (continuation.isActive) continuation.resume(false)
+                override fun onError(exception: ImageCaptureException) {
+                    if (continuation.isActive) continuation.resume(null)
                 }
             },
         )
@@ -109,11 +115,20 @@ private fun ImageProxy.toLuminanceFrame(): LuminanceFrame {
     )
 }
 
-/** The honour-system photo capture: any frame completes the mission. */
+private fun ImageProxy.toUprightBitmap(): Bitmap {
+    val bitmap = toBitmap()
+    val degrees = imageInfo.rotationDegrees
+    if (degrees == 0) return bitmap
+    val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}
+
+/** Captures a frame and hashes it for comparison against the reference photo. */
 class MissionPhotoCapturer(
     private val controller: MissionCameraController,
 ) : PhotoCapturer {
-    override suspend fun capture(): Boolean = controller.capturePhoto()
+    override suspend fun capture(): Long? =
+        controller.captureBitmap()?.let { withContext(Dispatchers.Default) { it.dHash() } }
 
     override fun close() = Unit
 }

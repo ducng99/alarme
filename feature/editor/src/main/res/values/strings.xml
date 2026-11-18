@@ -97,7 +97,7 @@
     <string name="config_example">Example: %1$s</string>
     <string name="config_memory_grid">%1$d × %1$d grid</string>
     <string name="config_custom_sentences_hint">Write each sentence on its own line</string>
-    <string name="config_photo_body">Path of the reference photo to retake when the alarm rings</string>
+    <string name="config_photo_body">You\'ll retake this photo from the same spot when the alarm rings</string>
     <string name="config_volume_body">How loud you need to read the words</string>
     <string name="config_desc_math">Solve arithmetic questions to turn the alarm off.</string>
     <string name="config_desc_memory">Remember the highlighted tiles and tap them back.</string>
@@ -113,7 +113,11 @@
     <string name="config_barcode">Barcode value</string>
     <string name="config_barcode_hint">Scan the barcode with the camera, or type the number under it</string>
     <string name="config_barcode_scan">Scan with camera</string>
-    <string name="config_photo">Photo path</string>
+    <string name="config_photo">Reference photo</string>
+    <string name="config_photo_pick">Choose photo</string>
+    <string name="config_photo_take">Take photo</string>
+    <string name="config_photo_empty">No reference photo yet</string>
+    <string name="config_photo_unreadable">Couldn\'t use that image</string>
     <string name="config_sentences">Sentences</string>
     <string name="config_custom_sentences">Your sentences (one per line)</string>
 

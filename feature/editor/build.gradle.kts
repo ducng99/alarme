@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.hilt.lifecycle.viewmodel.compose)
 
+    implementation(libs.activity.compose)
     implementation(libs.core.ktx)
     implementation(libs.emoji2.emojipicker)
     implementation(libs.datetime)

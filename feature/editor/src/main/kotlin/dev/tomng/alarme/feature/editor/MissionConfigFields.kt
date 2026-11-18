@@ -83,18 +83,7 @@ internal fun MissionFields(mission: Mission, onChange: (Mission) -> Unit) {
                     )
                 }
             }
-        is Mission.Photo ->
-            ConfigSection(
-                title = stringResource(R.string.config_photo),
-                body = stringResource(R.string.config_photo_body),
-            ) {
-                OutlinedTextField(
-                    value = mission.photoPath,
-                    onValueChange = { onChange(mission.copy(photoPath = it)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("mission_config_photo"),
-                )
-            }
+        is Mission.Photo -> PhotoFields(mission, onChange)
         is Mission.WordBeat -> WordBeatFields(mission, onChange)
     }
 }

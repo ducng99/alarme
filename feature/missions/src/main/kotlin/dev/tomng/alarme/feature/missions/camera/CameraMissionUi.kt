@@ -20,12 +20,17 @@ data class BarcodeMissionUi(
 
 data class PhotoMissionUi(
     val capturer: PhotoCapturer,
+    val references: ReferencePhotoSource,
     val controller: MissionCameraController?,
 ) {
     companion object {
         fun default(context: Context): PhotoMissionUi =
             MissionCameraController(context).let { controller ->
-                PhotoMissionUi(MissionPhotoCapturer(controller), controller)
+                PhotoMissionUi(
+                    MissionPhotoCapturer(controller),
+                    ReferencePhotoStore(context),
+                    controller,
+                )
             }
     }
 }

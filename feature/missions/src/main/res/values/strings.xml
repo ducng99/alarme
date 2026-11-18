@@ -39,7 +39,13 @@
     <string name="mission_barcode_none_registered">No barcode was registered for this alarm. Use Emergency to turn off the alarm.</string>
     <string name="mission_photo_reference">Your reference photo</string>
     <string name="mission_photo_capture">Take the photo</string>
-    <string name="mission_photo_no_reference">No reference photo was registered. Any photo completes the mission.</string>
+    <string name="mission_photo_instruction">Take the same photo as your reference</string>
+    <string name="mission_photo_mismatch">That doesn\'t match your reference photo. Try again.</string>
+    <string name="mission_photo_failed">Couldn\'t take the photo. Try again.</string>
+    <string name="mission_photo_missing">The reference photo can\'t be found. Use Emergency to turn off the alarm.</string>
+    <string name="photo_register_permission">Camera permission is needed to take a photo</string>
+    <string name="photo_register_capture">Take photo</string>
+    <string name="photo_register_cancel">Cancel</string>
     <string name="mission_wordbeat_instruction">Read this out loud</string>
     <string name="mission_wordbeat_listening">Listening…</string>
     <string name="mission_wordbeat_try_again">Say it again — a bit more of it this time</string>
