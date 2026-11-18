@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.hilt.lifecycle.viewmodel.compose)
 
     implementation(libs.core.ktx)
+    implementation(libs.emoji2.emojipicker)
     implementation(libs.datetime)
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)

@@ -44,6 +44,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.emoji2.emojipicker.EmojiPickerView
 import dev.tomng.alarme.core.designsystem.component.IconBadge
 import dev.tomng.alarme.core.designsystem.component.NavRow
 import dev.tomng.alarme.core.designsystem.component.SegmentedGroup
@@ -51,7 +53,7 @@ import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.MissionType
 
-/** The label with its icon: the emoji button opens a small picker. */
+/** The label with its icon: the emoji button opens the emoji picker in a bottom sheet. */
 @Composable
 internal fun LabelGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
     var picking by remember { mutableStateOf(false) }
@@ -67,7 +69,7 @@ internal fun LabelGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
                 leading = {
                     val label = stringResource(R.string.editor_emoji)
                     Surface(
-                        onClick = { picking = !picking },
+                        onClick = { picking = true },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         modifier =
@@ -82,35 +84,33 @@ internal fun LabelGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
                 },
             )
         }
-        if (picking) {
-            row { shapes ->
-                SegmentedListItem(shapes = shapes) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        EMOJIS.forEach { emoji ->
-                            Surface(
-                                onClick = {
-                                    callbacks.onEmoji(emoji)
-                                    picking = false
-                                },
-                                shape = CircleShape,
-                                color =
-                                    if (emoji == draft.emoji)
-                                        MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                modifier = Modifier.size(40.dp).testTag("editor_emoji:$emoji"),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(emoji, style = MaterialTheme.typography.titleLarge)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    }
+    if (picking) {
+        EmojiPickerSheet(
+            onPick = {
+                callbacks.onEmoji(it)
+                picking = false
+            },
+            onDismiss = { picking = false },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EmojiPickerSheet(onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        modifier = Modifier.testTag("editor_emoji_picker"),
+    ) {
+        AndroidView(
+            factory = { context ->
+                EmojiPickerView(context).apply { setOnEmojiPickedListener { onPick(it.emoji) } }
+            },
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
+        )
     }
 }
 
@@ -308,5 +308,3 @@ private fun MissionTypeTile(type: MissionType, onClick: () -> Unit) {
         }
     }
 }
-
-private val EMOJIS = listOf("⏰", "🌅", "☕", "🏃", "📚", "💪", "🐱", "🎵")

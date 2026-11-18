@@ -103,6 +103,24 @@ class AlarmEditorScreenTest {
     }
 
     @Test
+    fun `the emoji button shows the current emoji and the picker starts closed`() {
+        setScreen(draft = AlarmDraft(emoji = "🌅"))
+
+        compose.onNodeWithTag("editor_emoji").assertTextEquals("🌅")
+        compose.onNodeWithTag("editor_emoji_picker").assertDoesNotExist()
+    }
+
+    @Test
+    fun `tapping the emoji button opens the emoji picker without picking anything`() {
+        setScreen()
+
+        compose.onNodeWithTag("editor_emoji").performClick()
+
+        compose.onNodeWithTag("editor_emoji_picker").assertIsDisplayed()
+        assertThat(calls.filter { it.startsWith("emoji:") }).isEmpty()
+    }
+
+    @Test
     fun `a new alarm shows the new title and no delete action`() {
         setScreen()
 
