@@ -11,6 +11,7 @@ import dev.tomng.alarme.core.model.alarm.DaysOfWeek
 import dev.tomng.alarme.core.model.mission.Mission
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -28,6 +29,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
+@OptIn(ExperimentalCoroutinesApi::class)
 class AlarmRepositoryTest {
 
     private lateinit var db: AlarmeDatabase

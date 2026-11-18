@@ -17,9 +17,10 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,6 +37,9 @@ import dev.tomng.alarme.core.designsystem.component.rememberFeedback
 import dev.tomng.alarme.core.designsystem.theme.Spacing
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
+private val FULL_SHEET_VALUES = setOf(SheetValue.Hidden, SheetValue.Expanded)
+
 /** A bottom sheet for a one-off alarm counted from now: presets, or any duration on two wheels. */
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -44,7 +48,7 @@ import kotlinx.coroutines.launch
 )
 @Composable
 internal fun QuickAlarmSheet(onDismiss: () -> Unit, onCreate: (minutes: Int) -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberBottomSheetState(SheetValue.Hidden, enabledValues = FULL_SHEET_VALUES)
     val scope = rememberCoroutineScope()
     val feedback = rememberFeedback()
     var custom by remember { mutableStateOf(false) }
