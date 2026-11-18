@@ -5,6 +5,7 @@ import android.hardware.display.DisplayManager
 import android.view.Display
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.tomng.alarme.core.alarmengine.statemachine.RingSessionStore
+import dev.tomng.alarme.core.alarmengine.statemachine.RingStage
 import dev.tomng.alarme.core.alarmengine.statemachine.RingState
 import dev.tomng.alarme.core.common.di.ApplicationScope
 import javax.inject.Inject
@@ -42,7 +43,8 @@ class AndroidDisplayProbe @Inject constructor(@ApplicationContext context: Conte
  * Keeps the ring screen in front for as long as the session needs it (ringing or the wake-up
  * check). It follows the session store rather than the ring activity, so swiping the task away or
  * opening another app cannot end the mission: the screen is pulled back every second until the
- * alarm is dismissed, snoozed or finished through the emergency path.
+ * alarm is dismissed, snoozed or finished through the emergency path. While snoozed the phone is
+ * free to use; the pull back resumes when the snooze re-rings.
  */
 @Singleton
 class RingScreenKeeper
@@ -101,7 +103,11 @@ constructor(
     }
 
     private fun RingState.needsRingScreen(): Boolean =
-        this is RingState.Ringing || this is RingState.WakeUpCheck
+        when (this) {
+            is RingState.Ringing -> stage !is RingStage.Snoozing
+            is RingState.WakeUpCheck -> true
+            else -> false
+        }
 
     companion object {
         const val ENTRY_GRACE_MILLIS = 3_000L

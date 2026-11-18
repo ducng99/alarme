@@ -34,7 +34,7 @@ class RingScreenKeeperTest {
     private val alarm =
         Alarm(id = 7L, name = "Work", hour = 6, minute = 0, createdAt = now, updatedAt = now)
 
-    private fun ring() =
+    private fun ring(trigger: RingTrigger = RingTrigger.SCHEDULED) =
         store.submit(
             RingEvent.AlarmRingRequest(
                 alarm = alarm,
@@ -45,7 +45,7 @@ class RingScreenKeeperTest {
                         alarmTime = "20261117_0600",
                         nowTime = "20261116_2200",
                     ),
-                trigger = RingTrigger.SCHEDULED,
+                trigger = trigger,
                 ringEventId = 11L,
                 startedAt = now,
             ),
@@ -147,6 +147,35 @@ class RingScreenKeeperTest {
 
         assertThat(starter.starts).isEqualTo(before)
         assertThat(keeper.isRunning).isFalse()
+    }
+
+    @Test
+    fun `snoozing pauses the pull back so the phone stays usable`() = keeperTest { keeper ->
+        ring()
+        keeper.onScreenHidden()
+        advanceTimeBy(5_000)
+        val before = starter.starts
+
+        store.submit(RingEvent.OnSnoozeClick(now))
+        advanceTimeBy(60_000)
+
+        assertThat(starter.starts).isEqualTo(before)
+        assertThat(keeper.isRunning).isFalse()
+    }
+
+    @Test
+    fun `the pull back resumes when the snooze re-rings`() = keeperTest { keeper ->
+        ring()
+        store.submit(RingEvent.OnSnoozeClick(now))
+        keeper.onScreenHidden()
+        advanceTimeBy(60_000)
+        assertThat(starter.starts).isEqualTo(0)
+
+        ring(RingTrigger.SNOOZE)
+        advanceTimeBy(RingScreenKeeper.ENTRY_GRACE_MILLIS + RingScreenKeeper.PERIOD_MILLIS + 100)
+
+        assertThat(starter.starts).isAtLeast(1)
+        assertThat(keeper.isRunning).isTrue()
     }
 
     @Test
