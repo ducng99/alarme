@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.FitnessCenter
@@ -504,6 +505,16 @@ private fun AlarmActionsMenu(
                 callbacks.onPickSound(alarm)
             },
         )
+        if (alarm.type != AlarmType.QUICK) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.alarmlist_duplicate)) },
+                leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
+                onClick = {
+                    onDismiss()
+                    callbacks.onDuplicate(alarm)
+                },
+            )
+        }
         DropdownMenuItem(
             text = {
                 Text(

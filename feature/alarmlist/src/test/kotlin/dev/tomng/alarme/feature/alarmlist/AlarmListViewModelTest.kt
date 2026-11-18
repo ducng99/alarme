@@ -128,6 +128,19 @@ class AlarmListViewModelTest {
     }
 
     @Test
+    fun `duplicating an alarm stores a copy with a new id and rearms`() = runTest {
+        repo.alarms.value = listOf(alarm())
+
+        viewModel.duplicate(alarm())
+
+        assertThat(repo.alarms.value).hasSize(2)
+        val copy = repo.alarms.value.single { it.id != 7L }
+        assertThat(copy.name).isEqualTo("work")
+        assertThat(copy.hour).isEqualTo(7)
+        assertThat(scheduler.reasons).containsExactly(RescheduleReason.ADD_ALARM)
+    }
+
+    @Test
     fun `deleting an alarm removes it and rearms`() = runTest {
         repo.alarms.value = listOf(alarm())
 

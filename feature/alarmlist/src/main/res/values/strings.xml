@@ -9,6 +9,7 @@
     <string name="alarmlist_skipped_badge">Skipping next</string>
     <string name="alarmlist_skip_once">Skip next</string>
     <string name="alarmlist_undo_skip">Undo skip</string>
+    <string name="alarmlist_duplicate">Duplicate</string>
     <string name="alarmlist_delete">Delete</string>
     <string name="alarmlist_daily">Every day</string>
     <string name="alarmlist_weekdays">Weekdays</string>

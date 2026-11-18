@@ -135,6 +135,17 @@ constructor(
         }
     }
 
+    fun duplicate(alarm: Alarm) {
+        viewModelScope.launch {
+            val full = alarmRepository.getAlarm(alarm.id) ?: alarm
+            val now = clock.now()
+            alarmRepository.upsertAlarm(
+                full.copy(id = Alarm.NEW_ID, isSkipped = false, createdAt = now, updatedAt = now),
+            )
+            rearm(RescheduleReason.ADD_ALARM)
+        }
+    }
+
     fun delete(alarm: Alarm) {
         viewModelScope.launch {
             val full = alarmRepository.getAlarm(alarm.id) ?: alarm
