@@ -203,23 +203,26 @@ internal fun MissionCameraChrome(
     message: String,
     modifier: Modifier = Modifier,
     messageIsError: Boolean = false,
+    showScrim: Boolean = true,
     headerTrailing: (@Composable () -> Unit)? = null,
     action: @Composable () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        Box(
-            modifier =
-                Modifier.fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA),
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA),
+        if (showScrim) {
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA),
+                                    Color.Transparent,
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA),
+                                ),
                             ),
                         ),
-                    ),
-        )
+            )
+        }
         Column(
             modifier = Modifier.fillMaxSize().padding(Spacing.xl),
             verticalArrangement = Arrangement.SpaceBetween,

@@ -41,7 +41,7 @@ import dev.tomng.alarme.feature.missions.R
 import dev.tomng.alarme.feature.missions.camera.BarcodeMissionUi
 import dev.tomng.alarme.feature.missions.camera.MissionCameraPreview
 
-private const val SCAN_BOX_FRACTION = 0.7f
+internal const val SCAN_BOX_FRACTION = 0.7f
 
 /**
  * Full-screen camera dialog used by the alarm editor to register the barcode inside a centered scan
@@ -122,7 +122,7 @@ private fun ScannerContent(
 }
 
 @Composable
-private fun ScanBoxOverlay(boxSidePx: Float) {
+internal fun ScanBoxOverlay(boxSidePx: Float) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         val box =
             Rect(
