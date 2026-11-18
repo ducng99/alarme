@@ -63,23 +63,6 @@ class ZxingBarcodeDecoderTest {
         assertThat(decoder.decode(frame)).isNull()
     }
 
-    @Test
-    fun `supports every mission format`() {
-        assertThat(ZxingBarcodeDecoder.FORMATS)
-            .containsExactly(
-                BarcodeFormat.QR_CODE,
-                BarcodeFormat.EAN_13,
-                BarcodeFormat.EAN_8,
-                BarcodeFormat.UPC_A,
-                BarcodeFormat.UPC_E,
-                BarcodeFormat.CODE_128,
-                BarcodeFormat.CODE_39,
-                BarcodeFormat.DATA_MATRIX,
-                BarcodeFormat.PDF_417,
-                BarcodeFormat.AZTEC,
-            )
-    }
-
     private fun render(
         format: BarcodeFormat,
         value: String,

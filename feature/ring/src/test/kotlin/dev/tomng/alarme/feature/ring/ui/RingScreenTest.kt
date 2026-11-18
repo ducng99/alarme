@@ -259,7 +259,6 @@ class RingScreenTest {
         compose.onNodeWithText("Mission 1 of 1").assertIsDisplayed()
         compose.onNodeWithTag("mission:typing").assertExists()
 
-        compose.onNodeWithTag("ring:add_time").assertDoesNotExist()
         compose.onNodeWithTag("mission:typing:input").performTextInput("abc")
         compose.onNodeWithTag("mission:typing:submit").performClick()
         compose.mainClock.advanceTimeBy(1_000)

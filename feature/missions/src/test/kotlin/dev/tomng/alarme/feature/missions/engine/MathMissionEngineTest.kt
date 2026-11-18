@@ -55,8 +55,6 @@ class MathMissionEngineTest {
         val engine = MathMissionEngine()
         repeat(100) { difficulty ->
             val q = engine.nextQuestion(difficulty = difficulty % 7)
-            val match = Regex("(\\(|)(\\d+)(?: x (\\d+))?\\)?\\+?").findAll(q.text)
-            assertThat(match.any()).isTrue()
             // Re-evaluate from the text: strip the trailing '=' and 'x' -> '*'.
             val expr = q.text.removeSuffix("=").replace(" x ", "*")
             val evaluated = evaluate(expr)

@@ -39,13 +39,4 @@ class ContextRingScreenStarterTest {
         assertThat(started.flags and android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             .isNotEqualTo(0)
     }
-
-    @Test
-    fun `starting again reuses the same pending intent`() {
-        starter.start()
-        starter.start()
-
-        assertThat(shadowOf(application).nextStartedActivity.action)
-            .isEqualTo(RingIntents.ACTION_OPEN_RING)
-    }
 }

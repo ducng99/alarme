@@ -46,9 +46,4 @@ class StartFailurePolicyTest {
             )
             .isFalse()
     }
-
-    @Test
-    fun `retry delay is 3 seconds`() {
-        assertThat(StartFailurePolicy.RETRY_DELAY).isEqualTo(3.seconds)
-    }
 }

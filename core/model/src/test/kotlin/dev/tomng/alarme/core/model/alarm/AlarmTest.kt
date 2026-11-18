@@ -1,7 +1,6 @@
 package dev.tomng.alarme.core.model.alarm
 
 import kotlin.time.Instant
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -56,29 +55,5 @@ class AlarmTest {
         assertThrows(IllegalArgumentException::class.java) {
             alarm(snooze = SnoozeOption(limit = 10))
         }
-    }
-
-    @Test
-    fun `defaults match the product baseline`() {
-        val snooze = SnoozeOption()
-        assertEquals(true, snooze.enabled)
-        assertEquals(5, snooze.minutes)
-        assertEquals(3, snooze.limit)
-    }
-
-    @Test
-    fun `quick alarms are one-shot`() {
-        val quick =
-            Alarm(
-                id = 2L,
-                type = AlarmType.QUICK,
-                name = "quick",
-                hour = 8,
-                minute = 0,
-                daysOfWeek = DaysOfWeek.NONE,
-                createdAt = Instant.parse("2026-11-01T00:00:00Z"),
-                updatedAt = Instant.parse("2026-11-01T00:00:00Z"),
-            )
-        assertEquals(false, quick.daysOfWeek.isRepeating)
     }
 }

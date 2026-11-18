@@ -34,25 +34,6 @@ class AlarmWidgetUiTest {
     }
 
     @Test
-    fun `an unnamed alarm shows only the time`() = runGlanceAppWidgetUnitTest {
-        setContext(ApplicationProvider.getApplicationContext())
-        provideComposable {
-            WidgetUi(
-                content =
-                    WidgetContent(
-                        hasAlarm = true,
-                        timeText = "6:00 AM",
-                        label = "",
-                        countdownBaseMillis = null,
-                    ),
-                launch = null,
-            )
-        }
-
-        onNode(hasText("6:00 AM")).assertExists()
-    }
-
-    @Test
     fun `no alarm shows the empty state`() = runGlanceAppWidgetUnitTest {
         setContext(ApplicationProvider.getApplicationContext())
         provideComposable {

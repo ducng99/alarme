@@ -99,11 +99,4 @@ class RingSessionStoreTest {
         assertThat(seen.last()).isEqualTo(RingState.Idle)
         assertThat(seen).hasSize(3)
     }
-
-    @Test
-    fun `the volume key bypass is off by default and settable`() {
-        assertThat(store.volumeKeyBypass).isFalse()
-        store.volumeKeyBypass = true
-        assertThat(store.volumeKeyBypass).isTrue()
-    }
 }

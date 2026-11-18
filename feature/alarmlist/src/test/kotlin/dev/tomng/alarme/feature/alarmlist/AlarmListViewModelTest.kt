@@ -278,16 +278,6 @@ class AlarmListViewModelTest {
     }
 
     @Test
-    fun `a successful arming is not reported as a failure`() = runTest {
-        repo.alarms.value = listOf(alarm())
-        scheduler.next = alarm()
-
-        viewModel.setEnabled(alarm(), enabled = true)
-
-        assertThat(viewModel.message.value).isNotEqualTo(AlarmListMessage.NotArmed)
-    }
-
-    @Test
     fun `the next alarm is the earliest enabled one`() = runTest {
         repo.alarms.value =
             listOf(

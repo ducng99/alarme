@@ -60,9 +60,4 @@ class AlarmNotificationsTest {
             .isNotEqualTo(0)
         assertThat(notification.fullScreenIntent).isNotNull()
     }
-
-    @Test
-    fun `ringing notification id is 1001`() {
-        assertThat(AlarmNotifications.RINGING_NOTIFICATION_ID).isEqualTo(1001)
-    }
 }

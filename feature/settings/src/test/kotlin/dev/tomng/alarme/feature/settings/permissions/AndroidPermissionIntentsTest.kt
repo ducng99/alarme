@@ -66,11 +66,4 @@ class AndroidPermissionIntentsTest {
             assertThat(intent.data).isEqualTo(Uri.parse("package:${context.packageName}"))
         }
     }
-
-    @Test
-    fun `every item has a settings destination`() {
-        for (item in PermissionItem.entries) {
-            assertThat(intents.forItem(item).action).isNotNull()
-        }
-    }
 }

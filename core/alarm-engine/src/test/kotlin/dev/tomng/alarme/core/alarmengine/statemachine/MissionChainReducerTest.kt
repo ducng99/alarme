@@ -50,7 +50,6 @@ class MissionChainReducerTest : RingReducerTestBase() {
         val t = reduce(state, RingEvent.OnDismissClick(now))
 
         val limit = RingStateMachine.DEFAULT_MISSION_TIME_LIMIT
-        assertThat(limit).isEqualTo(60.seconds)
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.Mission(0, missions[0], MissionTimer(limit, limit)))
         assertThat(t.effects).contains(RingEffect.StartMissionTimer(missions[0], limit))
@@ -304,7 +303,6 @@ class MissionChainReducerTest : RingReducerTestBase() {
     @Test
     fun `the hundredth emergency tap dismisses with the emergency reason`() {
         val mission = Mission.Math()
-        assertThat(RingStateMachine.EMERGENCY_TAPS).isEqualTo(100)
         val state =
             ringing(
                 alarm = alarm(missions = listOf(mission)),

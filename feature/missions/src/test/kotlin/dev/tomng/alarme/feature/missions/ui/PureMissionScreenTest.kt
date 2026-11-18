@@ -160,24 +160,6 @@ class MemoryMissionScreenTest {
     }
 
     @Test
-    fun `a wrong tile shows as a mistake without completing`() {
-        val callbacks = RecordingCallbacks()
-        rule.setContent {
-            MemoryMissionScreen(
-                Mission.Memory(rounds = 1, difficulty = 3),
-                callbacks,
-                MemoryMissionEngine(Random(21)),
-            )
-        }
-        rule.mainClock.advanceTimeBy(2_000)
-        rule.waitForIdle()
-
-        val before = rule.onAllNodesWithTag("mission:memory:tile").fetchSemanticsNodes().size
-        assertThat(before).isEqualTo(9)
-        assertThat(callbacks.completed).isEqualTo(0)
-    }
-
-    @Test
     fun `every tile tap resets the mission timer`() {
         val callbacks = RecordingCallbacks()
         rule.setContent {

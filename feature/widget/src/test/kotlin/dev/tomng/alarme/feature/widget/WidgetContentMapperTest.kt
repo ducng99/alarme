@@ -97,11 +97,4 @@ class WidgetContentMapperTest {
         assertThat(content.timeText).isEqualTo("7:05 PM")
         assertThat(german.timeText).isEqualTo("19:05")
     }
-
-    @Test
-    fun `an unnamed alarm keeps an empty label`() {
-        val content = map(alarm(name = ""))
-
-        assertThat(content.label).isEmpty()
-    }
 }

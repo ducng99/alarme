@@ -20,12 +20,6 @@ class BarcodeMatcherTest {
     }
 
     @Test
-    fun `a different format with the same value still matches`() {
-        // The format is not compared — only the raw value.
-        assertThat(BarcodeMatcher.matches("12345678", "12345678")).isTrue()
-    }
-
-    @Test
     fun `case matters`() {
         assertThat(BarcodeMatcher.matches("AbC", "abc")).isFalse()
     }

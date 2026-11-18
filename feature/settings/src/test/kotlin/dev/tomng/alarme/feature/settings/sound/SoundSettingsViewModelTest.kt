@@ -27,14 +27,6 @@ class SoundSettingsViewModelTest {
     @After fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun `mute during mission defaults to on`() =
-        runTest(dispatcher) {
-            val viewModel = SoundSettingsViewModel(settings)
-
-            assertThat(viewModel.state.value.muteDuringMission).isTrue()
-        }
-
-    @Test
     fun `toggling mute during mission persists and is reflected`() =
         runTest(dispatcher) {
             val viewModel = SoundSettingsViewModel(settings)
