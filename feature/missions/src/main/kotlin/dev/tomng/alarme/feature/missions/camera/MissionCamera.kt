@@ -60,6 +60,7 @@ class ZxingBarcodeScanner(
     override val scannedValue: StateFlow<String?> = _scannedValue
 
     private val decoder = ZxingBarcodeDecoder()
+    private val confirmer = ReadConfirmer()
 
     @Volatile private var scanArea: ScanArea? = null
 
@@ -73,7 +74,8 @@ class ZxingBarcodeScanner(
         controller.setAnalyzer { imageProxy ->
             imageProxy.use { image ->
                 val frame = image.toLuminanceFrame()
-                decoder.decode(frame, cropSideFor(frame))?.let { _scannedValue.value = it }
+                val read = decoder.decode(frame, cropSideFor(frame))
+                confirmer.offer(read)?.let { _scannedValue.value = it }
             }
         }
     }
