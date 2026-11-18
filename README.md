@@ -7,11 +7,11 @@
 A free, private, open-source Android alarm clock with wake-up missions, a wake-up check and anti-cheat protection.<br>
 No ads, no analytics, no network permission, no paywall.
 
-[![Latest release](https://img.shields.io/github/v/release/ducng99/alarme?style=for-the-badge&label=download&color=5c6bc0)](https://github.com/ducng99/alarme/releases/latest)
 [![License](https://img.shields.io/github/license/ducng99/alarme?style=for-the-badge)](LICENSE)
 [![Android 15+](https://img.shields.io/badge/Android-15%2B-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#install)
 
-[Download the APK](https://github.com/ducng99/alarme/releases/latest) · [Landing page](https://ducng99.github.io/alarme/) · [Report an issue](https://github.com/ducng99/alarme/issues)
+<a href="https://github.com/ducng99/alarme/releases/latest"><img height="64" alt="badge_github" src="https://github.com/user-attachments/assets/b2a41943-6afb-4445-8455-5824d3f26a60" /></a>
+<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22dev.tomng.alarme%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fducng99%2Falarme%22%2C%22author%22%3A%22ducng99%22%2C%22name%22%3A%22Alarme%22%7D"><img height="64" alt="badge_obtainium" src="https://github.com/user-attachments/assets/1c090e08-1185-4d1a-9f1c-74579108124e" /></a>
 
 <br>
 
