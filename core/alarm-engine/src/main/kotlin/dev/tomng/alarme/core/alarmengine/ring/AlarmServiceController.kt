@@ -148,9 +148,7 @@ constructor(
                 scheduleId = delivery.scheduleId.orEmpty(),
             ),
         )
-        notifications.postRinging(
-            notifications.ringingNotification(alarmName = alarm.name),
-        )
+        notifications.postRinging(alarmName = alarm.name)
         // The full-screen intent is suppressed while the user is in the app; ask for the screen
         // too.
         ringScreenStarter.start()

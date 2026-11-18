@@ -30,9 +30,14 @@ constructor(
 ) {
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
+    @Volatile private var ringScreenShown = false
+    @Volatile private var postedRingingName: String? = null
+    @Volatile private var ringingPosted = false
+
     fun ensureChannels() {
         if (
             notificationManager.getNotificationChannel(CHANNEL_ALARM_STATUS) != null &&
+                notificationManager.getNotificationChannel(CHANNEL_ALARM_QUIET) != null &&
                 notificationManager.getNotificationChannel(CHANNEL_NEXT_ALARM) != null
         ) {
             return
@@ -46,6 +51,18 @@ constructor(
         )
         notificationManager.createNotificationChannel(
             NotificationChannel(
+                    CHANNEL_ALARM_QUIET,
+                    context.getString(R.string.alarme_notif_channel_quiet),
+                    NotificationManager.IMPORTANCE_LOW,
+                )
+                .apply {
+                    setSound(null, null)
+                    enableVibration(false)
+                    setShowBadge(false)
+                },
+        )
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
                 CHANNEL_NEXT_ALARM,
                 context.getString(R.string.alarme_notif_channel_next),
                 NotificationManager.IMPORTANCE_DEFAULT,
@@ -53,25 +70,62 @@ constructor(
         )
     }
 
-    /** The ongoing "alarm is ringing" notification (id [RINGING_NOTIFICATION_ID]). */
+    /**
+     * The ongoing "alarm is ringing" notification (id [RINGING_NOTIFICATION_ID]). While the ring
+     * screen is in front it goes to the quiet channel without a full-screen intent, so no heads-up
+     * banner covers the ring screen.
+     */
     fun ringingNotification(alarmName: String?): NotificationCompat.Builder {
-        val fullScreen =
+        val open =
             PendingIntent.getActivity(
                 context,
                 0,
                 ringScreenIntent(),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-        return NotificationCompat.Builder(context, CHANNEL_ALARM_STATUS)
-            .setSmallIcon(R.drawable.ic_stat_alarm)
-            .setContentTitle(context.getString(R.string.alarme_notif_ring_title))
-            .setContentText(alarmName.orEmpty())
-            .setCategory(Notification.CATEGORY_ALARM)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setFullScreenIntent(fullScreen, true)
-            .setContentIntent(fullScreen)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+        val quiet = ringScreenShown
+        val builder =
+            NotificationCompat.Builder(
+                    context,
+                    if (quiet) CHANNEL_ALARM_QUIET else CHANNEL_ALARM_STATUS,
+                )
+                .setSmallIcon(R.drawable.ic_stat_alarm)
+                .setContentTitle(context.getString(R.string.alarme_notif_ring_title))
+                .setContentText(alarmName.orEmpty())
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setContentIntent(open)
+                .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+        if (quiet) {
+            builder.setPriority(NotificationCompat.PRIORITY_LOW)
+        } else {
+            builder.setFullScreenIntent(open, true)
+        }
+        return builder
+    }
+
+    /** Posts the ringing notification and remembers it so it can be quietened later. */
+    fun postRinging(alarmName: String?) {
+        postedRingingName = alarmName
+        ringingPosted = true
+        notificationManager.notify(RINGING_NOTIFICATION_ID, ringingNotification(alarmName).build())
+    }
+
+    /** The ring screen is in front: replace the heads-up ringing notification with a quiet one. */
+    fun onRingScreenShown() {
+        if (ringScreenShown) return
+        ringScreenShown = true
+        if (ringingPosted) {
+            notificationManager.notify(
+                RINGING_NOTIFICATION_ID,
+                ringingNotification(postedRingingName).build(),
+            )
+        }
+    }
+
+    fun onRingScreenHidden() {
+        ringScreenShown = false
     }
 
     /**
@@ -82,11 +136,6 @@ constructor(
         ringScreenIntentFactory
             .ringIntent()
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-
-    /** Re-posts the ringing notification (e.g. once the alarm name is known). */
-    fun postRinging(builder: NotificationCompat.Builder) {
-        notificationManager.notify(RINGING_NOTIFICATION_ID, builder.build())
-    }
 
     /**
      * The wake-up check prompt (id 1002): same channel and category as the ring, but no sound and
@@ -121,7 +170,15 @@ constructor(
     }
 
     /** The ongoing "snoozed until HH:mm" form of the ring notification (same id, id 1001). */
-    fun snoozedNotification(
+    fun postSnoozed(alarmName: String?, until: java.time.Instant) {
+        ringingPosted = false
+        notificationManager.notify(
+            RINGING_NOTIFICATION_ID,
+            snoozedNotification(alarmName, until).build(),
+        )
+    }
+
+    private fun snoozedNotification(
         alarmName: String?,
         until: java.time.Instant,
     ): NotificationCompat.Builder {
@@ -135,7 +192,7 @@ constructor(
         val untilText =
             java.time.format.DateTimeFormatter.ofPattern("h:mm a")
                 .format(java.time.Instant.ofEpochMilli(until.toEpochMilli()).atZone(zone()))
-        return NotificationCompat.Builder(context, CHANNEL_ALARM_STATUS)
+        return NotificationCompat.Builder(context, CHANNEL_ALARM_QUIET)
             .setSmallIcon(R.drawable.ic_stat_alarm)
             .setContentTitle(context.getString(R.string.alarme_notif_snoozed_title))
             .setContentText(
@@ -183,6 +240,7 @@ constructor(
         /** The pre-alarm reminder notification id (1003). */
         const val REMINDER_NOTIFICATION_ID = 1003
         const val CHANNEL_ALARM_STATUS = "alarm_status"
+        const val CHANNEL_ALARM_QUIET = "alarm_quiet"
         const val CHANNEL_NEXT_ALARM = "channel_next_alarm"
     }
 }

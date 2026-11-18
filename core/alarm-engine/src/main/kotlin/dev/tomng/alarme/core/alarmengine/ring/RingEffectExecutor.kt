@@ -190,11 +190,9 @@ constructor(
             at = effect.finishAt,
             count = effect.count,
         )
-        notifications.postRinging(
-            notifications.snoozedNotification(
-                alarmName = effect.alarm.name,
-                until = java.time.Instant.ofEpochMilli(effect.finishAt.toEpochMilliseconds()),
-            ),
+        notifications.postSnoozed(
+            alarmName = effect.alarm.name,
+            until = java.time.Instant.ofEpochMilli(effect.finishAt.toEpochMilliseconds()),
         )
         rearm(RescheduleReason.SNOOZE_ALARM)
     }
@@ -202,7 +200,7 @@ constructor(
     private fun resumeFromSnooze(alarm: Alarm) {
         scheduler.cancelSnooze()
         snoozeStore.clear()
-        notifications.postRinging(notifications.ringingNotification(alarmName = alarm.name))
+        notifications.postRinging(alarmName = alarm.name)
         startPrimedHost()
     }
 

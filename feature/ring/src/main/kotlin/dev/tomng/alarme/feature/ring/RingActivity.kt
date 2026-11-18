@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import dagger.hilt.android.AndroidEntryPoint
+import dev.tomng.alarme.core.alarmengine.notifications.AlarmNotifications
 import dev.tomng.alarme.core.alarmengine.poweroff.PowerOffBlockerController
 import dev.tomng.alarme.core.alarmengine.ring.RingScreenKeeper
 import dev.tomng.alarme.core.alarmengine.statemachine.RingEvent
@@ -53,6 +54,8 @@ class RingActivity : ComponentActivity() {
     @Inject lateinit var blocker: PowerOffBlockerController
 
     @Inject lateinit var screenKeeper: RingScreenKeeper
+
+    @Inject lateinit var notifications: AlarmNotifications
 
     private val focusScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -183,12 +186,16 @@ class RingActivity : ComponentActivity() {
         super.onResume()
         takeover.keepImmersive()
         screenKeeper.onScreenShown()
+        notifications.onRingScreenShown()
         dialogCloser.start()
     }
 
     override fun onPause() {
         dialogCloser.stop()
-        if (!awaitingPermission) screenKeeper.onScreenHidden()
+        if (!awaitingPermission) {
+            screenKeeper.onScreenHidden()
+            notifications.onRingScreenHidden()
+        }
         super.onPause()
     }
 

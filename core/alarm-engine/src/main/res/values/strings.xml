@@ -2,6 +2,7 @@
 <resources>
     <string name="alarme_app_name">Alarme</string>
     <string name="alarme_notif_channel_status">Alarm status</string>
+    <string name="alarme_notif_channel_quiet">Alarm status (silent)</string>
     <string name="alarme_notif_ring_title">Alarm</string>
     <string name="alarme_wuc_notif_title">You aren\'t still in bed, right?</string>
     <string name="alarme_wuc_notif_body">Tap here and complete the Wake Up Check or your alarm will start ringing again.</string>
