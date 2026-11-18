@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -108,16 +110,21 @@ private fun EmojiPickerSheet(onPick: (String) -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        sheetGesturesEnabled = false,
         modifier = Modifier.testTag("editor_emoji_picker"),
     ) {
+        val pickerHeight =
+            LocalConfiguration.current.screenHeightDp.dp * EMOJI_PICKER_HEIGHT_FRACTION
         AndroidView(
             factory = { context ->
                 EmojiPickerView(context).apply { setOnEmojiPickedListener { onPick(it.emoji) } }
             },
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
+            modifier = Modifier.fillMaxWidth().height(pickerHeight).navigationBarsPadding(),
         )
     }
 }
+
+private const val EMOJI_PICKER_HEIGHT_FRACTION = 0.4f
 
 /**
  * The mission chain: each row opens its configuration, can be moved up or down, and removed (with
