@@ -49,16 +49,17 @@ for i in 1 2 3 4 5 6; do
   echo "q=$q"
   [ -z "$q" ] && break
   if [ "$q" = "$prev" ]; then
-    adb shell input tap $(node_center 'text="Check"')
+    adb shell input tap $(node_center 'content-desc="Check"')
     sleep 0.9
     continue
   fi
   prev=$q
   [ "$i" = 1 ] && sleep 1.2
-  adb shell input tap $(node_center 'text="Your answer"'); sleep 0.4
-  adb shell input text $(( q )); sleep 0.3
+  for d in $(echo $(( q )) | grep -o .); do
+    adb shell input tap $(node_center "text=\"$d\""); sleep 0.25
+  done
   dump_ui
-  adb shell input tap $(node_center 'text="Check"')
+  adb shell input tap $(node_center 'content-desc="Check"')
   sleep 0.9
 done
 

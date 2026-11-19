@@ -2,6 +2,7 @@ package dev.tomng.alarme.feature.missions.ui
 
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -82,7 +83,7 @@ class MathMissionScreenTest {
     }
 
     @Test
-    fun `a typed answer completes a numeric round`() {
+    fun `an answer entered on the keypad completes a numeric round`() {
         val callbacks = RecordingCallbacks()
         val question = MathMissionEngine(Random(11)).nextQuestion(2)
         rule.setContent {
@@ -93,10 +94,29 @@ class MathMissionScreenTest {
             )
         }
 
-        rule.onNodeWithTag("mission:math:input").performTextInput(question.answer.toString())
-        rule.onNodeWithTag("mission:math:submit").performClick()
+        question.answer.toString().forEach { digit ->
+            rule.onNodeWithTag("mission:math:key:$digit").performClick()
+        }
+        rule.onNodeWithTag("mission:math:enter").performClick()
 
         assertThat(callbacks.completed).isEqualTo(1)
+    }
+
+    @Test
+    fun `backspace removes the last entered digit`() {
+        rule.setContent {
+            MathMissionScreen(
+                Mission.Math(rounds = 1, difficulty = 2),
+                RecordingCallbacks(),
+                MathMissionEngine(Random(11)),
+            )
+        }
+
+        rule.onNodeWithTag("mission:math:key:4").performClick()
+        rule.onNodeWithTag("mission:math:key:2").performClick()
+        rule.onNodeWithTag("mission:math:backspace").performClick()
+
+        rule.onNodeWithTag("mission:math:input").assertTextEquals("4")
     }
 
     @Test
@@ -110,23 +130,11 @@ class MathMissionScreenTest {
             )
         }
 
-        rule.onNodeWithTag("mission:math:input").performTextInput("1")
-        rule.onNodeWithTag("mission:math:submit").performClick()
+        rule.onNodeWithTag("mission:math:key:1").performClick()
+        rule.onNodeWithTag("mission:math:backspace").performClick()
+        rule.onNodeWithTag("mission:math:enter").performClick()
 
-        assertThat(callbacks.timerResets).isEqualTo(2)
-    }
-
-    @Test
-    fun `the numeric answer field is focused when shown`() {
-        rule.setContent {
-            MathMissionScreen(
-                Mission.Math(rounds = 1, difficulty = 2),
-                RecordingCallbacks(),
-                MathMissionEngine(Random(11)),
-            )
-        }
-
-        rule.onNodeWithTag("mission:math:input").assertIsFocused()
+        assertThat(callbacks.timerResets).isEqualTo(3)
     }
 }
 

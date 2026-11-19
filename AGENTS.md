@@ -98,6 +98,7 @@ When changing ring behavior, update the reducer (and its effects) plus the execu
 ## Conventions and constraints
 
 - Test-first is the project rule: write the failing unit test before implementation. Use Truth, Turbine, `kotlinx-coroutines-test`, `FakeAppClock`, and in-module fakes; use Robolectric for anything touching `android.*`.
+- Unit tests cover functional requirements only. Do not write tests for simple UI rules (focus, enabled state, a field being read-only, styling, layout); meaningless tests are banned.
 - Formatting is enforced by ktfmt (`kotlinLangStyle`) and detekt with `build.maxIssues: 0`. Keep comments sparse and only where code is not self-explanatory. Do not use em-dashes in comments; use hyphens. Do not wrap long lines in comments or markdown.
 - Compose screens take callbacks and are testable with `createComposeRule` under Robolectric; ViewModels use constructor injection and expose state flows.
 - Release uses R8 full mode and resource shrinking. Built-in sounds are referenced only by name string (`android.resource://.../raw/<name>`), so resource shrinking removes them unless listed in `feature/ringtones/src/main/res/raw/keep.xml`; add every new built-in sound there. Signing comes from untracked `keystore.properties`; without it the release build falls back to the debug key.

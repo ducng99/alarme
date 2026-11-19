@@ -15,6 +15,7 @@
     <string name="mission_wordbeat_title">Say the sentence</string>
     <string name="mission_math_answer_hint">Your answer</string>
     <string name="mission_math_submit">Check</string>
+    <string name="mission_math_backspace">Delete</string>
     <string name="mission_math_wrong">Not quite — try again</string>
     <string name="mission_memory_memorize">Memorize the highlighted tiles</string>
     <string name="mission_memory_find">Find the tiles</string>
