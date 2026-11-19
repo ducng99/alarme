@@ -340,6 +340,8 @@ private class RecordingSettings : SettingsRepository {
 
     override suspend fun setMuteDuringMission(enabled: Boolean) = Unit
 
+    override suspend fun setMissionMuteMinutes(minutes: Int) = Unit
+
     override suspend fun setAutoDismiss(option: AutoDismissOption) = Unit
 
     override suspend fun setAudioOutput(output: AudioOutputPreference) = Unit

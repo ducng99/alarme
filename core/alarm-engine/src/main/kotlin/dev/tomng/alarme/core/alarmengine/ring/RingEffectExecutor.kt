@@ -30,10 +30,10 @@ import kotlinx.coroutines.launch
 
 /**
  * Runs the reducer's commands on the main thread: audio start/stop against the request primed by
- * the ring service (silenced while a mission is solved), service shutdown on dismiss, the ring-loop
- * timers (auto-dismiss, snooze finish, mission countdown, the 100 s wake-up-check window) which
- * feed their expiry back into the session as events, and the wake-up-check arming (request code
- * 100).
+ * the ring service (silenced while a mission is solved, within the mute budget), service shutdown
+ * on dismiss, the ring-loop timers (auto-dismiss, snooze finish, mission countdown, the 100 s
+ * wake-up-check window) which feed their expiry back into the session as events, and the
+ * wake-up-check arming (request code 100).
  */
 @Singleton
 class RingEffectExecutor
@@ -52,7 +52,8 @@ constructor(
 
     private val handler = Handler(Looper.getMainLooper())
     private var primedRequest: RingRequest? = null
-    private var autoDismissRunnable: Runnable? = null
+    private val autoDismissTimer = OneShotTimer(handler)
+    private val muteBudgetTimer = OneShotTimer(handler)
     private var countdown: Countdown? = null
 
     init {
@@ -77,8 +78,11 @@ constructor(
 
             is RingEffect.Dismiss -> dismissRing(effect.alarm)
 
-            is RingEffect.StartAutoDismissTimer -> scheduleAutoDismiss(effect.duration)
-            RingEffect.StopAutoDismissTimer -> cancelAutoDismiss()
+            is RingEffect.StartAutoDismissTimer ->
+                autoDismissTimer.schedule(effect.duration) {
+                    store.submit(RingEvent.AutoDismissTimeout(clock.now()))
+                }
+            RingEffect.StopAutoDismissTimer -> autoDismissTimer.cancel()
 
             is RingEffect.Snooze -> startDurableSnooze(effect)
 
@@ -89,11 +93,18 @@ constructor(
             is RingEffect.StartWakeUpCheckTimer,
             RingEffect.StopWakeUpCheckTimer -> handleCountdown(effect)
 
-            RingEffect.SilenceRing -> ringHost.stop()
+            is RingEffect.SilenceRing -> {
+                ringHost.stop()
+                muteBudgetTimer.schedule(effect.budget) {
+                    store.submit(RingEvent.MissionMuteExhausted)
+                }
+            }
 
             // A failed mission must wake the user again: no slow crescendo on the way back.
-            RingEffect.ResumeRing ->
+            RingEffect.ResumeRing -> {
+                muteBudgetTimer.cancel()
                 primedRequest?.let { ringHost.start(it.copy(crescendo = null)) }
+            }
 
             is RingEffect.ScheduleWakeUpCheck ->
                 scheduler.armWakeUpCheck(effect.alarm.id, effect.at)
@@ -122,7 +133,7 @@ constructor(
                 startCountdown(
                     duration = effect.duration,
                     onTick = { remaining -> store.submit(RingEvent.OnMissionTimerTick(remaining)) },
-                    onExpire = { store.submit(RingEvent.OnMissionTimeout) },
+                    onExpire = { store.submit(RingEvent.OnMissionTimeout(clock.now())) },
                 )
 
             is RingEffect.StartWakeUpCheckTimer ->
@@ -155,7 +166,8 @@ constructor(
     }
 
     private fun dismissRing(alarm: Alarm) {
-        cancelAutoDismiss()
+        autoDismissTimer.cancel()
+        muteBudgetTimer.cancel()
         cancelCountdown()
         ringHost.stop()
         context.stopService(Intent(context, AlarmService::class.java))
@@ -176,6 +188,7 @@ constructor(
      * next normal occurrence is re-armed immediately so a crash mid-snooze can't lose tomorrow.
      */
     private fun startDurableSnooze(effect: RingEffect.Snooze) {
+        muteBudgetTimer.cancel()
         ringHost.stop()
         snoozeStore.save(
             dev.tomng.alarme.core.alarmengine.scheduling.SnoozeRecord(
@@ -204,18 +217,6 @@ constructor(
         startPrimedHost()
     }
 
-    private fun scheduleAutoDismiss(duration: Duration) {
-        cancelAutoDismiss()
-        val runnable = Runnable { store.submit(RingEvent.AutoDismissTimeout(clock.now())) }
-        autoDismissRunnable = runnable
-        handler.postDelayed(runnable, duration.inWholeMilliseconds)
-    }
-
-    private fun cancelAutoDismiss() {
-        autoDismissRunnable?.let(handler::removeCallbacks)
-        autoDismissRunnable = null
-    }
-
     /** A one-second countdown loop against an uptime deadline; [onExpire] fires at zero. */
     private fun startCountdown(
         duration: Duration,
@@ -232,6 +233,23 @@ constructor(
     private fun cancelCountdown() {
         countdown?.cancel()
         countdown = null
+    }
+}
+
+/** A single pending callback; scheduling again replaces the previous one. */
+private class OneShotTimer(private val handler: Handler) {
+    private var pending: Runnable? = null
+
+    fun schedule(delay: Duration, action: () -> Unit) {
+        cancel()
+        val runnable = Runnable(action)
+        pending = runnable
+        handler.postDelayed(runnable, delay.inWholeMilliseconds)
+    }
+
+    fun cancel() {
+        pending?.let(handler::removeCallbacks)
+        pending = null
     }
 }
 

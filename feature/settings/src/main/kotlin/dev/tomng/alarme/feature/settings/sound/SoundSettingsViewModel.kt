@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.tomng.alarme.core.data.repository.SettingsRepository
+import dev.tomng.alarme.core.data.settings.DEFAULT_MISSION_MUTE_MINUTES
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class SoundSettingsState(val muteDuringMission: Boolean = true)
+data class SoundSettingsState(
+    val muteDuringMission: Boolean = true,
+    val missionMuteMinutes: Int = DEFAULT_MISSION_MUTE_MINUTES,
+)
 
 @HiltViewModel
 class SoundSettingsViewModel @Inject constructor(private val settings: SettingsRepository) :
@@ -19,10 +23,19 @@ class SoundSettingsViewModel @Inject constructor(private val settings: SettingsR
 
     val state: StateFlow<SoundSettingsState> =
         settings.settings
-            .map { SoundSettingsState(muteDuringMission = it.muteDuringMission) }
+            .map {
+                SoundSettingsState(
+                    muteDuringMission = it.muteDuringMission,
+                    missionMuteMinutes = it.missionMuteMinutes,
+                )
+            }
             .stateIn(viewModelScope, SharingStarted.Eagerly, SoundSettingsState())
 
     fun setMuteDuringMission(enabled: Boolean) {
         viewModelScope.launch { settings.setMuteDuringMission(enabled) }
+    }
+
+    fun setMissionMuteMinutes(minutes: Int) {
+        viewModelScope.launch { settings.setMissionMuteMinutes(minutes) }
     }
 }

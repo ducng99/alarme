@@ -27,7 +27,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects)
             .containsExactly(
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
-                RingEffect.SilenceRing,
+                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
             )
             .inOrder()
     }
@@ -77,14 +77,14 @@ class MissionChainReducerTest : RingReducerTestBase() {
                 stage = RingStage.PrepareMission(0, mission),
             )
 
-        val t = reduce(state, RingEvent.OnMissionStart)
+        val t = reduce(state, RingEvent.OnMissionStart(now))
 
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.Mission(0, mission, MissionTimer(30.seconds, 30.seconds)))
         assertThat(t.effects)
             .containsExactly(
                 RingEffect.StartMissionTimer(mission, 30.seconds),
-                RingEffect.SilenceRing,
+                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
             )
             .inOrder()
     }
@@ -175,7 +175,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         val state =
             ringing(alarm = alarm(missions = listOf(mission)), stage = missionStage(0, mission))
 
-        val t = reduce(state, RingEvent.OnMissionTimeout)
+        val t = reduce(state, RingEvent.OnMissionTimeout(now))
 
         assertThat((t.state as RingState.Ringing).stage).isEqualTo(RingStage.Ring)
         assertThat(t.effects)
@@ -193,7 +193,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
                 muteDuringMission = false,
             )
 
-        val t = reduce(state, RingEvent.OnMissionTimeout)
+        val t = reduce(state, RingEvent.OnMissionTimeout(now))
 
         assertThat((t.state as RingState.Ringing).stage).isEqualTo(RingStage.Ring)
         assertThat(t.effects).containsExactly(RingEffect.StopMissionTimer)
@@ -206,7 +206,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         val state =
             ringing(alarm = alarm(missions = missions), stage = missionStage(1, missions[1]))
 
-        val failed = reduce(state, RingEvent.OnMissionTimeout)
+        val failed = reduce(state, RingEvent.OnMissionTimeout(now))
         val t = reduce(failed.state, RingEvent.OnDismissClick(now))
 
         assertThat((t.state as RingState.Ringing).stage).isEqualTo(missionStage(0, missions[0]))
@@ -249,7 +249,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         val state =
             ringing(alarm = alarm(missions = listOf(mission)), stage = missionStage(0, mission))
 
-        val t = reduce(state, RingEvent.OnEmergencyClick)
+        val t = reduce(state, RingEvent.OnEmergencyClick(now))
 
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.Emergency(0, mission, taps = 0))
@@ -267,7 +267,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
                 stage = RingStage.PrepareMission(0, mission),
             )
 
-        val t = reduce(state, RingEvent.OnEmergencyClick)
+        val t = reduce(state, RingEvent.OnEmergencyClick(now))
 
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.Emergency(0, mission, taps = 0))
@@ -278,7 +278,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
     fun `emergency is not offered from the ring stage`() {
         val state = ringing(alarm = alarm(missions = listOf(Mission.Math())))
 
-        val t = reduce(state, RingEvent.OnEmergencyClick)
+        val t = reduce(state, RingEvent.OnEmergencyClick(now))
 
         assertThat(t.state).isEqualTo(state)
         assertThat(t.effects).isEmpty()
@@ -329,14 +329,14 @@ class MissionChainReducerTest : RingReducerTestBase() {
                 stage = RingStage.Emergency(0, mission, taps = 12),
             )
 
-        val t = reduce(state, RingEvent.OnEmergencyCancel)
+        val t = reduce(state, RingEvent.OnEmergencyCancel(now))
 
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.Mission(0, mission, MissionTimer(30.seconds, 30.seconds)))
         assertThat(t.effects)
             .containsExactly(
                 RingEffect.StartMissionTimer(mission, 30.seconds),
-                RingEffect.SilenceRing,
+                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
             )
             .inOrder()
     }
@@ -350,7 +350,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
                 stage = RingStage.Emergency(0, mission, taps = 3),
             )
 
-        val t = reduce(state, RingEvent.OnEmergencyCancel)
+        val t = reduce(state, RingEvent.OnEmergencyCancel(now))
 
         assertThat((t.state as RingState.Ringing).stage)
             .isEqualTo(RingStage.PrepareMission(0, mission))
@@ -385,7 +385,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
             .containsExactly(
                 RingEffect.ResumeFromSnooze(state.alarm),
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
-                RingEffect.SilenceRing,
+                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
             )
             .inOrder()
     }

@@ -82,7 +82,7 @@ class RingActivity : ComponentActivity() {
 
             override fun onSnooze() = submit(RingEvent.OnSnoozeClick(clock.now()))
 
-            override fun onMissionStart() = submit(RingEvent.OnMissionStart)
+            override fun onMissionStart() = submit(RingEvent.OnMissionStart(clock.now()))
 
             override fun onMissionComplete() = submit(RingEvent.OnMissionComplete(clock.now()))
 
@@ -90,11 +90,11 @@ class RingActivity : ComponentActivity() {
 
             override fun onWakeUpCheckComplete() = submit(RingEvent.OnWakeUpCheckComplete)
 
-            override fun onEmergency() = submit(RingEvent.OnEmergencyClick)
+            override fun onEmergency() = submit(RingEvent.OnEmergencyClick(clock.now()))
 
             override fun onEmergencyTap() = submit(RingEvent.OnEmergencyTap(clock.now()))
 
-            override fun onEmergencyCancel() = submit(RingEvent.OnEmergencyCancel)
+            override fun onEmergencyCancel() = submit(RingEvent.OnEmergencyCancel(clock.now()))
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {

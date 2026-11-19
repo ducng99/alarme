@@ -33,6 +33,12 @@
     <string name="settings_default_sound_body">Used by alarms without their own sound.</string>
     <string name="settings_mute_during_mission">Mute during mission</string>
     <string name="settings_mute_during_mission_body">Silences the alarm while you solve a mission. It rings again if the mission times out.</string>
+    <string name="settings_mission_mute_limit">Mute time limit</string>
+    <string name="settings_mission_mute_limit_body">Total silence per alarm. Once used up, the alarm keeps ringing through the missions.</string>
+    <plurals name="settings_mission_mute_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
     <string name="settings_troubleshooting_title">Troubleshooting</string>
 
     <string name="settings_reliability_title">Cheat prevention</string>

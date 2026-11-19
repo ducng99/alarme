@@ -42,6 +42,7 @@ import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.feature.settings.permissions.PermissionCenterState
 import dev.tomng.alarme.feature.settings.permissions.PermissionItem
 import dev.tomng.alarme.feature.settings.reliability.ReliabilityState
+import dev.tomng.alarme.feature.settings.sound.MissionMuteLimitRow
 import dev.tomng.alarme.feature.settings.sound.SoundSettingsState
 
 @Composable
@@ -95,29 +96,7 @@ fun SettingsScreen(
             }
             item(key = "sound") {
                 SectionHeader(R.string.settings_sound_title)
-                SegmentedGroup {
-                    row { shapes ->
-                        NavRow(
-                            shapes = shapes,
-                            title = stringResource(R.string.settings_default_sound_title),
-                            supporting = stringResource(R.string.settings_default_sound_body),
-                            icon = Icons.Outlined.MusicNote,
-                            onClick = callbacks.onOpenDefaultSound,
-                            modifier = Modifier.testTag("settings_default_sound"),
-                        )
-                    }
-                    row { shapes ->
-                        SwitchRow(
-                            shapes = shapes,
-                            title = stringResource(R.string.settings_mute_during_mission),
-                            supporting = stringResource(R.string.settings_mute_during_mission_body),
-                            icon = Icons.AutoMirrored.Outlined.VolumeOff,
-                            checked = sound.muteDuringMission,
-                            onCheckedChange = callbacks.onToggleMuteDuringMission,
-                            modifier = Modifier.testTag("toggle_mute_during_mission"),
-                        )
-                    }
-                }
+                SoundGroup(sound, callbacks)
             }
             item(key = "reliability") {
                 SectionHeader(R.string.settings_reliability_title)
@@ -162,6 +141,42 @@ fun SettingsScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SoundGroup(sound: SoundSettingsState, callbacks: SettingsCallbacks) {
+    SegmentedGroup {
+        row { shapes ->
+            NavRow(
+                shapes = shapes,
+                title = stringResource(R.string.settings_default_sound_title),
+                supporting = stringResource(R.string.settings_default_sound_body),
+                icon = Icons.Outlined.MusicNote,
+                onClick = callbacks.onOpenDefaultSound,
+                modifier = Modifier.testTag("settings_default_sound"),
+            )
+        }
+        row { shapes ->
+            SwitchRow(
+                shapes = shapes,
+                title = stringResource(R.string.settings_mute_during_mission),
+                supporting = stringResource(R.string.settings_mute_during_mission_body),
+                icon = Icons.AutoMirrored.Outlined.VolumeOff,
+                checked = sound.muteDuringMission,
+                onCheckedChange = callbacks.onToggleMuteDuringMission,
+                modifier = Modifier.testTag("toggle_mute_during_mission"),
+            )
+        }
+        if (sound.muteDuringMission) {
+            row { shapes ->
+                MissionMuteLimitRow(
+                    shapes = shapes,
+                    minutes = sound.missionMuteMinutes,
+                    onMinutesChange = callbacks.onMissionMuteMinutes,
+                )
             }
         }
     }

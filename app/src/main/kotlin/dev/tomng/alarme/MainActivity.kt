@@ -381,6 +381,7 @@ private fun SettingsRoute(deps: AppDeps) {
                 onOpenBackup = { nav.push(Screen.Backup) },
                 onOpenDefaultSound = { nav.push(Screen.Picker(PickerTarget.Default)) },
                 onToggleMuteDuringMission = sound::setMuteDuringMission,
+                onMissionMuteMinutes = sound::setMissionMuteMinutes,
                 onBack = { nav.pop() },
             ),
     )

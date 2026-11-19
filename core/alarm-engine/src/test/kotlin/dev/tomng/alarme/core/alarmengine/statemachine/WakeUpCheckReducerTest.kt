@@ -203,7 +203,7 @@ class WakeUpCheckReducerTest : RingReducerTestBase() {
             .isEqualTo(RingStage.Mission(1, missions[1], MissionTimer(30.seconds, 30.seconds)))
 
         // math times out -> back to the ring screen, the ring resumes
-        t = reduce(t.state, RingEvent.OnMissionTimeout)
+        t = reduce(t.state, RingEvent.OnMissionTimeout(now))
         assertThat((t.state as RingState.Ringing).stage).isEqualTo(RingStage.Ring)
         assertThat(t.effects).contains(RingEffect.ResumeRing)
 
@@ -213,7 +213,7 @@ class WakeUpCheckReducerTest : RingReducerTestBase() {
             .isEqualTo(RingStage.Mission(0, missions[0], MissionTimer(30.seconds, 30.seconds)))
 
         // the user gives up -> emergency, 100 taps -> dismissed (EMERGENCY) + WUC pending
-        t = reduce(t.state, RingEvent.OnEmergencyClick)
+        t = reduce(t.state, RingEvent.OnEmergencyClick(now))
         repeat(RingStateMachine.EMERGENCY_TAPS) {
             t = reduce(t.state, RingEvent.OnEmergencyTap(now))
         }

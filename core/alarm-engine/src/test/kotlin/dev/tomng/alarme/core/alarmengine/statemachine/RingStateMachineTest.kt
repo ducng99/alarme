@@ -222,7 +222,7 @@ class RingStateMachineTest : RingReducerTestBase() {
             .containsExactly(
                 RingEffect.ResumeFromSnooze(state.alarm),
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
-                RingEffect.SilenceRing,
+                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
             )
             .inOrder()
     }
@@ -244,7 +244,7 @@ class RingStateMachineTest : RingReducerTestBase() {
                 RingEffect.ResumeFromSnooze(state.alarm),
                 RingEffect.StartAutoDismissTimer(60.seconds),
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
-                RingEffect.SilenceRing,
+                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
             )
             .inOrder()
     }
@@ -334,11 +334,11 @@ class RingStateMachineTest : RingReducerTestBase() {
                 RingState.Idle to RingEvent.OnDismissClick(now),
                 RingState.Idle to RingEvent.OnSnoozeClick(now),
                 RingState.Idle to RingEvent.OnMissionComplete(now),
-                RingState.Idle to RingEvent.OnMissionTimeout,
+                RingState.Idle to RingEvent.OnMissionTimeout(now),
                 RingState.Idle to RingEvent.AutoDismissTimeout(now),
                 RingState.Idle to RingEvent.VolumeMuteRequested,
                 RingState.Idle to RingEvent.OnWakeUpCheckComplete,
-                RingState.Idle to RingEvent.OnEmergencyClick,
+                RingState.Idle to RingEvent.OnEmergencyClick(now),
                 RingState.Idle to RingEvent.OnEmergencyTap(now),
             )
 

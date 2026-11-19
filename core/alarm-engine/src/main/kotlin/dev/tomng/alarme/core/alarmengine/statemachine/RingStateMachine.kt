@@ -25,7 +25,8 @@ data class RingTransition(
  *   chain (Step/Squat via a prepare stage); dismissing from the snooze stage also starts the chain
  *   (the alarm rings again), so snoozing is never a way around the missions;
  * * with mute-during-mission on, the sound is silenced while a mission is being solved and comes
- *   back whenever the mission stage is left (prepare screen, emergency, failure);
+ *   back whenever the mission stage is left (prepare screen, emergency, failure); the silence is
+ *   budgeted per session (3 minutes by default) and the ring returns for good once it is spent;
  * * every mission has an inactivity limit (its own, or 60 s); running out fails back to the ring
  *   stage and the next dismiss restarts the chain from the first mission;
  * * the emergency (100 taps, sound on) is always available from a mission and dismisses the ring;
@@ -49,6 +50,9 @@ object RingStateMachine {
 
     /** The confirmation window: miss it and the alarm rings again. */
     val WAKE_UP_CHECK_WINDOW: Duration = 100.seconds
+
+    /** Total silence a ring session may spend in missions with mute-during-mission on. */
+    val DEFAULT_MISSION_MUTE_BUDGET: Duration = 180.seconds
 
     /** The app-level default mute limit: limit 3, enabled. */
     const val DEFAULT_MUTE_LIMIT = 3
@@ -151,6 +155,7 @@ object RingStateMachine {
             snooze = SnoozeState(count = event.snoozeCount, limit = event.alarm.snoozeOption.limit),
             stage = RingStage.Ring,
             muteDuringMission = event.muteDuringMission,
+            missionMuteLeft = event.missionMuteBudget,
         )
 }
 

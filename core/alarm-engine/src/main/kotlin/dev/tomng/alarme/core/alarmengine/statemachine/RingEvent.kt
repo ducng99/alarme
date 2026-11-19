@@ -21,6 +21,7 @@ sealed interface RingEvent {
         val autoDismiss: Duration?
         val snoozeCount: Int
         val muteDuringMission: Boolean
+        val missionMuteBudget: Duration
     }
 
     /** A validated ring delivery; [snoozeCount] restores persisted counters. */
@@ -33,6 +34,7 @@ sealed interface RingEvent {
         override val autoDismiss: Duration? = null,
         override val snoozeCount: Int = 0,
         override val muteDuringMission: Boolean = true,
+        override val missionMuteBudget: Duration = RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET,
     ) : RingEvent, RingSessionEvent
 
     /** The service came back (reboot/redelivery) and is restoring a live ring. */
@@ -45,6 +47,7 @@ sealed interface RingEvent {
         override val autoDismiss: Duration? = null,
         override val snoozeCount: Int = 0,
         override val muteDuringMission: Boolean = true,
+        override val missionMuteBudget: Duration = RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET,
     ) : RingEvent, RingSessionEvent
 
     data class OnDismissClick(val now: Instant) : RingEvent
@@ -56,11 +59,11 @@ sealed interface RingEvent {
     ) : RingEvent
 
     /** Prepare stage done, the user is in position — start the physical mission. */
-    data object OnMissionStart : RingEvent
+    data class OnMissionStart(val now: Instant) : RingEvent
 
     data class OnMissionComplete(val now: Instant) : RingEvent
 
-    data object OnMissionTimeout : RingEvent
+    data class OnMissionTimeout(val now: Instant) : RingEvent
 
     data class OnMissionTimerTick(val remaining: Duration) : RingEvent
 
@@ -68,12 +71,15 @@ sealed interface RingEvent {
     data object OnMissionTimerReset : RingEvent
 
     /** The user gives up on the mission and opens the tap-to-dismiss emergency. */
-    data object OnEmergencyClick : RingEvent
+    data class OnEmergencyClick(val now: Instant) : RingEvent
 
     data class OnEmergencyTap(val now: Instant) : RingEvent
 
     /** Back from the emergency to the mission it was opened from. */
-    data object OnEmergencyCancel : RingEvent
+    data class OnEmergencyCancel(val now: Instant) : RingEvent
+
+    /** The mute-during-mission budget ran out: the ring comes back for the rest of the session. */
+    data object MissionMuteExhausted : RingEvent
 
     data class AutoDismissTimeout(val now: Instant) : RingEvent
 

@@ -66,6 +66,7 @@ abstract class RingReducerTestBase {
         autoDismiss: Duration? = null,
         snoozeCount: Int = 0,
         muteDuringMission: Boolean = true,
+        missionMuteLeft: Duration = RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET,
     ): RingState.Ringing =
         RingState.Ringing(
             alarm = alarm,
@@ -78,6 +79,16 @@ abstract class RingReducerTestBase {
             snooze = SnoozeState(count = snoozeCount, limit = alarm.snoozeOption.limit),
             stage = stage,
             muteDuringMission = muteDuringMission,
+            missionMuteLeft = missionMuteLeft,
+            // A mission stage reached through the chain is silenced from the moment it started.
+            silencedSince =
+                if (
+                    muteDuringMission &&
+                        stage is RingStage.Mission &&
+                        missionMuteLeft > Duration.ZERO
+                )
+                    now
+                else null,
         )
 
     protected fun missionStage(index: Int, mission: Mission): RingStage.Mission =

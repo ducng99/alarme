@@ -327,6 +327,27 @@ class RingEffectExecutorTest {
     }
 
     @Test
+    fun `the ring comes back once the mission mute budget is spent`() {
+        val mission = Mission.Typing(timeLimitSeconds = 600, rounds = 1)
+        val missionAlarm = alarm.copy(emoji = "", missions = listOf(mission))
+        store.submit(
+            ringRequest()
+                .copy(alarm = missionAlarm, ringEventId = 17L, missionMuteBudget = 5.seconds),
+        )
+        mainLooper.idle()
+
+        store.submit(RingEvent.OnDismissClick(clock.now))
+        mainLooper.idle()
+        assertThat(host.stopped).isEqualTo(1)
+
+        mainLooper.idleFor(java.time.Duration.ofSeconds(6))
+
+        val ringing = store.state.value as RingState.Ringing
+        assertThat(ringing.stage).isInstanceOf(RingStage.Mission::class.java)
+        assertThat(host.started).isEqualTo(2)
+    }
+
+    @Test
     fun `missions keep the ring sounding when mute during mission is off`() {
         val mission = Mission.Typing(timeLimitSeconds = 10, rounds = 1)
         val missionAlarm = alarm.copy(emoji = "", missions = listOf(mission))
@@ -373,7 +394,7 @@ class RingEffectExecutorTest {
         store.submit(RingEvent.OnDismissClick(clock.now))
         mainLooper.idle()
 
-        store.submit(RingEvent.OnEmergencyClick)
+        store.submit(RingEvent.OnEmergencyClick(clock.now))
         mainLooper.idle()
         assertThat(host.started).isEqualTo(2)
 
