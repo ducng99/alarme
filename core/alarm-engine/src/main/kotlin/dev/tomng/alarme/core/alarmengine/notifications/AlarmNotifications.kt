@@ -109,6 +109,7 @@ constructor(
     fun postRinging(alarmName: String?) {
         postedRingingName = alarmName
         ringingPosted = true
+        cancelReminder()
         notificationManager.notify(RINGING_NOTIFICATION_ID, ringingNotification(alarmName).build())
     }
 
@@ -223,7 +224,12 @@ constructor(
             .setContentText(context.getString(R.string.alarme_notif_reminder_body, alarmName))
             .setCategory(Notification.CATEGORY_REMINDER)
             .setAutoCancel(true)
+            .setTimeoutAfter((ringAt.toEpochMilli() - System.currentTimeMillis()).coerceAtLeast(1L))
             .addAction(0, context.getString(R.string.alarme_notif_reminder_skip), skipIntent)
+    }
+
+    fun cancelReminder() {
+        notificationManager.cancel(REMINDER_NOTIFICATION_ID)
     }
 
     fun postReminder(builder: NotificationCompat.Builder) {
