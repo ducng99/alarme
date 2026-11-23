@@ -199,6 +199,18 @@ constructor(
             )
     }
 
+    fun setRandomMissions(enabled: Boolean) = edit { draft ->
+        when {
+            !enabled -> draft.copy(randomMissionCount = null)
+            draft.randomMissionCount != null -> draft
+            else -> draft.copy(randomMissionCount = draft.missions.size)
+        }
+    }
+
+    fun setRandomMissionCount(count: Int) = edit { draft ->
+        if (draft.randomMissionCount == null) draft else draft.copy(randomMissionCount = count)
+    }
+
     fun save() {
         val current = _state.value
         if (current.saving) return
@@ -242,7 +254,7 @@ constructor(
 
     private fun edit(transform: (AlarmDraft) -> AlarmDraft) {
         _state.update {
-            val draft = transform(it.draft)
+            val draft = transform(it.draft).withValidRandomCount()
             it.copy(draft = draft, errors = emptyList(), nextRing = nextRingOf(draft))
         }
     }

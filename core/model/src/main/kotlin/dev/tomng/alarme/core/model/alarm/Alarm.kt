@@ -21,6 +21,11 @@ data class Alarm(
     val daysOfWeek: DaysOfWeek = DaysOfWeek.EVERY_DAY,
     val enabled: Boolean = true,
     val missions: List<Mission> = emptyList(),
+    /**
+     * Random missions: each ring runs this many of [missions] in random order; null runs all in
+     * order.
+     */
+    val randomMissionCount: Int? = null,
     val ringtoneUri: String? = null,
     val volumeRatio: Float = 1f,
     val vibrate: Boolean = false,

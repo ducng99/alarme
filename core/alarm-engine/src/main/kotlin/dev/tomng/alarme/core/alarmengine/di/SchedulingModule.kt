@@ -117,6 +117,15 @@ internal object SchedulingProviderModule {
         )
 
     @Provides
+    fun ringMissionPicker(
+        store: dev.tomng.alarme.core.alarmengine.ring.DeviceProtectedRandomMissionStore,
+    ): dev.tomng.alarme.core.alarmengine.ring.RingMissionPicker =
+        dev.tomng.alarme.core.alarmengine.ring.RingMissionPicker(
+            store,
+            kotlin.random.Random.Default,
+        )
+
+    @Provides
     @Singleton
     fun alarmManager(@ApplicationContext context: Context): AlarmManager =
         context.getSystemService(AlarmManager::class.java)

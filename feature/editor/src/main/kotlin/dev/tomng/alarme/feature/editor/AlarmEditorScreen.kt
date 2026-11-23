@@ -255,6 +255,7 @@ fun AlarmEditorScreen(
                     onEditMission = { editingMission = it },
                     onAddMission = { addingMission = true },
                 )
+                RandomMissionsGroup(draft, callbacks)
                 DraftErrors(state.errors)
             }
             section("sound", R.string.editor_section_sound) {

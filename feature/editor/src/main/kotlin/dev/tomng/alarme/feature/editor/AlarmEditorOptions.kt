@@ -441,6 +441,8 @@ class AlarmEditorCallbacks(
     val onRestoreMission: () -> Unit = {},
     val onMoveMission: (from: Int, to: Int) -> Unit = { _, _ -> },
     val onReplaceMission: (Int, Mission) -> Unit = { _, _ -> },
+    val onRandomMissions: (Boolean) -> Unit = {},
+    val onRandomMissionCount: (Int) -> Unit = {},
     val onOpenSound: (current: String?) -> Unit = {},
     val onOpenBackupSound: (current: String?) -> Unit = {},
     val onSave: () -> Unit = {},

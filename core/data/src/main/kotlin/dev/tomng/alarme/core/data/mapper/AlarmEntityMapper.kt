@@ -119,6 +119,7 @@ object AlarmEntityMapper {
                 timePressure = alarm.timeAnnouncementEnabled,
                 labelReminder = alarm.memoOption.ttsEnabled,
                 isSkipped = alarm.isSkipped,
+                randomMissionCount = alarm.randomMissionCount,
                 createdAt = alarm.createdAt.toEpochMilliseconds(),
                 updatedAt = alarm.updatedAt.toEpochMilliseconds(),
             )
@@ -202,6 +203,7 @@ object AlarmEntityMapper {
             daysOfWeek = DaysOfWeek(info.daysOfWeek),
             enabled = info.enabled,
             missions = missions,
+            randomMissionCount = info.randomMissionCount,
             ringtoneUri = info.alert,
             volumeRatio = info.volume.toFloat(),
             vibrate = info.vibrate,

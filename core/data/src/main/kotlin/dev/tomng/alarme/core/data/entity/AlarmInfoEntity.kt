@@ -35,6 +35,8 @@ data class AlarmInfoEntity(
     val timePressure: Boolean,
     val labelReminder: Boolean,
     val isSkipped: Boolean,
+    /** Random missions: how many of the chain ring each time; null rings the whole chain. */
+    val randomMissionCount: Int? = null,
     val createdAt: Long,
     val updatedAt: Long,
 )

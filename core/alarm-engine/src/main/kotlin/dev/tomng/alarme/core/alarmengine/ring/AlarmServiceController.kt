@@ -21,6 +21,7 @@ import dev.tomng.alarme.core.data.repository.AlarmEventType
 import dev.tomng.alarme.core.data.repository.AlarmRepository
 import dev.tomng.alarme.core.data.repository.RingEventRepository
 import dev.tomng.alarme.core.data.repository.SettingsRepository
+import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.scheduling.ScheduleIds
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,6 +35,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 
 /**
  * The ring service's brain (the [dev.tomng.alarme.core.alarmengine.service.AlarmService] shell is a
@@ -57,6 +60,7 @@ constructor(
     private val sessionStore: RingSessionStore,
     private val effectExecutor: RingEffectExecutor,
     private val ringScreenStarter: RingScreenStarter,
+    private val missionPicker: RingMissionPicker,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
     private var wakeLock: PowerManager.WakeLock? = null
@@ -109,8 +113,8 @@ constructor(
     }
 
     private suspend fun startRingHost(service: Service, delivery: RingDelivery) {
-        val alarm = alarmRepository.getAlarm(delivery.alarmId)
-        if (alarm == null || !alarm.enabled) {
+        val stored = alarmRepository.getAlarm(delivery.alarmId)
+        if (stored == null || !stored.enabled) {
             // Deleted or disabled between arming and delivery — never ring a ghost.
             ringEventRepository.logEvent(delivery.blockedEvent(REASON_EMPTY))
             snoozeStore.clear()
@@ -123,7 +127,8 @@ constructor(
         // This ring consumes the durable snooze (the finish PI that started it) and a pending
         // skip-once (the occurrence after the skipped one rings normally again).
         snoozeStore.clear()
-        if (alarm.isSkipped) alarmRepository.setSkipped(alarm.id, false)
+        if (stored.isSkipped) alarmRepository.setSkipped(stored.id, false)
+        val alarm = missionPicker.pick(stored, delivery.scheduleId)
 
         val settings = settingsRepository.settings.first()
         val effectiveRingtone = ringtoneResolver.resolve(alarm.ringtoneUri)
@@ -142,7 +147,7 @@ constructor(
                 ringRootId = delivery.scheduleId.orEmpty(),
                 timestamp = clock.now(),
                 triggerType = delivery.triggerType.name,
-                missionsJson = null,
+                missionsJson = missionsJson(alarm.missions),
                 alarmName = alarm.name,
                 alarmEmoji = alarm.emoji,
                 scheduleId = delivery.scheduleId.orEmpty(),
@@ -193,6 +198,10 @@ constructor(
             triggerType = TriggerType.NORMAL,
         )
     }
+
+    private fun missionsJson(missions: List<Mission>): String? =
+        if (missions.isEmpty()) null
+        else Json.encodeToString(ListSerializer(Mission.serializer()), missions)
 
     private fun synthesizedScheduleId(alarmId: Long) =
         dev.tomng.alarme.core.model.scheduling.ScheduleId(

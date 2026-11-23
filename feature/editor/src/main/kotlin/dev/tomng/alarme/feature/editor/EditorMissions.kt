@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -28,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
@@ -40,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -52,9 +57,11 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import dev.tomng.alarme.core.designsystem.component.IconBadge
 import dev.tomng.alarme.core.designsystem.component.NavRow
 import dev.tomng.alarme.core.designsystem.component.SegmentedGroup
+import dev.tomng.alarme.core.designsystem.component.SwitchRow
 import dev.tomng.alarme.core.designsystem.theme.Spacing
 import dev.tomng.alarme.core.model.mission.Mission
 import dev.tomng.alarme.core.model.mission.MissionType
+import kotlin.math.roundToInt
 
 /** The label with its icon: the emoji button opens the emoji picker in a bottom sheet. */
 @Composable
@@ -141,6 +148,7 @@ internal fun MissionGroup(
     onEditMission: (Int) -> Unit,
     onAddMission: () -> Unit,
 ) {
+    val random = draft.randomMissionCount != null
     SegmentedGroup {
         draft.missions.forEachIndexed { index, mission ->
             row { shapes ->
@@ -153,6 +161,7 @@ internal fun MissionGroup(
                     modifier =
                         Modifier.testTag("editor_mission:$index").semantics {
                             customActions = buildList {
+                                if (random) return@buildList
                                 if (index > 0) {
                                     add(
                                         CustomAccessibilityAction(moveUp) {
@@ -194,7 +203,7 @@ internal fun MissionGroup(
                     },
                     trailingContent = {
                         Row {
-                            if (draft.missions.size > 1) {
+                            if (draft.missions.size > 1 && !random) {
                                 IconButton(
                                     onClick = {
                                         onMoveMission(
@@ -226,11 +235,13 @@ internal fun MissionGroup(
                     },
                 ) {
                     Text(
-                        stringResource(
-                            R.string.editor_mission_slot,
-                            index + 1,
-                            missionTypeLabel(mission),
-                        ),
+                        if (random) missionTypeLabel(mission)
+                        else
+                            stringResource(
+                                R.string.editor_mission_slot,
+                                index + 1,
+                                missionTypeLabel(mission),
+                            ),
                     )
                 }
             }
@@ -247,6 +258,70 @@ internal fun MissionGroup(
                 onClick = onAddMission,
                 modifier = Modifier.testTag("editor_add_mission"),
             )
+        }
+    }
+}
+
+/**
+ * Random missions: when on, each ring runs [AlarmDraft.randomMissionCount] of the chain in random
+ * order. Only offered for chains of two or more missions.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun RandomMissionsGroup(draft: AlarmDraft, callbacks: AlarmEditorCallbacks) {
+    if (!draft.canRandomizeMissions) return
+    val count = draft.randomMissionCount
+    val total = draft.missions.size
+    SegmentedGroup(modifier = Modifier.padding(top = Spacing.m)) {
+        row { shapes ->
+            SwitchRow(
+                shapes = shapes,
+                title = stringResource(R.string.editor_random_missions),
+                supporting =
+                    if (count == null) stringResource(R.string.editor_random_missions_off)
+                    else
+                        pluralStringResource(
+                            R.plurals.editor_random_missions_on,
+                            count,
+                            count,
+                            total,
+                        ),
+                checked = count != null,
+                icon = Icons.Outlined.Shuffle,
+                onCheckedChange = callbacks.onRandomMissions,
+                modifier = Modifier.testTag("editor_random_missions"),
+            )
+        }
+        if (count != null) {
+            row { shapes ->
+                SegmentedListItem(
+                    shapes = shapes,
+                    leadingContent = { Spacer(Modifier.size(24.dp)) },
+                    trailingContent = {
+                        Text(
+                            text = count.toString(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.widthIn(min = 24.dp),
+                        )
+                    },
+                    supportingContent = {
+                        Slider(
+                            value = count.toFloat(),
+                            onValueChange = { value ->
+                                val picked = value.roundToInt()
+                                if (picked != count) callbacks.onRandomMissionCount(picked)
+                            },
+                            valueRange = 1f..total.toFloat(),
+                            steps = (total - 2).coerceAtLeast(0),
+                            modifier = Modifier.fillMaxWidth().testTag("editor_random_count"),
+                        )
+                    },
+                ) {
+                    Text(stringResource(R.string.editor_random_missions_count))
+                }
+            }
         }
     }
 }

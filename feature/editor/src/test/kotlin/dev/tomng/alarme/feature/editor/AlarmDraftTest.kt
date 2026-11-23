@@ -52,6 +52,15 @@ class AlarmDraftTest {
         )
 
     @Test
+    fun `a draft round-trips the random mission count`() {
+        val original =
+            alarm(missions = listOf(Mission.Math(), Mission.Shake(), Mission.Step()))
+                .copy(randomMissionCount = 2)
+
+        assertThat(AlarmDraft.fromAlarm(original).toAlarm(now).randomMissionCount).isEqualTo(2)
+    }
+
+    @Test
     fun `a draft round-trips every field of an alarm`() {
         val original = alarm(missions = listOf(Mission.Math(rounds = 3, difficulty = 2)))
 

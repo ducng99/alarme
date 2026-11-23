@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.RecordVoiceOver
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -333,6 +334,29 @@ private fun MissionIcons(alarm: Alarm, withDot: Boolean) {
                 modifier = Modifier.size(MISSION_ICON),
             )
         }
+        alarm.randomMissionCount?.let { count -> RandomMissionsHint(count, alarm.missions.size) }
+    }
+}
+
+@Composable
+private fun RandomMissionsHint(count: Int, total: Int) {
+    val description = stringResource(R.string.alarmlist_random_missions, count, total)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Shuffle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(MISSION_ICON),
+        )
+        Text(
+            text = stringResource(R.string.alarmlist_random_missions_short, count, total),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

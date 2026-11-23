@@ -47,6 +47,7 @@ constructor(
     private val snoozeStore: SnoozeStore,
     private val notifications: AlarmNotifications,
     private val alarmRepository: AlarmRepository,
+    private val missionPicker: RingMissionPicker,
     @ApplicationScope private val scope: CoroutineScope,
 ) : RingEffectListener {
 
@@ -161,6 +162,7 @@ constructor(
         autoDismissTimer.cancel()
         cancelCountdown()
         ringHost.stop()
+        missionPicker.forget()
         context.stopService(Intent(context, AlarmService::class.java))
         // A one-shot alarm has no next occurrence: it turns itself off once it has rung.
         scope.launch {

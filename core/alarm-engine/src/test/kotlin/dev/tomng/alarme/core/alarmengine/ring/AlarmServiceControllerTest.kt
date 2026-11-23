@@ -19,6 +19,7 @@ import dev.tomng.alarme.core.alarmengine.statemachine.RingState
 import dev.tomng.alarme.core.common.time.FakeAppClock
 import dev.tomng.alarme.core.data.repository.AlarmEventType
 import dev.tomng.alarme.core.model.alarm.Alarm
+import dev.tomng.alarme.core.model.mission.Mission
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
@@ -54,6 +55,7 @@ class AlarmServiceControllerTest {
     private val store = RingSessionStore()
     private val snoozeStore = dev.tomng.alarme.core.alarmengine.InMemorySnoozeStore()
     private val screenStarter = RecordingRingScreenStarter()
+    private val randomMissionStore = dev.tomng.alarme.core.alarmengine.InMemoryRandomMissionStore()
     private lateinit var service: Service
 
     @Before
@@ -88,6 +90,7 @@ class AlarmServiceControllerTest {
             snoozeStore = snoozeStore,
             clock = clock,
             ringScreenStarter = screenStarter,
+            missionPicker = RingMissionPicker(randomMissionStore, kotlin.random.Random(1)),
             scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler) + Job()),
             sessionStore = store,
             effectExecutor =
@@ -100,6 +103,7 @@ class AlarmServiceControllerTest {
                     dev.tomng.alarme.core.alarmengine.InMemorySnoozeStore(),
                     AlarmNotifications(context) { Intent("dev.tomng.alarme.action.OPEN_RING") },
                     alarmRepo,
+                    RingMissionPicker(randomMissionStore, kotlin.random.Random(1)),
                     CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
                 ),
         )
@@ -309,6 +313,50 @@ class AlarmServiceControllerTest {
         assertThat(ringing.snooze.count).isEqualTo(2)
         assertThat(ringing.trigger)
             .isEqualTo(dev.tomng.alarme.core.alarmengine.statemachine.RingTrigger.SNOOZE)
+        controller.onDestroy()
+    }
+
+    @Test
+    fun `a random mission alarm rings with its picked missions and logs them`() = runTest {
+        val chain = (1..5).map { Mission.Shake(count = it) }
+        alarmRepo.alarms.value =
+            listOf(alarmRepo.alarms.value.single().copy(missions = chain, randomMissionCount = 2))
+        val controller = newController()
+
+        controller.onStartCommand(service, ringIntent(), 0, 1)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+
+        val picked = (store.state.value as RingState.Ringing).alarm.missions
+        assertThat(picked).hasSize(2)
+        assertThat(chain).containsAtLeastElementsIn(picked)
+        val logged = events.events.single().missionsJson!!
+        picked.forEach { assertThat(logged).contains("\"count\":${(it as Mission.Shake).count}") }
+        controller.onDestroy()
+    }
+
+    @Test
+    fun `a snooze delivery of the same occurrence keeps the picked missions`() = runTest {
+        val chain = (1..5).map { Mission.Shake(count = it) }
+        alarmRepo.alarms.value =
+            listOf(alarmRepo.alarms.value.single().copy(missions = chain, randomMissionCount = 3))
+        val controller = newController()
+        controller.onStartCommand(service, ringIntent(), 0, 1)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+        val first = (store.state.value as RingState.Ringing).alarm.missions
+
+        val snoozeIntent =
+            AlarmIntents.ringIntent(
+                context,
+                alarmId = 2,
+                scheduleId = "dev_2_0600_2310",
+                alarmTimeMillis = Instant.parse("2026-11-04T06:05:00Z").toEpochMilliseconds(),
+                triggerType = TriggerType.SNOOZE,
+                snoozeCount = 1,
+            )
+        controller.onStartCommand(service, snoozeIntent, 0, 2)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+
+        assertThat((store.state.value as RingState.Ringing).alarm.missions).isEqualTo(first)
         controller.onDestroy()
     }
 

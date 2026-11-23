@@ -31,6 +31,8 @@
     <string name="alarmlist_quick_created">Quick alarm rings in %1$s</string>
     <string name="alarmlist_undo">Undo</string>
     <string name="alarmlist_edit">Edit alarm</string>
+    <string name="alarmlist_random_missions">%1$d of %2$d random missions</string>
+    <string name="alarmlist_random_missions_short">%1$d/%2$d</string>
     <string name="alarmlist_banner_title">Alarms can\'t ring yet</string>
     <string name="alarmlist_banner_body">Alarme needs a couple of permissions to wake you up on time.</string>
     <string name="alarmlist_quick_title">Quick alarm</string>

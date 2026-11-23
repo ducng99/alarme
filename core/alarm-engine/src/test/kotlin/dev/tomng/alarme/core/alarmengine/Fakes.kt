@@ -158,6 +158,20 @@ class InMemorySnoozeStore : dev.tomng.alarme.core.alarmengine.scheduling.SnoozeS
     }
 }
 
+class InMemoryRandomMissionStore : dev.tomng.alarme.core.alarmengine.ring.RandomMissionStore {
+    private var pick: dev.tomng.alarme.core.alarmengine.ring.RandomMissionPick? = null
+
+    override fun save(pick: dev.tomng.alarme.core.alarmengine.ring.RandomMissionPick) {
+        this.pick = pick
+    }
+
+    override fun load(): dev.tomng.alarme.core.alarmengine.ring.RandomMissionPick? = pick
+
+    override fun clear() {
+        pick = null
+    }
+}
+
 class RecordingRingDispatcher : RingDispatcher {
     val deliveries = mutableListOf<dev.tomng.alarme.core.alarmengine.scheduling.RingDelivery>()
 

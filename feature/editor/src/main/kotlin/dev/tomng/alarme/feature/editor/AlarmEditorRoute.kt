@@ -79,6 +79,8 @@ fun AlarmEditorRoute(
                 onRestoreMission = viewModel::restoreMission,
                 onMoveMission = viewModel::moveMission,
                 onReplaceMission = viewModel::replaceMission,
+                onRandomMissions = viewModel::setRandomMissions,
+                onRandomMissionCount = viewModel::setRandomMissionCount,
                 onOpenSound = sounds.onPickSound,
                 onOpenBackupSound = sounds.onPickBackupSound,
                 onSave = viewModel::save,

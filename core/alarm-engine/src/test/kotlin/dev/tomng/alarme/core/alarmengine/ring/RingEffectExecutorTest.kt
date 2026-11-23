@@ -45,6 +45,8 @@ class RingEffectExecutorTest {
     private val scheduler = dev.tomng.alarme.core.alarmengine.FakeAlarmScheduler()
     private val snoozeStore = dev.tomng.alarme.core.alarmengine.InMemorySnoozeStore()
     private val alarmRepository = RecordingAlarmRepository()
+    private val randomMissionStore = dev.tomng.alarme.core.alarmengine.InMemoryRandomMissionStore()
+    private val missionPicker = RingMissionPicker(randomMissionStore, kotlin.random.Random(1))
     private lateinit var executor: RingEffectExecutor
 
     private val alarm =
@@ -78,6 +80,7 @@ class RingEffectExecutorTest {
                     android.content.Intent("dev.tomng.alarme.action.OPEN_RING")
                 },
                 alarmRepository,
+                missionPicker,
                 kotlinx.coroutines.CoroutineScope(
                     kotlinx.coroutines.Dispatchers.Unconfined,
                 ),
@@ -111,6 +114,7 @@ class RingEffectExecutorTest {
                     android.content.Intent("dev.tomng.alarme.action.OPEN_RING")
                 },
                 alarmRepository,
+                missionPicker,
                 kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined),
             )
         bareExecutor.onEffect(RingEffect.Ring(alarm))
@@ -132,6 +136,36 @@ class RingEffectExecutorTest {
         val shadowContext: ShadowContextWrapper = shadowOf(context)
         assertThat(shadowContext.getNextStoppedService()?.component)
             .isEqualTo(ComponentName(context, AlarmService::class.java))
+    }
+
+    @Test
+    fun `dismissing forgets the random mission pick so the next occurrence picks again`() {
+        missionPicker.pick(
+            alarm.copy(missions = listOf(Mission.Math(), Mission.Shake()), randomMissionCount = 1),
+            scheduleId = scheduleId.raw,
+        )
+        store.submit(ringRequest())
+        mainLooper.idle()
+
+        store.submit(RingEvent.OnDismissClick(clock.now))
+        mainLooper.idle()
+
+        assertThat(randomMissionStore.load()).isNull()
+    }
+
+    @Test
+    fun `snoozing keeps the random mission pick`() {
+        missionPicker.pick(
+            alarm.copy(missions = listOf(Mission.Math(), Mission.Shake()), randomMissionCount = 1),
+            scheduleId = scheduleId.raw,
+        )
+        store.submit(ringRequest())
+        mainLooper.idle()
+
+        store.submit(RingEvent.OnSnoozeClick(clock.now))
+        mainLooper.idle()
+
+        assertThat(randomMissionStore.load()).isNotNull()
     }
 
     @Test

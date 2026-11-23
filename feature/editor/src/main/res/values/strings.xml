@@ -173,4 +173,11 @@
     <string name="editor_add_mission_title">Add a mission</string>
     <string name="editor_add_mission_body">You\'ll have to finish it to turn the alarm off.</string>
     <string name="editor_mission_back">Back to missions</string>
+    <string name="editor_random_missions">Random missions</string>
+    <string name="editor_random_missions_off">Run every mission in order</string>
+    <plurals name="editor_random_missions_on">
+        <item quantity="one">Pick %1$d of %2$d each time the alarm rings</item>
+        <item quantity="other">Pick %1$d of %2$d in random order each time the alarm rings</item>
+    </plurals>
+    <string name="editor_random_missions_count">Missions per alarm</string>
 </resources>

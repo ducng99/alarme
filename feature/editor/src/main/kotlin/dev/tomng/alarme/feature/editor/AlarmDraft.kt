@@ -27,6 +27,8 @@ data class AlarmDraft(
     val days: Set<DayOfWeek> = emptySet(),
     val enabled: Boolean = true,
     val missions: List<Mission> = emptyList(),
+    /** Random missions: how many of [missions] ring each time; null rings all of them in order. */
+    val randomMissionCount: Int? = null,
     val ringtoneUri: String? = null,
     val volumeRatio: Float = 1f,
     val vibrate: Boolean = false,
@@ -51,6 +53,16 @@ data class AlarmDraft(
     val canAddMission: Boolean
         get() = missions.size < Mission.MAX_PER_ALARM
 
+    val canRandomizeMissions: Boolean
+        get() = missions.size >= MIN_RANDOM_MISSIONS
+
+    /** Keeps the random count valid for the current chain: 1..size, off below two missions. */
+    fun withValidRandomCount(): AlarmDraft {
+        val count = randomMissionCount ?: return this
+        return if (!canRandomizeMissions) copy(randomMissionCount = null)
+        else copy(randomMissionCount = count.coerceIn(1, missions.size))
+    }
+
     /** Problems that block saving; empty means the draft is saveable. */
     fun errors(): List<DraftError> {
         val errors = mutableListOf<DraftError>()
@@ -72,6 +84,7 @@ data class AlarmDraft(
             daysOfWeek = DaysOfWeek.ofSet(days),
             enabled = enabled,
             missions = missions,
+            randomMissionCount = withValidRandomCount().randomMissionCount,
             ringtoneUri = ringtoneUri,
             volumeRatio = volumeRatio,
             vibrate = vibrate,
@@ -95,6 +108,7 @@ data class AlarmDraft(
 
     companion object {
         const val DEFAULT_HOUR = 7
+        const val MIN_RANDOM_MISSIONS = 2
 
         fun fromAlarm(alarm: Alarm): AlarmDraft =
             AlarmDraft(
@@ -107,6 +121,7 @@ data class AlarmDraft(
                 days = alarm.daysOfWeek.toSet(),
                 enabled = alarm.enabled,
                 missions = alarm.missions,
+                randomMissionCount = alarm.randomMissionCount,
                 ringtoneUri = alarm.ringtoneUri,
                 volumeRatio = alarm.volumeRatio,
                 vibrate = alarm.vibrate,

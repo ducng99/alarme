@@ -101,6 +101,15 @@ class AlarmMapperTest {
     }
 
     @Test
+    fun `random mission count round trips`() {
+        val random =
+            alarm(listOf(Mission.Shake(count = 5), Mission.Math()), nextTimeMillis = 1L)
+                .copy(randomMissionCount = 1)
+
+        assertEquals(1, roundTrip(random, 1L).randomMissionCount)
+    }
+
+    @Test
     fun `quick one-shot alarm round trips`() {
         val quick =
             alarm(nextTimeMillis = 5L)
