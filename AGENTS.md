@@ -7,7 +7,7 @@ Alarme is an Android alarm clock built with Kotlin, Compose Material 3, Hilt, Ro
 - JDK 17 (`JAVA_HOME` must point to it; JDK 27 on this machine is too new for the Gradle daemon).
 - Android SDK: `ANDROID_HOME=/opt/android-sdk`, platform 37, build-tools 36.0.0.
 - Gradle wrapper 9.6.0. `minSdk 35`, `compileSdk/targetSdk 37`, `applicationId dev.tomng.alarme`.
-- Reference material lives outside this repo: `../.pi/plans/alarme-android-app.md` (build plan) and `../findings/01…06.md` (behavioral spec). `README.md` covers release/signing/baseline-profile details.
+- `README.md` covers release/signing/baseline-profile details.
 
 ## Commands
 
