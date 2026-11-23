@@ -174,8 +174,8 @@ private fun SoundGroup(sound: SoundSettingsState, callbacks: SettingsCallbacks) 
             row { shapes ->
                 MissionMuteLimitRow(
                     shapes = shapes,
-                    minutes = sound.missionMuteMinutes,
-                    onMinutesChange = callbacks.onMissionMuteMinutes,
+                    limit = sound.missionMuteLimit,
+                    onLimitChange = callbacks.onMissionMuteLimit,
                 )
             }
         }

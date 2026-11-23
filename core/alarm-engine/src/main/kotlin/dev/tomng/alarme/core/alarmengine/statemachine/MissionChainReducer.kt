@@ -1,7 +1,6 @@
 package dev.tomng.alarme.core.alarmengine.statemachine
 
 import dev.tomng.alarme.core.model.mission.Mission
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -11,10 +10,10 @@ import kotlin.time.Instant
  */
 internal object MissionChainReducer {
 
-    fun onMissionStart(state: RingState.Ringing, now: Instant): RingTransition =
+    fun onMissionStart(state: RingState.Ringing): RingTransition =
         when (val stage = state.stage) {
             // The prepare screen already ran: start the mission itself, no second prepare.
-            is RingStage.PrepareMission -> startMission(state, stage.index, stage.mission, now)
+            is RingStage.PrepareMission -> startMission(state, stage.index, stage.mission)
             else -> RingTransition(state)
         }
 
@@ -23,7 +22,7 @@ internal object MissionChainReducer {
         val next = stage.index + 1
         val missions = state.alarm.missions
         return if (next < missions.size) {
-            val entering = enterMission(state, next, missions[next], now)
+            val entering = enterMission(state, next, missions[next])
             RingTransition(entering.state, listOf(RingEffect.StopMissionTimer) + entering.effects)
         } else {
             DismissReducer.complete(state, DismissReason.NORMAL, now, stopMissionTimer = true)
@@ -31,9 +30,9 @@ internal object MissionChainReducer {
     }
 
     /** A failed mission returns to the loud ring; the next dismiss restarts the whole chain. */
-    fun onMissionTimeout(state: RingState.Ringing, now: Instant): RingTransition {
+    fun onMissionTimeout(state: RingState.Ringing): RingTransition {
         if (state.stage !is RingStage.Mission) return RingTransition(state)
-        val resumed = MissionMute.end(state, now)
+        val resumed = MissionMute.end(state, charge = true)
         return RingTransition(
             state = resumed.state.copy(stage = RingStage.Ring),
             effects = listOf(RingEffect.StopMissionTimer) + resumed.effects,
@@ -65,26 +64,24 @@ internal object MissionChainReducer {
         state: RingState.Ringing,
         index: Int,
         mission: Mission,
-        now: Instant,
     ): RingTransition {
         if (mission.needsPrepare()) {
-            val resumed = MissionMute.end(state, now)
+            val resumed = MissionMute.end(state)
             return RingTransition(
                 resumed.state.copy(stage = RingStage.PrepareMission(index, mission)),
                 resumed.effects,
             )
         }
-        return startMission(state, index, mission, now)
+        return startMission(state, index, mission)
     }
 
     fun startMission(
         state: RingState.Ringing,
         index: Int,
         mission: Mission,
-        now: Instant,
     ): RingTransition {
         val timer = timerOf(mission)
-        val silenced = MissionMute.start(state, now)
+        val silenced = MissionMute.start(state)
         return RingTransition(
             silenced.state.copy(stage = RingStage.Mission(index, mission, timer)),
             listOf(RingEffect.StartMissionTimer(mission, timer.total)) + silenced.effects,
@@ -101,43 +98,33 @@ internal object MissionChainReducer {
         return MissionTimer(limit, limit)
     }
 
-    fun onMuteExhausted(state: RingState.Ringing): RingTransition {
-        if (state.silencedSince == null) return RingTransition(state)
-        return RingTransition(
-            state.copy(missionMuteLeft = Duration.ZERO, silencedSince = null),
-            listOf(RingEffect.ResumeRing),
-        )
-    }
-
     private fun Mission.needsPrepare(): Boolean = this is Mission.Step || this is Mission.Squat
 }
 
 /**
  * The mute-during-mission budget: silence is only granted while [RingState.Ringing.missionMuteLeft]
- * lasts, and every silent stretch is charged against it when it ends.
+ * is above zero. Starting a mission is free; each time the ring comes back after a mission timed
+ * out costs one.
  */
 internal object MissionMute {
 
     data class Step(val state: RingState.Ringing, val effects: List<RingEffect> = emptyList())
 
-    fun start(state: RingState.Ringing, now: Instant): Step {
-        val canSilence =
-            state.muteDuringMission &&
-                state.silencedSince == null &&
-                state.missionMuteLeft > Duration.ZERO
+    fun start(state: RingState.Ringing): Step {
+        val canSilence = state.muteDuringMission && !state.silenced && state.missionMuteLeft > 0
         if (!canSilence) return Step(state)
-        return Step(
-            state.copy(silencedSince = now),
-            listOf(RingEffect.SilenceRing(state.missionMuteLeft)),
-        )
+        return Step(state.copy(silenced = true), listOf(RingEffect.SilenceRing))
     }
 
-    /** Charges the silent stretch; [resume] is false when the sound stays off anyway (snooze). */
-    fun end(state: RingState.Ringing, now: Instant, resume: Boolean = true): Step {
-        val since = state.silencedSince ?: return Step(state)
-        val left = (state.missionMuteLeft - (now - since)).coerceAtLeast(Duration.ZERO)
+    /**
+     * Ends the silence; [charge] spends one resume, [resume] is false when the sound stays off
+     * anyway (snooze).
+     */
+    fun end(state: RingState.Ringing, charge: Boolean = false, resume: Boolean = true): Step {
+        if (!state.silenced) return Step(state)
+        val left = if (charge) state.missionMuteLeft - 1 else state.missionMuteLeft
         return Step(
-            state.copy(missionMuteLeft = left, silencedSince = null),
+            state.copy(missionMuteLeft = left, silenced = false),
             if (resume) listOf(RingEffect.ResumeRing) else emptyList(),
         )
     }

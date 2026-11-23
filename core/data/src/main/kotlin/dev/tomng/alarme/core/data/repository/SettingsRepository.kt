@@ -9,8 +9,8 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.tomng.alarme.core.data.settings.AppSettings
 import dev.tomng.alarme.core.data.settings.AudioOutputPreference
-import dev.tomng.alarme.core.data.settings.DEFAULT_MISSION_MUTE_MINUTES
-import dev.tomng.alarme.core.data.settings.MISSION_MUTE_MINUTES_RANGE
+import dev.tomng.alarme.core.data.settings.DEFAULT_MISSION_MUTE_LIMIT
+import dev.tomng.alarme.core.data.settings.MISSION_MUTE_LIMIT_RANGE
 import dev.tomng.alarme.core.model.alarm.AutoDismissOption
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +28,7 @@ interface SettingsRepository {
 
     suspend fun setMuteDuringMission(enabled: Boolean)
 
-    suspend fun setMissionMuteMinutes(minutes: Int)
+    suspend fun setMissionMuteLimit(minutes: Int)
 
     suspend fun setAutoDismiss(option: AutoDismissOption)
 
@@ -70,9 +70,9 @@ constructor(
         dataStore.edit { prefs -> prefs[MUTE_DURING_MISSION] = enabled }
     }
 
-    override suspend fun setMissionMuteMinutes(minutes: Int) {
-        require(minutes in MISSION_MUTE_MINUTES_RANGE) { "mission mute minutes out of range" }
-        dataStore.edit { prefs -> prefs[MISSION_MUTE_MINUTES] = minutes }
+    override suspend fun setMissionMuteLimit(minutes: Int) {
+        require(minutes in MISSION_MUTE_LIMIT_RANGE) { "mission mute minutes out of range" }
+        dataStore.edit { prefs -> prefs[MISSION_MUTE_LIMIT] = minutes }
     }
 
     override suspend fun setAutoDismiss(option: AutoDismissOption) {
@@ -122,7 +122,7 @@ constructor(
             muteEnabled = this[MUTE_ENABLED] ?: true,
             muteLimit = this[MUTE_LIMIT] ?: 3,
             muteDuringMission = this[MUTE_DURING_MISSION] ?: true,
-            missionMuteMinutes = this[MISSION_MUTE_MINUTES] ?: DEFAULT_MISSION_MUTE_MINUTES,
+            missionMuteLimit = this[MISSION_MUTE_LIMIT] ?: DEFAULT_MISSION_MUTE_LIMIT,
             autoDismiss =
                 when (val minutes = this[AUTO_DISMISS_MINUTES]) {
                     null,
@@ -161,7 +161,7 @@ constructor(
         val MUTE_ENABLED = booleanPreferencesKey("mute_enabled")
         val MUTE_LIMIT = intPreferencesKey("mute_limit")
         val MUTE_DURING_MISSION = booleanPreferencesKey("mute_during_mission")
-        val MISSION_MUTE_MINUTES = intPreferencesKey("mission_mute_minutes")
+        val MISSION_MUTE_LIMIT = intPreferencesKey("mission_mute_limit")
         val AUTO_DISMISS_MINUTES = intPreferencesKey("auto_dismiss_minutes")
         val AUDIO_OUTPUT = stringPreferencesKey("audio_output")
         val PREVENT_POWER_OFF = booleanPreferencesKey("prevent_power_off")

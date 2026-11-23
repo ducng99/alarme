@@ -23,28 +23,28 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.tomng.alarme.core.data.settings.MISSION_MUTE_MINUTES_RANGE
+import dev.tomng.alarme.core.data.settings.MISSION_MUTE_LIMIT_RANGE
 import dev.tomng.alarme.feature.settings.R
 import kotlin.math.roundToInt
 
-/** The total mute-during-mission time per alarm, in whole minutes. */
+/** The total mute-during-mission time per alarm, as a number of mission timeouts. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun MissionMuteLimitRow(
     shapes: ListItemShapes,
-    minutes: Int,
-    onMinutesChange: (Int) -> Unit,
+    limit: Int,
+    onLimitChange: (Int) -> Unit,
 ) {
-    val range = MISSION_MUTE_MINUTES_RANGE
+    val range = MISSION_MUTE_LIMIT_RANGE
     // Dragging is local; the setting is written once when the thumb is released.
-    var dragged by remember(minutes) { mutableFloatStateOf(minutes.toFloat()) }
+    var dragged by remember(limit) { mutableFloatStateOf(limit.toFloat()) }
     val shown = dragged.roundToInt()
     SegmentedListItem(
         shapes = shapes,
         leadingContent = { Icon(Icons.Outlined.Timer, contentDescription = null) },
         trailingContent = {
             Text(
-                text = pluralStringResource(R.plurals.settings_mission_mute_minutes, shown, shown),
+                text = pluralStringResource(R.plurals.settings_mission_mute_limit, shown, shown),
                 style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.End,
                 modifier = Modifier.widthIn(min = 48.dp),
@@ -56,10 +56,10 @@ internal fun MissionMuteLimitRow(
                 Slider(
                     value = dragged,
                     onValueChange = { dragged = it },
-                    onValueChangeFinished = { onMinutesChange(dragged.roundToInt()) },
+                    onValueChangeFinished = { onLimitChange(dragged.roundToInt()) },
                     valueRange = range.first.toFloat()..range.last.toFloat(),
                     steps = range.last - range.first - 1,
-                    modifier = Modifier.fillMaxWidth().testTag("mission_mute_minutes"),
+                    modifier = Modifier.fillMaxWidth().testTag("mission_mute_limit"),
                 )
             }
         },

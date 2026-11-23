@@ -56,8 +56,8 @@ sealed interface RingState {
         val snooze: SnoozeState,
         val stage: RingStage,
         val muteDuringMission: Boolean = true,
-        val missionMuteLeft: Duration = RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET,
-        val silencedSince: Instant? = null,
+        val missionMuteLeft: Int = RingStateMachine.DEFAULT_MISSION_MUTE_LIMIT,
+        val silenced: Boolean = false,
     ) : RingState
 
     /** The 100 s confirmation is running. */

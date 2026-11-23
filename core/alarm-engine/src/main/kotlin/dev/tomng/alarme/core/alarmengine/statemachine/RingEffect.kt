@@ -58,11 +58,8 @@ sealed interface RingEffect {
 
     data object StopMissionTimer : RingEffect
 
-    /**
-     * Mute the ring sound while a mission is being solved; [ResumeRing] brings it back. The
-     * executor reports [RingEvent.MissionMuteExhausted] once [budget] of silence has passed.
-     */
-    data class SilenceRing(val budget: Duration) : RingEffect
+    /** Mute the ring sound while a mission is being solved; [ResumeRing] brings it back. */
+    data object SilenceRing : RingEffect
 
     data object ResumeRing : RingEffect
 

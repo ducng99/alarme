@@ -119,8 +119,8 @@ private class FakeSettings : SettingsRepository {
         state.value = state.value.copy(muteDuringMission = enabled)
     }
 
-    override suspend fun setMissionMuteMinutes(minutes: Int) {
-        state.value = state.value.copy(missionMuteMinutes = minutes)
+    override suspend fun setMissionMuteLimit(minutes: Int) {
+        state.value = state.value.copy(missionMuteLimit = minutes)
     }
 
     override suspend fun setAutoDismiss(option: AutoDismissOption) = Unit

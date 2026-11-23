@@ -21,7 +21,7 @@ internal object DismissReducer {
                 if (missions.isEmpty()) {
                     complete(state, DismissReason.NORMAL, now, stopMissionTimer = false)
                 } else {
-                    MissionChainReducer.enterMission(state, index = 0, mission = missions[0], now)
+                    MissionChainReducer.enterMission(state, index = 0, mission = missions[0])
                 }
             }
 
@@ -30,7 +30,7 @@ internal object DismissReducer {
                 if (missions.isEmpty()) {
                     complete(state, DismissReason.NORMAL, now, stopMissionTimer = false)
                 } else {
-                    resumeIntoMissions(state, missions, now)
+                    resumeIntoMissions(state, missions)
                 }
             }
 
@@ -42,10 +42,8 @@ internal object DismissReducer {
     private fun resumeIntoMissions(
         state: RingState.Ringing,
         missions: List<Mission>,
-        now: Instant,
     ): RingTransition {
-        val entering =
-            MissionChainReducer.enterMission(state, index = 0, mission = missions[0], now)
+        val entering = MissionChainReducer.enterMission(state, index = 0, mission = missions[0])
         val effects = buildList {
             add(RingEffect.ResumeFromSnooze(state.alarm))
             state.autoDismiss?.let { add(RingEffect.StartAutoDismissTimer(it)) }
@@ -108,7 +106,7 @@ internal object SnoozeReducer {
 
         val duration = event.duration ?: (option.minutes * 60).seconds
         val finishAt = event.now + duration
-        val charged = MissionMute.end(state, event.now, resume = false).state
+        val charged = MissionMute.end(state, resume = false).state
         return RingTransition(
             state =
                 charged.copy(
@@ -131,10 +129,10 @@ internal object SnoozeReducer {
  */
 internal object EmergencyReducer {
 
-    fun open(state: RingState.Ringing, now: Instant): RingTransition =
+    fun open(state: RingState.Ringing): RingTransition =
         when (val stage = state.stage) {
             is RingStage.Mission -> {
-                val resumed = MissionMute.end(state, now)
+                val resumed = MissionMute.end(state)
                 RingTransition(
                     resumed.state.copy(
                         stage = RingStage.Emergency(stage.index, stage.mission, taps = 0),
@@ -161,9 +159,9 @@ internal object EmergencyReducer {
         }
     }
 
-    fun cancel(state: RingState.Ringing, now: Instant): RingTransition {
+    fun cancel(state: RingState.Ringing): RingTransition {
         val stage = state.stage as? RingStage.Emergency ?: return RingTransition(state)
-        return MissionChainReducer.enterMission(state, stage.index, stage.mission, now)
+        return MissionChainReducer.enterMission(state, stage.index, stage.mission)
     }
 }
 

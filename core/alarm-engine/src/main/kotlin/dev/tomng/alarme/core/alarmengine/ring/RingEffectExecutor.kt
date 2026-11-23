@@ -53,7 +53,6 @@ constructor(
     private val handler = Handler(Looper.getMainLooper())
     private var primedRequest: RingRequest? = null
     private val autoDismissTimer = OneShotTimer(handler)
-    private val muteBudgetTimer = OneShotTimer(handler)
     private var countdown: Countdown? = null
 
     init {
@@ -93,18 +92,11 @@ constructor(
             is RingEffect.StartWakeUpCheckTimer,
             RingEffect.StopWakeUpCheckTimer -> handleCountdown(effect)
 
-            is RingEffect.SilenceRing -> {
-                ringHost.stop()
-                muteBudgetTimer.schedule(effect.budget) {
-                    store.submit(RingEvent.MissionMuteExhausted)
-                }
-            }
+            RingEffect.SilenceRing -> ringHost.stop()
 
             // A failed mission must wake the user again: no slow crescendo on the way back.
-            RingEffect.ResumeRing -> {
-                muteBudgetTimer.cancel()
+            RingEffect.ResumeRing ->
                 primedRequest?.let { ringHost.start(it.copy(crescendo = null)) }
-            }
 
             is RingEffect.ScheduleWakeUpCheck ->
                 scheduler.armWakeUpCheck(effect.alarm.id, effect.at)
@@ -167,7 +159,6 @@ constructor(
 
     private fun dismissRing(alarm: Alarm) {
         autoDismissTimer.cancel()
-        muteBudgetTimer.cancel()
         cancelCountdown()
         ringHost.stop()
         context.stopService(Intent(context, AlarmService::class.java))
@@ -188,7 +179,6 @@ constructor(
      * next normal occurrence is re-armed immediately so a crash mid-snooze can't lose tomorrow.
      */
     private fun startDurableSnooze(effect: RingEffect.Snooze) {
-        muteBudgetTimer.cancel()
         ringHost.stop()
         snoozeStore.save(
             dev.tomng.alarme.core.alarmengine.scheduling.SnoozeRecord(

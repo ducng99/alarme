@@ -168,7 +168,7 @@ constructor(
                 autoDismiss = settings.autoDismiss.toMillis()?.milliseconds,
                 snoozeCount = delivery.snoozeCount,
                 muteDuringMission = settings.muteDuringMission,
-                missionMuteBudget = settings.missionMuteMinutes.minutes,
+                missionMuteLimit = settings.missionMuteLimit,
             ),
         )
     }

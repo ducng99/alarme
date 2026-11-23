@@ -27,7 +27,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects)
             .containsExactly(
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
-                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
+                RingEffect.SilenceRing,
             )
             .inOrder()
     }
@@ -84,7 +84,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects)
             .containsExactly(
                 RingEffect.StartMissionTimer(mission, 30.seconds),
-                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
+                RingEffect.SilenceRing,
             )
             .inOrder()
     }
@@ -336,7 +336,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects)
             .containsExactly(
                 RingEffect.StartMissionTimer(mission, 30.seconds),
-                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
+                RingEffect.SilenceRing,
             )
             .inOrder()
     }
@@ -385,7 +385,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
             .containsExactly(
                 RingEffect.ResumeFromSnooze(state.alarm),
                 RingEffect.StartMissionTimer(missions[0], 30.seconds),
-                RingEffect.SilenceRing(RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET),
+                RingEffect.SilenceRing,
             )
             .inOrder()
     }

@@ -21,7 +21,7 @@ sealed interface RingEvent {
         val autoDismiss: Duration?
         val snoozeCount: Int
         val muteDuringMission: Boolean
-        val missionMuteBudget: Duration
+        val missionMuteLimit: Int
     }
 
     /** A validated ring delivery; [snoozeCount] restores persisted counters. */
@@ -34,7 +34,7 @@ sealed interface RingEvent {
         override val autoDismiss: Duration? = null,
         override val snoozeCount: Int = 0,
         override val muteDuringMission: Boolean = true,
-        override val missionMuteBudget: Duration = RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET,
+        override val missionMuteLimit: Int = RingStateMachine.DEFAULT_MISSION_MUTE_LIMIT,
     ) : RingEvent, RingSessionEvent
 
     /** The service came back (reboot/redelivery) and is restoring a live ring. */
@@ -47,7 +47,7 @@ sealed interface RingEvent {
         override val autoDismiss: Duration? = null,
         override val snoozeCount: Int = 0,
         override val muteDuringMission: Boolean = true,
-        override val missionMuteBudget: Duration = RingStateMachine.DEFAULT_MISSION_MUTE_BUDGET,
+        override val missionMuteLimit: Int = RingStateMachine.DEFAULT_MISSION_MUTE_LIMIT,
     ) : RingEvent, RingSessionEvent
 
     data class OnDismissClick(val now: Instant) : RingEvent
@@ -77,9 +77,6 @@ sealed interface RingEvent {
 
     /** Back from the emergency to the mission it was opened from. */
     data class OnEmergencyCancel(val now: Instant) : RingEvent
-
-    /** The mute-during-mission budget ran out: the ring comes back for the rest of the session. */
-    data object MissionMuteExhausted : RingEvent
 
     data class AutoDismissTimeout(val now: Instant) : RingEvent
 

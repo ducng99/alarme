@@ -59,7 +59,7 @@ class FakeSettingsRepository(private val id: String = "dev1") : SettingsReposito
 
     override suspend fun setMuteDuringMission(enabled: Boolean) = Unit
 
-    override suspend fun setMissionMuteMinutes(minutes: Int) = Unit
+    override suspend fun setMissionMuteLimit(minutes: Int) = Unit
 
     override suspend fun setAutoDismiss(option: AutoDismissOption) = Unit
 

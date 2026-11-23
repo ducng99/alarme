@@ -12,7 +12,7 @@ data class AppSettings(
     val muteEnabled: Boolean = true,
     val muteLimit: Int = 3,
     val muteDuringMission: Boolean = true,
-    val missionMuteMinutes: Int = DEFAULT_MISSION_MUTE_MINUTES,
+    val missionMuteLimit: Int = DEFAULT_MISSION_MUTE_LIMIT,
     val autoDismiss: AutoDismissOption = AutoDismissOption.Off,
     val audioOutput: AudioOutputPreference = AudioOutputPreference.ALARM_STREAM,
     val preventPowerOff: Boolean = false,
@@ -21,7 +21,7 @@ data class AppSettings(
     val onboardingDone: Boolean = false,
 )
 
-const val DEFAULT_MISSION_MUTE_MINUTES = 3
+const val DEFAULT_MISSION_MUTE_LIMIT = 3
 
-/** The settings slider range for the total mute-during-mission time per ring. */
-val MISSION_MUTE_MINUTES_RANGE: IntRange = 1..10
+/** The settings slider range for how many mission timeouts may still be muted per ring. */
+val MISSION_MUTE_LIMIT_RANGE: IntRange = 1..10
