@@ -111,6 +111,10 @@ class RingActivity : ComponentActivity() {
             AlarmeTheme {
                 val state by sessionStore.state.collectAsState()
                 RingScreen(state = state, callbacks = callbacks)
+                val holdScreenOn = RingTakeoverController.holdsScreenOn(state)
+                LaunchedEffect(holdScreenOn) {
+                    takeover.holdScreenOn(this@RingActivity, holdScreenOn)
+                }
                 FinishWhenSessionEnds(state)
                 RequestMissionPermission(state)
             }

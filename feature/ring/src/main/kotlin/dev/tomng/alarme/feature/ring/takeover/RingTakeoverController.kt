@@ -6,6 +6,8 @@ import android.view.WindowManager
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import dev.tomng.alarme.core.alarmengine.statemachine.RingStage
+import dev.tomng.alarme.core.alarmengine.statemachine.RingState
 
 /** Hides and reveals the system bars of one window. */
 interface SystemBarsHider {
@@ -53,6 +55,15 @@ class RingTakeoverController(private val bars: SystemBarsHider) {
         bars.hide()
     }
 
+    /** While snoozed the screen may dim and sleep like any other app; it is held on otherwise. */
+    fun holdScreenOn(activity: Activity, hold: Boolean) {
+        if (hold) {
+            activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
     /** Re-applies immersive mode when the window is resumed. */
     fun keepImmersive() {
         bars.hide()
@@ -63,5 +74,14 @@ class RingTakeoverController(private val bars: SystemBarsHider) {
         activity.setTurnScreenOn(false)
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         bars.show()
+    }
+
+    companion object {
+        fun holdsScreenOn(state: RingState): Boolean =
+            when (state) {
+                is RingState.Ringing -> state.stage !is RingStage.Snoozing
+                is RingState.WakeUpCheck -> true
+                else -> false
+            }
     }
 }
