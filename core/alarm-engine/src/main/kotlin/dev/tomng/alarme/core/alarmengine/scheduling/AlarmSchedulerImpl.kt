@@ -180,6 +180,7 @@ constructor(
                         alarmTimeMillis = delivery.alarmTimeMillis,
                         triggerType = delivery.triggerType,
                         isRetry = true,
+                        snoozeCount = delivery.snoozeCount,
                     ),
             ),
         )

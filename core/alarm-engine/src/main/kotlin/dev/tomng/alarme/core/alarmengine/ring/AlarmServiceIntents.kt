@@ -21,6 +21,7 @@ object AlarmServiceIntents {
             putExtra(AlarmIntents.EXTRA_ALARM_TIME, delivery.alarmTimeMillis)
             putExtra(AlarmIntents.EXTRA_TRIGGER_TYPE, delivery.triggerType.name)
             putExtra(AlarmIntents.EXTRA_IS_START_FAILURE_RETRY, delivery.isRetry)
+            putExtra(AlarmIntents.EXTRA_SNOOZE_COUNT, delivery.snoozeCount)
         }
 
     /** Manual start (previews, tests): service must look the alarm up itself. */

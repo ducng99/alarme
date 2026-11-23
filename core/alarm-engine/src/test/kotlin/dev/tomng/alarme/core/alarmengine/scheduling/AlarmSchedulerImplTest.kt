@@ -302,6 +302,27 @@ class AlarmSchedulerImplTest {
         assertThat(scheduledAlarmWithTrigger(TriggerType.NORMAL)).isNotNull()
     }
 
+    @Test
+    fun `a retried snooze re-ring keeps its snooze count`() {
+        val at = clock.now + 3.minutes
+        val delivery =
+            RingDelivery(
+                alarmId = 7,
+                scheduleId = "dev1_7_0600_2310",
+                alarmTimeMillis = clock.now.toEpochMilliseconds(),
+                triggerType = TriggerType.SNOOZE,
+                snoozeCount = 2,
+            )
+
+        scheduler.armRetryRing(delivery, at)
+
+        val retry = scheduledAlarmWithTrigger(TriggerType.SNOOZE)!!
+        val intent = shadowOf(retry.pendingIntent()!!).savedIntents.first()
+        val redelivered = RingDelivery.fromIntent(intent)!!
+        assertThat(redelivered.isRetry).isTrue()
+        assertThat(redelivered.snoozeCount).isEqualTo(2)
+    }
+
     private fun scheduledAlarmWithTrigger(
         trigger: TriggerType,
     ): ShadowAlarmManager.ScheduledAlarm? =

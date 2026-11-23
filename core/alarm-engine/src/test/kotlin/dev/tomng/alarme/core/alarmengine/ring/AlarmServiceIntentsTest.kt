@@ -38,6 +38,22 @@ class AlarmServiceIntentsTest {
     }
 
     @Test
+    fun `service intent keeps the snooze count of a snooze re-ring`() {
+        val delivery =
+            RingDelivery(
+                alarmId = 3,
+                scheduleId = "dev_3_0600_2310",
+                alarmTimeMillis = 1_000L,
+                triggerType = TriggerType.SNOOZE,
+                snoozeCount = 2,
+            )
+
+        val intent = AlarmServiceIntents.serviceIntent(context, delivery)
+
+        assertThat(RingDelivery.fromIntent(intent)?.snoozeCount).isEqualTo(2)
+    }
+
+    @Test
     fun `manual start mode for previews`() {
         val intent = AlarmServiceIntents.manualStartIntent(context, alarmId = 1)
         assertThat(intent.getStringExtra(AlarmServiceIntents.EXTRA_START_MODE))
