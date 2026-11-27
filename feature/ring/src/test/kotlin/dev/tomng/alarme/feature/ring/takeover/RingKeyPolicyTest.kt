@@ -5,17 +5,17 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
- * The takeover key policy: back never escapes the ring, volume keys are swallowed (volume-down
- * additionally counts against the mute limit) unless the bypass is active.
+ * The takeover key policy: back is left to the back dispatcher, volume keys are swallowed
+ * (volume-down additionally counts against the mute limit) unless the bypass is active.
  */
 class RingKeyPolicyTest {
 
     @Test
-    fun `back is always consumed`() {
+    fun `back is left to the back dispatcher`() {
         assertThat(RingKeyPolicy.onKey(KeyEvent.KEYCODE_BACK, volumeKeyBypass = false))
-            .isEqualTo(KeyVerdict.CONSUME)
+            .isEqualTo(KeyVerdict.PASS)
         assertThat(RingKeyPolicy.onKey(KeyEvent.KEYCODE_BACK, volumeKeyBypass = true))
-            .isEqualTo(KeyVerdict.CONSUME)
+            .isEqualTo(KeyVerdict.PASS)
     }
 
     @Test

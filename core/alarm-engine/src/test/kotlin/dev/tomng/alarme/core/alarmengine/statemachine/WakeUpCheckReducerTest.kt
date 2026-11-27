@@ -10,7 +10,7 @@ import org.junit.Test
 /** The wake-up check, blocked/false-alarm deliveries, and the end-to-end journey. */
 class WakeUpCheckReducerTest : RingReducerTestBase() {
 
-    // ---------------------------------------------------------------- wake-up check
+    // Wake-up check
 
     @Test
     fun `the pending check starts on the scheduled event and arms the 100 second window`() {
@@ -150,7 +150,7 @@ class WakeUpCheckReducerTest : RingReducerTestBase() {
             )
     }
 
-    // ---------------------------------------------------------------- blocked / false alarm
+    // Blocked / false alarm
 
     @Test
     fun `a blocked invalid alarm reschedules and returns to idle`() {
@@ -176,7 +176,7 @@ class WakeUpCheckReducerTest : RingReducerTestBase() {
         assertThat(t.effects).containsExactly(RingEffect.Reschedule(RescheduleReason.FALSE_ALARM))
     }
 
-    // ---------------------------------------------------------------- the full journey
+    // The full journey
 
     @Test
     fun `the full journey - ring, chain, timeout, retry, emergency, wuc fail, re-ring`() {

@@ -65,6 +65,9 @@ sealed interface RingEvent {
 
     data class OnMissionTimeout(val now: Instant) : RingEvent
 
+    /** System back during the mission chain: a mission fails back to the ring like a timeout. */
+    data class OnMissionBack(val now: Instant) : RingEvent
+
     data class OnMissionTimerTick(val remaining: Duration) : RingEvent
 
     /** User activity (keystroke, tap, sensor progress): don't time out mid-attempt. */

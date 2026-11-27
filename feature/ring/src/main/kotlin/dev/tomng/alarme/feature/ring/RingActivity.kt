@@ -102,8 +102,8 @@ class RingActivity : ComponentActivity() {
 
         takeover = RingTakeoverController(InsetsSystemBarsHider(window))
         takeover.takeOver(this)
-        // Belt and braces: the key policy already swallows back in dispatchKeyEvent.
-        onBackPressedDispatcher.addCallback(this) { /* swallowed */ }
+        // Always enabled so back never leaves the ring; the reducer ignores it outside missions.
+        onBackPressedDispatcher.addCallback(this) { submit(RingEvent.OnMissionBack(clock.now())) }
 
         dialogCloser = SystemDialogCloser(this)
 

@@ -8,7 +8,7 @@ import org.junit.Test
 /** Ring start, dismiss, snooze and auto-dismiss. */
 class RingStateMachineTest : RingReducerTestBase() {
 
-    // ---------------------------------------------------------------- ring start
+    // Ring start
 
     @Test
     fun `a ring request from idle starts ringing with fresh mute and snooze state`() {
@@ -79,7 +79,7 @@ class RingStateMachineTest : RingReducerTestBase() {
         assertThat(t.effects).isEmpty()
     }
 
-    // ---------------------------------------------------------------- dismiss (no missions)
+    // Dismiss (no missions)
 
     @Test
     fun `dismissing a mission-less alarm dismisses normally`() {
@@ -110,7 +110,7 @@ class RingStateMachineTest : RingReducerTestBase() {
             )
     }
 
-    // ---------------------------------------------------------------- snooze
+    // Snooze
 
     @Test
     fun `snoozing moves to the snooze stage and increments the count`() {
@@ -287,7 +287,7 @@ class RingStateMachineTest : RingReducerTestBase() {
             .containsAtLeast(RingEffect.Ring(alarm()), RingEffect.StartAutoDismissTimer(60.seconds))
     }
 
-    // ---------------------------------------------------------------- auto dismiss
+    // Auto dismiss
 
     @Test
     fun `the auto dismiss timeout dismisses with the auto reason`() {
@@ -325,7 +325,7 @@ class RingStateMachineTest : RingReducerTestBase() {
         assertThat(t.effects).isEmpty()
     }
 
-    // ---------------------------------------------------------------- unknown-state robustness
+    // Unknown-state robustness
 
     @Test
     fun `events that do not apply to the current state are ignored`() {
@@ -335,6 +335,7 @@ class RingStateMachineTest : RingReducerTestBase() {
                 RingState.Idle to RingEvent.OnSnoozeClick(now),
                 RingState.Idle to RingEvent.OnMissionComplete(now),
                 RingState.Idle to RingEvent.OnMissionTimeout(now),
+                RingState.Idle to RingEvent.OnMissionBack(now),
                 RingState.Idle to RingEvent.AutoDismissTimeout(now),
                 RingState.Idle to RingEvent.VolumeMuteRequested,
                 RingState.Idle to RingEvent.OnWakeUpCheckComplete,

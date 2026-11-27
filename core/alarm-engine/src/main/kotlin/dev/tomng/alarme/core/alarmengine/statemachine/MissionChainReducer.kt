@@ -39,6 +39,15 @@ internal object MissionChainReducer {
         )
     }
 
+    /** Back abandons the mission like a timeout; from the emergency it returns to the mission. */
+    fun onBack(state: RingState.Ringing): RingTransition =
+        when (state.stage) {
+            is RingStage.Mission -> onMissionTimeout(state)
+            is RingStage.PrepareMission -> RingTransition(state.copy(stage = RingStage.Ring))
+            is RingStage.Emergency -> EmergencyReducer.cancel(state)
+            else -> RingTransition(state)
+        }
+
     fun onTimerEvent(state: RingState.Ringing, event: RingEvent): RingTransition {
         val stage = state.stage as? RingStage.Mission ?: return RingTransition(state)
         val timer = stage.timer

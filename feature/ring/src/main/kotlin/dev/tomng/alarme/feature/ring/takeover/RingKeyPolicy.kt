@@ -15,15 +15,16 @@ enum class KeyVerdict {
 }
 
 /**
- * The takeover key policy: back can never escape a ringing alarm, and volume keys are swallowed
- * (volume-down additionally reports as a mute attempt) unless the volume-key bypass is active — the
- * bypass lets auxiliary screens offer normal volume control.
+ * The takeover key policy: back is left to the activity's back dispatcher (which never lets it
+ * escape a ringing alarm), and volume keys are swallowed (volume-down additionally reports as a
+ * mute attempt) unless the volume-key bypass is active — the bypass lets auxiliary screens offer
+ * normal volume control.
  */
 object RingKeyPolicy {
 
     fun onKey(keyCode: Int, volumeKeyBypass: Boolean): KeyVerdict =
         when (keyCode) {
-            KeyEvent.KEYCODE_BACK -> KeyVerdict.CONSUME
+            KeyEvent.KEYCODE_BACK -> KeyVerdict.PASS
             KeyEvent.KEYCODE_VOLUME_DOWN ->
                 if (volumeKeyBypass) KeyVerdict.PASS else KeyVerdict.CONSUME_AND_MUTE
             KeyEvent.KEYCODE_VOLUME_UP ->

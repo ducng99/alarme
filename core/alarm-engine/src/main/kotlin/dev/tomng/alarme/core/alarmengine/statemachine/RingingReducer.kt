@@ -39,6 +39,8 @@ internal object RingingReducer {
 
             is RingEvent.OnMissionTimeout -> MissionChainReducer.onMissionTimeout(state)
 
+            is RingEvent.OnMissionBack -> MissionChainReducer.onBack(state)
+
             is RingEvent.OnMissionTimerTick,
             RingEvent.OnMissionTimerReset -> MissionChainReducer.onTimerEvent(state, event)
 

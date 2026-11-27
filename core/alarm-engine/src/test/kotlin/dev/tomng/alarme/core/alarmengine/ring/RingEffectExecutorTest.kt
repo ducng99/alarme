@@ -425,7 +425,7 @@ class RingEffectExecutorTest {
         assertThat(store.state.value).isEqualTo(RingState.Idle)
     }
 
-    // ---------------------------------------------------------- wake-up check
+    // Wake-up check
 
     @Test
     fun `scheduling the wake-up check arms the exact alarm`() {

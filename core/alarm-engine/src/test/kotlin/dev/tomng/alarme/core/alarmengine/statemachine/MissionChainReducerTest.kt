@@ -11,7 +11,7 @@ import org.junit.Test
  */
 class MissionChainReducerTest : RingReducerTestBase() {
 
-    // ---------------------------------------------------------------- mission chain
+    // Mission chain
 
     @Test
     fun `dismiss with missions starts the first mission and silences the ring`() {
@@ -167,7 +167,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects).isEmpty()
     }
 
-    // ---------------------------------------------------------------- timers
+    // Timers
 
     @Test
     fun `a mission timeout fails back to the ring stage and resumes the ring`() {
@@ -241,7 +241,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects).containsExactly(RingEffect.StartMissionTimer(mission, 30.seconds))
     }
 
-    // ---------------------------------------------------------------- emergency
+    // Emergency
 
     @Test
     fun `emergency from a mission stops the timer and resumes the ring`() {
@@ -357,7 +357,77 @@ class MissionChainReducerTest : RingReducerTestBase() {
         assertThat(t.effects).isEmpty()
     }
 
-    // ---------------------------------------------------------------- snooze while silenced
+    // Back navigation
+
+    @Test
+    fun `back from a mission returns to the ring stage like a timeout`() {
+        val mission = Mission.Math(timeLimitSeconds = 30)
+        val state =
+            ringing(alarm = alarm(missions = listOf(mission)), stage = missionStage(0, mission))
+
+        val t = reduce(state, RingEvent.OnMissionBack(now))
+
+        val ringing = t.state as RingState.Ringing
+        assertThat(ringing.stage).isEqualTo(RingStage.Ring)
+        assertThat(ringing.missionMuteLeft).isEqualTo(2)
+        assertThat(t.effects)
+            .containsExactly(RingEffect.StopMissionTimer, RingEffect.ResumeRing)
+            .inOrder()
+    }
+
+    @Test
+    fun `dismissing after backing out restarts the chain from the first mission`() {
+        val missions =
+            listOf(Mission.Math(timeLimitSeconds = 30), Mission.Typing(timeLimitSeconds = 20))
+        val state =
+            ringing(alarm = alarm(missions = missions), stage = missionStage(1, missions[1]))
+
+        val back = reduce(state, RingEvent.OnMissionBack(now))
+        val t = reduce(back.state, RingEvent.OnDismissClick(now))
+
+        assertThat((t.state as RingState.Ringing).stage).isEqualTo(missionStage(0, missions[0]))
+    }
+
+    @Test
+    fun `back from the prepare stage returns to the ring stage`() {
+        val mission = Mission.Step()
+        val state =
+            ringing(
+                alarm = alarm(missions = listOf(mission)),
+                stage = RingStage.PrepareMission(0, mission),
+            )
+
+        val t = reduce(state, RingEvent.OnMissionBack(now))
+
+        assertThat((t.state as RingState.Ringing).stage).isEqualTo(RingStage.Ring)
+        assertThat(t.effects).isEmpty()
+    }
+
+    @Test
+    fun `back from the emergency returns to the mission like cancel`() {
+        val mission = Mission.Math(timeLimitSeconds = 30)
+        val state =
+            ringing(
+                alarm = alarm(missions = listOf(mission)),
+                stage = RingStage.Emergency(0, mission, taps = 12),
+            )
+
+        val t = reduce(state, RingEvent.OnMissionBack(now))
+
+        assertThat(t).isEqualTo(reduce(state, RingEvent.OnEmergencyCancel(now)))
+    }
+
+    @Test
+    fun `back on the ring stage is ignored`() {
+        val state = ringing(alarm = alarm(missions = listOf(Mission.Math())))
+
+        val t = reduce(state, RingEvent.OnMissionBack(now))
+
+        assertThat(t.state).isEqualTo(state)
+        assertThat(t.effects).isEmpty()
+    }
+
+    // Snooze while silenced
 
     @Test
     fun `snoozing from a silenced mission does not resume the ring`() {
@@ -390,7 +460,7 @@ class MissionChainReducerTest : RingReducerTestBase() {
             .inOrder()
     }
 
-    // ---------------------------------------------------------------- mute limit
+    // Mute limit
 
     @Test
     fun `a mute request increments the count and mutes`() {
