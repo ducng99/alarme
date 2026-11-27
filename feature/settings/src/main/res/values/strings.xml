@@ -87,11 +87,7 @@
     <string name="optimize_missing">Not allowed</string>
     <string name="optimize_generic_body">Your device has no vendor autostart screen; check the app details page instead.</string>
 
-    <string name="settings_status_ready">Ready to ring</string>
-    <string name="settings_status_ready_body">Alarme has everything it needs to wake you up on time.</string>
     <string name="settings_status_critical">Alarms can\'t ring reliably</string>
-    <string name="settings_status_optional">%1$d optional permissions off</string>
-    <string name="settings_status_optional_body">Some missions and extras won\'t work until you allow them.</string>
     <string name="settings_status_fix">Fix now</string>
     <string name="settings_permissions_row">App permissions</string>
     <string name="settings_permissions_row_ok">Everything allowed</string>

@@ -1,6 +1,6 @@
 package dev.tomng.alarme.feature.settings
 
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.BatterySaver
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Mic
@@ -70,7 +69,17 @@ fun SettingsScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
-            item(key = "status") { StatusHero(permissions, callbacks.onFixPermissions) }
+            item(key = "status") {
+                MissingPermissionsBanner(permissions, callbacks.onFixPermissions)
+            }
+            item(key = "sound") {
+                SectionHeader(R.string.settings_sound_title)
+                SoundGroup(sound, callbacks)
+            }
+            item(key = "reliability") {
+                SectionHeader(R.string.settings_reliability_title)
+                ReliabilityGroup(reliability, callbacks)
+            }
             item(key = "permissions") {
                 SectionHeader(R.string.settings_permissions_title)
                 SegmentedGroup {
@@ -93,14 +102,6 @@ fun SettingsScreen(
                         )
                     }
                 }
-            }
-            item(key = "sound") {
-                SectionHeader(R.string.settings_sound_title)
-                SoundGroup(sound, callbacks)
-            }
-            item(key = "reliability") {
-                SectionHeader(R.string.settings_reliability_title)
-                ReliabilityGroup(reliability, callbacks)
             }
             item(key = "troubleshooting") {
                 SectionHeader(R.string.settings_troubleshooting_title)
@@ -182,48 +183,21 @@ private fun SoundGroup(sound: SoundSettingsState, callbacks: SettingsCallbacks) 
     }
 }
 
-/** The one-glance answer to "will my alarm ring?", with a way to fix it when it won't. */
 @Composable
-private fun StatusHero(permissions: PermissionCenterState, onFix: () -> Unit) {
-    val critical = permissions.criticalMissing
-    val tone =
-        when {
-            critical.isNotEmpty() -> BannerTone.Error
-            !permissions.allGranted -> BannerTone.Neutral
-            else -> BannerTone.Success
-        }
-    val criticalNames = critical.map { stringResource(it.titleRes()) }.joinToString(" · ")
-    AnimatedContent(
-        targetState = tone,
-        label = "status",
-        modifier = Modifier.padding(top = Spacing.s).testTag("permissions_banner"),
-    ) { shown ->
-        when (shown) {
-            BannerTone.Error ->
-                InlineBanner(
-                    title = stringResource(R.string.settings_status_critical),
-                    body = criticalNames,
-                    icon = Icons.Outlined.PriorityHigh,
-                    tone = BannerTone.Error,
-                    actionLabel = stringResource(R.string.settings_status_fix),
-                    onAction = onFix,
-                    actionModifier = Modifier.testTag("settings_fix"),
-                )
-            BannerTone.Neutral ->
-                InlineBanner(
-                    title =
-                        stringResource(R.string.settings_status_optional, permissions.missingCount),
-                    body = stringResource(R.string.settings_status_optional_body),
-                    icon = Icons.Outlined.Shield,
-                )
-            else ->
-                InlineBanner(
-                    title = stringResource(R.string.settings_status_ready),
-                    body = stringResource(R.string.settings_status_ready_body),
-                    icon = Icons.Outlined.CheckCircle,
-                    tone = BannerTone.Success,
-                )
-        }
+private fun MissingPermissionsBanner(permissions: PermissionCenterState, onFix: () -> Unit) {
+    val criticalNames =
+        permissions.criticalMissing.map { stringResource(it.titleRes()) }.joinToString(" · ")
+    AnimatedVisibility(visible = permissions.criticalMissing.isNotEmpty()) {
+        InlineBanner(
+            title = stringResource(R.string.settings_status_critical),
+            body = criticalNames,
+            icon = Icons.Outlined.PriorityHigh,
+            tone = BannerTone.Error,
+            actionLabel = stringResource(R.string.settings_status_fix),
+            onAction = onFix,
+            modifier = Modifier.padding(top = Spacing.s).testTag("permissions_banner"),
+            actionModifier = Modifier.testTag("settings_fix"),
+        )
     }
 }
 

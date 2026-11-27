@@ -77,15 +77,16 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun `all grants show the ready state`() {
-        val all =
+    fun `granted required permissions hide the status banner`() {
+        val requiredOnly =
             PermissionCenterState(
-                rows = PermissionItem.entries.map { PermissionRow(it, granted = true) },
-                allGranted = true,
+                rows = PermissionItem.entries.map { PermissionRow(it, granted = it.critical) },
+                missingCount = PermissionItem.entries.count { !it.critical },
+                allGranted = false,
             )
-        compose.setContent { SettingsScreen(all, ReliabilityState(), SettingsCallbacks()) }
+        compose.setContent { SettingsScreen(requiredOnly, ReliabilityState(), SettingsCallbacks()) }
 
-        compose.onNodeWithText("Ready to ring").assertIsDisplayed()
+        compose.onNodeWithTag("permissions_banner").assertDoesNotExist()
     }
 
     @Test
